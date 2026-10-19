@@ -117,6 +117,7 @@ The hooks enforce the promises in [README: What it will never do](README.md#what
 - **Always:** run `npm test` and `npm run lint`; update the tools-list fixture and `docs/tracker-api.md`
   with any tool schema change; keep Hermes parity.
 - **Ask first:** adding any dependency; changing a tool's name or removing a field; changing a hook
-  matcher in `hooks/hooks.json`; anything touching send, submit, consent or delete gates.
+  matcher in `hooks/hooks.json`; renaming CI jobs or changing the test matrix (the job names are required
+  checks on `main`); anything touching send, submit, consent or delete gates.
 - **Never:** write to stdout from the server or hooks outside the protocol; edit a shipped migration;
   commit personal data, `.db` files or secrets; commit with a non-noreply email.
