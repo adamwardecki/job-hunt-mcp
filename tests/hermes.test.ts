@@ -114,6 +114,7 @@ test('hermes.ts: a submit click needs the user approval typed as /job-hunt:appro
   assert.match(approved.context, /gate_check passed/);
   assert.match(approved.context, new RegExp(`\\$ARGUMENTS = "${role.id}"`));
   assert.equal(hermes('pre_tool_call', click), null);
+  assert.match(hermes('pre_tool_call', click).message, /needs the user's approval/, 'approval is consumed by one submit attempt');
 });
 
 test('hermes.ts: a subagent turn cannot grant approval', () => {

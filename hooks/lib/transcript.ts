@@ -80,16 +80,40 @@ export function labelForRef(steps: ToolStep[], ref: string | null | undefined): 
   return null;
 }
 
-// Most recent page URL seen in a browser tool's input or result.
-export function currentUrl(steps: ToolStep[]): string | null {
+export interface PageContext {
+  url: string;
+  tab_id?: string;
+}
+
+export function tabIdOf(input: ToolInput | undefined): string | undefined {
+  const value = input?.tabId ?? input?.tab_id ?? input?.pageId ?? input?.page_id;
+  return typeof value === 'string' || typeof value === 'number' ? String(value) : undefined;
+}
+
+function tabIdFromText(text: string): string | undefined {
+  const match = text.match(/(?:"(?:tabId|tab_id|pageId|page_id)"|\b(?:tabId|tab_id|pageId|page_id))\s*[:=]\s*["']?([\w.-]+)/i);
+  return match?.[1];
+}
+
+// Most recent page URL seen in a browser tool's input or result. When a browser action names a tab,
+// only evidence associated with that tab is accepted.
+export function currentPage(steps: ToolStep[], preferredTabId?: string): PageContext | null {
+  const uses = new Map(steps.filter((s): s is Extract<ToolStep, { kind: 'use' }> => s.kind === 'use').map((s) => [s.id, s]));
   for (let i = steps.length - 1; i >= 0; i--) {
     const s = steps[i]!; // i is within steps by the loop bounds.
     if (!/browser|chrome|playwright|puppeteer|computer/i.test(s.name)) continue;
-    if (s.kind === 'use' && typeof s.input?.url === 'string') return s.input.url;
+    const use = s.kind === 'use' ? s : uses.get(s.id);
+    const tab = tabIdOf(use?.input) || (s.kind === 'result' ? tabIdFromText(s.text) : undefined);
+    if (preferredTabId !== undefined && tab !== preferredTabId) continue;
+    if (s.kind === 'use' && typeof s.input?.url === 'string') return { url: s.input.url, ...(tab ? { tab_id: tab } : {}) };
     if (s.kind === 'result') {
       const m = s.text.match(/(?:url|URL|Page URL|Navigated to|Current URL)["']?\s*[:=]?\s*["']?(https?:\/\/[^\s"'<>)]+)/);
-      if (m?.[1]) return m[1];
+      if (m?.[1]) return { url: m[1], ...(tab ? { tab_id: tab } : {}) };
     }
   }
   return null;
+}
+
+export function currentUrl(steps: ToolStep[], preferredTabId?: string): string | null {
+  return currentPage(steps, preferredTabId)?.url || null;
 }

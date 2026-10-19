@@ -104,7 +104,7 @@ test('AC5: pay floor drops only when the band maximum is below it', () => {
 
 test('state machine: illegal moves, required fields, verified_at only via verify', () => {
   const t = fresh();
-  const { role } = t.upsertRole({ company: 'Acme', title: 'Product Engineer', source: 'hn' });
+  const { role } = t.upsertRole({ company: 'Acme', title: 'Product Engineer', url: 'https://jobs.example.com/acme/product-engineer', source: 'hn' });
   assert.throws(() => t.transition({ role_id: role.id, to: 'applied', reason: 'x', evidence: 'y' }), /Illegal transition found → applied/);
   assert.throws(() => t.transition({ role_id: role.id, to: 'verified', reason: 'x', evidence: 'no url', location_line: 'Remote', location_type: 'remote' }), /URL/);
   assert.throws(() => t.record({ role_id: role.id, status: 'verified', reason: 'x', actor: 'pipeline', evidence: 'https://a "b"' }), /transition/);
@@ -113,6 +113,7 @@ test('state machine: illegal moves, required fields, verified_at only via verify
   verify(t, role.id);
   assert.ok(t.roleRow(role.id)?.verified_at);
   assert.equal(t.gateCheck({ role_id: role.id }).ok, true);
+  assert.equal(t.gateCheck({ role_id: role.id }).url, role.url);
   t.transition({ role_id: role.id, to: 'scored', reason: 'ok' });
   t.transition({ role_id: role.id, to: 'queued', reason: 'ok' });
   assert.throws(() => t.transition({ role_id: role.id, to: 'applied', reason: 'ok' }), /confirmation/);

@@ -38,7 +38,7 @@ try {
     if (!p.parent_session_id) {
       // Subagent turns are written by the model, never by the user, so they cannot approve anything.
       const typed = userText(p.user_message);
-      await handlers.prompt({ session_id: sid, prompt: typed });
+      await handlers.prompt({ session_id: sid, prompt: typed, transcript_path: stepsPath(sid) });
       if (captured?.hookSpecificOutput?.additionalContext) notes.push(captured.hookSpecificOutput.additionalContext);
       const { skill, args } = unwrapSkillInvocation(typeof p.user_message === 'string' ? p.user_message : '');
       if (skill?.startsWith('job-hunt:') && args) notes.push(`[job-hunt] In this command, $ARGUMENTS = "${args}".`);

@@ -85,11 +85,11 @@ export function hostOf(url: string): string {
 
 export function jsIntent(code: unknown): 'guard' | 'submit' | 'delete' | 'personal' | 'other' {
   const s = String(code || '');
-  if (/JOBHUNT_TRIAGE_GUARD/.test(s)) return 'guard';
   const clicks = /\.click\s*\(|dispatchEvent\s*\(|\.submit\s*\(|requestSubmit\s*\(/.test(s);
   if (/\.(submit|requestSubmit)\s*\(/.test(s)) return 'submit';
   if (clicks && /submit|apply|send/i.test(s)) return 'submit';
   if (clicks && /delete|trash|remove|discard/i.test(s)) return 'delete';
   if (/(\.value\s*=|\.checked\s*=|setAttribute\(\s*['"]checked)/.test(s) && (PERSONAL.test(s) || CONSENT.test(s))) return 'personal';
+  if (/JOBHUNT_TRIAGE_GUARD/.test(s)) return 'guard';
   return 'other';
 }

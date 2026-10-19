@@ -27,6 +27,8 @@ export interface HookOutput {
 export interface Approval {
   role_id: number;
   at: string;
+  target_url: string;
+  target_tab?: string;
 }
 
 export interface Denial {
