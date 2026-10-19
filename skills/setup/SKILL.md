@@ -10,7 +10,7 @@ The skill drives the conversation. The tracker tools validate and persist. Every
 ## Hard rules
 
 - **Ask, don't infer, for anything that gates applications.** Echo each section back as a one-screen summary and save only after the user confirms. Why: a wrong hard filter silently drops or approves roles for weeks.
-- **Use multiple-choice questions** (the host's question tool, e.g. AskUserQuestion) wherever the answer has a small option set. One topic per question.
+- **Use multiple-choice questions** (the host's question tool, e.g. AskUserQuestion) wherever the answer has a small option set. One topic per question. When the question asks the user to confirm something (a draft, a summary, a set of filters), print that content in the message first; never put it only in the question or leave it out.
 - **Never ask for passwords, tokens for job sites, or ID numbers.** Never create job-site accounts.
 - **The Node.js installer asks for the computer's password in the operating system's own window.** Never ask for it in chat, never run `sudo`, and never work around a checksum or signature failure from the installer scripts.
 - **Tell the user where personal data lives** before saving any of it: the tracker database (a local file in `~/.job-hunt`, readable only by their OS account), and any connector they add.
@@ -55,6 +55,7 @@ Scripts live in `${CLAUDE_PLUGIN_ROOT}/scripts/` (Hermes: `${HERMES_SKILL_DIR}/.
 - Draft the `profile` document using `templates/profile.md`. For **every role**, write a stack line listing the technologies used in that role, taken from the CV text for that role.
 - Mark anything inferred (not literally in the CV) with `(inferred)` and ask the user to confirm or remove each one.
 - Add the note from the template that summary lines are not exhaustive. Why: a skills summary was once read as the whole record and a technology the user had used for years was scored as a gap.
+- Show the full draft in chat, as message text, before asking to save. Then ask: save, or edit first. Why: the question tool only shows the question, so a user asked to approve a profile they cannot see is approving it blind.
 - `save_document` with `name: "profile"`.
 
 ### 2. Hard filters (`filters`)
