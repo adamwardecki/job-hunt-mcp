@@ -22,7 +22,7 @@ export interface PayVerdict {
 }
 
 export function checkPay({ comp_min, comp_max, currency, period = 'year', fx_rate, equity }: PayInput, floor: Partial<PayFloor> | null | undefined): PayVerdict {
-  if (!floor || !floor.amount) return { verdict: 'unknown', reason: 'No pay floor configured (filters.pay_floor).' };
+  if (!floor?.amount) return { verdict: 'unknown', reason: 'No pay floor configured (filters.pay_floor).' };
   const max = comp_max ?? comp_min;
   if (max == null) return { verdict: 'unknown', reason: 'No salary stated. Score on everything else; ask in the form only if it asks.' };
   const k = period === null ? undefined : PER_YEAR[period];

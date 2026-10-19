@@ -112,7 +112,7 @@
     }
     out.protected[name] = { count: p.count, checked: p.checked.length };
     if (p.checked.length) problems.push(`protected column "${name}" has ${p.checked.length} checked: ${p.checked.join('; ')}`);
-    const expected = input.expectedCounts && input.expectedCounts[name];
+    const expected = input.expectedCounts?.[name];
     if (expected != null && expected !== p.count) problems.push(`protected column "${name}" count changed: expected ${expected}, now ${p.count}`);
   }
 

@@ -4,9 +4,9 @@
 
 import { appendFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { home } from '../session.ts';
-import { isRecord } from '../../../servers/tracker/src/util.ts';
 import { secureDir, secureFile } from '../../../servers/tracker/src/fsperm.ts';
+import { isRecord } from '../../../servers/tracker/src/util.ts';
+import { home } from '../session.ts';
 import type { ToolInput } from '../types.ts';
 
 // The Hermes hook kwargs that __init__.py pipes to hooks/hermes.ts as JSON.
@@ -74,7 +74,7 @@ export function appendStep(p: HermesPayload): void {
   ];
   secureDir(join(home(), 'sessions'));
   const path = stepsPath(p.session_id);
-  appendFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n') + '\n', { mode: 0o600 });
+  appendFileSync(path, `${lines.map((l) => JSON.stringify(l)).join('\n')}\n`, { mode: 0o600 });
   secureFile(path);
 }
 

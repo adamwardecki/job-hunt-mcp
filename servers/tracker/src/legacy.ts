@@ -1,13 +1,13 @@
 // One-off migration from the manual markdown pipeline (spec §13). Imported events bypass the state
 // machine (history is what it is) but keep the original row as evidence.
 
-import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { tx } from './db.ts';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import type { RoleRow } from './db.ts';
+import { tx } from './db.ts';
 import { normalizeName } from './fuzzy.ts';
-import type { Company, Tracker } from './tracker.ts';
 import type { ArgsFor } from './tools.ts';
+import type { Company, Tracker } from './tracker.ts';
 import { oneOf } from './util.ts';
 
 // A queue note: the file name, its markdown, and (when read from disk) its modification time.
@@ -38,7 +38,7 @@ const strip = (s: string | null | undefined) =>
     .replace(/\*\*|__|`/g, '')
     .replace(/(^|\s)[*_](\S)/g, '$1$2')
     .replace(/(\S)[*_](\s|$)/g, '$1$2')
-    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{1F000}-\u{1F2FF}]/gu, '')
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{1F000}-\u{1F2FF}]|\u{FE0F}/gu, '')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -179,7 +179,7 @@ export function importLegacy(t: Tracker, args: ArgsFor<'import_legacy'>) {
     if (companyCount() > before) stats.companies++;
     const roles = t.q<RoleRow>('SELECT * FROM roles WHERE company_id = ?', company.id);
     const nt = normalizeName(title);
-    let role = (url && roles.find((r) => r.url === url)) || roles.find((r) => normalizeName(r.title) === nt) ||
+    const role = (url && roles.find((r) => r.url === url)) || roles.find((r) => normalizeName(r.title) === nt) ||
       roles.find((r) => nt && normalizeName(r.title) && (normalizeName(r.title).startsWith(nt) || nt.startsWith(normalizeName(r.title))));
     return { company, role, roles };
   };
@@ -265,7 +265,7 @@ export function importLegacy(t: Tracker, args: ArgsFor<'import_legacy'>) {
           // "Needs <user>" on a live process is a to-do, not a step back to the queue.
           const eff = mapped.status === 'queued' && oneOf(['applied', 'interviewing', 'offer'], role.status) ? { status: null } : mapped;
           event(role, ts, eff, `Legacy log ${row.date}: ${strip(row.status).slice(0, 200) || 'row'}`, row.raw);
-          if (INTRO.test(row.status + ' ' + row.action) && !company.no_cold_apply) {
+          if (INTRO.test(`${row.status} ${row.action}`) && !company.no_cold_apply) {
             t.setNoColdApply({ company_id: company.id, on: true, reason: `Legacy log ${row.date}: intro or recruiter process open` });
             stats.no_cold_apply.push(company.name);
           }
@@ -313,7 +313,7 @@ export function importLegacy(t: Tracker, args: ArgsFor<'import_legacy'>) {
         if (/^- /.test(line)) {
           if (cur) bullets.push(cur);
           cur = line.slice(2);
-        } else if (cur !== null && line.trim()) cur += '\n' + line;
+        } else if (cur !== null && line.trim()) cur += `\n${line}`;
         else if (cur !== null && !line.trim()) cur += '\n';
       }
       if (cur) bullets.push(cur);
@@ -330,7 +330,7 @@ export function importLegacy(t: Tracker, args: ArgsFor<'import_legacy'>) {
 
   if (documents) {
     for (const [name, content] of Object.entries(documents)) {
-      if (content && content.trim()) {
+      if (content?.trim()) {
         t.saveDocument({ name, content });
         stats.documents++;
       }

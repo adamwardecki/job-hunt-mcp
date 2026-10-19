@@ -1,9 +1,9 @@
-import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { toUtcIso, isValidTimeZone } from './time.ts';
+import { DatabaseSync } from 'node:sqlite';
 import { secureDir, secureFile } from './fsperm.ts';
+import { isValidTimeZone, toUtcIso } from './time.ts';
 
 export function jobHuntHome(): string {
   return process.env.JOB_HUNT_HOME || join(homedir(), '.job-hunt');

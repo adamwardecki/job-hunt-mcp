@@ -1,11 +1,12 @@
 #!/usr/bin/env node
+
 // Hook entry point: node hooks/main.ts pre-tool | prompt | stop
 // Reads the hook payload on stdin and answers in Claude Code's hook JSON format.
 
-import { handlers, HOOK_EVENTS } from './gates.ts';
-import { splitToolName, isBrowser, isSendTool } from './lib/classify.ts';
-import type { HookPayload } from './lib/types.ts';
 import { errorText, oneOf } from '../servers/tracker/src/util.ts';
+import { HOOK_EVENTS, handlers } from './gates.ts';
+import { isBrowser, isSendTool, splitToolName } from './lib/classify.ts';
+import type { HookPayload } from './lib/types.ts';
 
 const event = process.argv[2];
 let payload: HookPayload = {};

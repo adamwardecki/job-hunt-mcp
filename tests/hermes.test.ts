@@ -1,12 +1,13 @@
 // Hermes host adapter: tool-name mapping, step log, skill unwrapping, and hooks/hermes.ts end to end.
-import { test, beforeEach } from 'node:test';
+
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, dirname } from 'node:path';
+import { dirname, join } from 'node:path';
+import { beforeEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
-import { browserAction, resolveLabel, splitToolName, isBrowser, isSendTool } from '../hooks/lib/classify.ts';
+import { browserAction, isBrowser, isSendTool, resolveLabel, splitToolName } from '../hooks/lib/classify.ts';
 import { normalizeToolName } from '../hooks/lib/hosts/hermes.ts';
 import type { ToolStep } from '../hooks/lib/types.ts';
 
@@ -46,7 +47,7 @@ test('Hermes browser actions and @refs are understood', () => {
 // --- Steps log ---
 
 import { appendStep, stepsPath, unwrapSkillInvocation, userText } from '../hooks/lib/hosts/hermes.ts';
-import { readTranscript, toolSteps, currentUrl } from '../hooks/lib/transcript.ts';
+import { currentUrl, readTranscript, toolSteps } from '../hooks/lib/transcript.ts';
 
 const FIXTURE = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'hermes-skill-invocation.txt'), 'utf8');
 

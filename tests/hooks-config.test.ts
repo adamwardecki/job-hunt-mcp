@@ -1,7 +1,8 @@
 // hooks/hooks.json: shell form everywhere; PreToolUse fails closed for mail, LinkedIn and browser tools only.
-import { test } from 'node:test';
+
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { test } from 'node:test';
 
 type Hook = { type: string; command: string; timeout: number; onFailure?: string; args?: unknown };
 type HookGroup = { matcher?: string; hooks: Hook[] };

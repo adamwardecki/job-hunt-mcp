@@ -224,7 +224,9 @@ function check(spec: FieldSpec, value: unknown, path: string, errors: string[]):
   }
   if (spec.enum && !oneOf(spec.enum, value)) errors.push(`${path}: "${value}" is not one of ${spec.enum.join(', ')}`);
   const { items, fields } = spec;
-  if (Array.isArray(value) && items) value.forEach((item, i) => check(items, item, `${path}[${i}]`, errors));
+  if (Array.isArray(value) && items) value.forEach((item, i) => {
+    check(items, item, `${path}[${i}]`, errors);
+  });
   if (isRecord(value) && fields) checkObject({ required: spec.required, fields }, value, path, errors);
 }
 
