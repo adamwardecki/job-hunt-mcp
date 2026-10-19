@@ -15,7 +15,7 @@ Thanks for helping. This is a small project, so the process is light.
 Node 22.18 or newer and Python 3 (for the Hermes plugin tests).
 
 ```
-npm install
+npm run setup   # installs TypeScript, the Node types and Biome into dev/
 npm test
 ```
 
@@ -26,6 +26,8 @@ Google Chrome and the Windows installer tests need PowerShell (`pwsh`); each is 
 
 - **TypeScript that Node runs directly.** No build step and no runtime dependencies. Keep it that way:
   the plugin must work from a plain checkout.
+- **Dev tools live in `dev/`.** Never add a lockfile next to the root `package.json`: Claude Code installs
+  whatever a lockfile in the plugin root lists, on every user's install and update.
 - **Tracker tools.** Input schemas live in `servers/tracker/src/tools.ts`. If you change a tool's
   schema, update the snapshot in `servers/tracker/test/fixtures/tools-list.json` and
   [`docs/tracker-api.md`](docs/tracker-api.md).

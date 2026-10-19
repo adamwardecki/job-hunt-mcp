@@ -11,7 +11,7 @@
       "!site",
       "!tests/fixtures",
       "!servers/tracker/test/fixtures",
-      "!package-lock.json"
+      "!dev/package-lock.json"
     ]
   },
   "formatter": {

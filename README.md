@@ -198,8 +198,8 @@ for help.
 ## Development
 
 ```
-npm install   # dev only: TypeScript and the Node types, for type-checking
-npm test      # tsc, then the Node and Python tests
+npm run setup   # dev only: TypeScript, the Node types and Biome, installed into dev/
+npm test        # tsc, then the Node and Python tests
 ```
 
 The code is TypeScript that Node runs directly (type stripping), so there is no build step and nothing to
