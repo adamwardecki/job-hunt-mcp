@@ -1,6 +1,6 @@
 ---
 name: scorer
-description: Verifies one job role on the employer's own posting and scores it against the user's hard filters and preferences, writing transition events with verbatim evidence (verified, scored or dropped) and flagging blocking questions. Launched by /job-hunt:sweep and /job-hunt:apply, one role per instance.
+description: Verifies one job role on the employer's own posting and scores it against the user's hard filters and preferences, writing transition events with verbatim evidence (verified, scored or dropped) and flagging blocking questions. Launched by /j-hunt:sweep and /j-hunt:apply, one role per instance.
 model: sonnet
 ---
 

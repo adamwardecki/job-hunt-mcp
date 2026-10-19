@@ -21,7 +21,7 @@ the common ones.
 - Photos
 - Passwords, account creation, CAPTCHAs
 - Consent checkboxes (recording, marketing, talent pool, data sharing), unless you type
-  `/job-hunt:allow-consent <role_id>` for that role
+  `/j-hunt:allow-consent <role_id>` for that role
 
 ## Standard fields
 

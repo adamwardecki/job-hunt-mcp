@@ -62,4 +62,4 @@ inferred (not literally in your CV) with "(inferred)" until you confirm it.
 
 ## Facts confirmed by the user
 
-<!-- Corrections from /job-hunt:correct land here, with the date. E.g. "Used <technology> at <Company> (confirmed <date>)." -->
+<!-- Corrections from /j-hunt:correct land here, with the date. E.g. "Used <technology> at <Company> (confirmed <date>)." -->

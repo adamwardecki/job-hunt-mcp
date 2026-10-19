@@ -5,7 +5,7 @@ argument-hint: "<company>"
 
 Prepare the user for an interview at `$ARGUMENTS`.
 
-**If the tracker tools are missing** (search for them first if tools are deferred), or a hook error says `node` could not start: Node.js, which the plugin runs on, is missing or too old. Tell the user that in one sentence, offer to run `/job-hunt:setup` (it installs Node.js), and stop.
+**If the tracker tools are missing** (search for them first if tools are deferred), or a hook error says `node` could not start: Node.js, which the plugin runs on, is missing or too old. Tell the user that in one sentence, offer to run `/j-hunt:setup` (it installs Node.js), and stop.
 
 Load the `interview-prep` skill and follow it.
 

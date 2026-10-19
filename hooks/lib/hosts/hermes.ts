@@ -85,7 +85,7 @@ const INSTRUCTION = 'The user has provided the following instruction alongside t
 const RUNTIME_NOTE = '\n\n[Runtime note:';
 
 // A slash-skill turn embeds the whole skill body. Only the skill name and the user's own instruction
-// (after the LAST instruction marker) may be read. The body can quote "/job-hunt:approve 999" and
+// (after the LAST instruction marker) may be read. The body can quote "/j-hunt:approve 999" and
 // must never count as approval.
 export function unwrapSkillInvocation(text: string): { text: string; skill: string | null; args: string | null } {
   if (!text.startsWith(INVOKED) || !text.includes(LOADED)) return { text, skill: null, args: null };

@@ -66,7 +66,7 @@ class PluginTest(unittest.TestCase):
         self.assertIn("drafts", r["message"])
 
     def test_unfinished_sweep_injects_a_nudge(self):
-        self.ctx.hooks["pre_llm_call"](session_id="s3", user_message="/job-hunt:sweep", parent_session_id="")
+        self.ctx.hooks["pre_llm_call"](session_id="s3", user_message="/j-hunt:sweep", parent_session_id="")
         self.ctx.hooks["post_llm_call"](session_id="s3")
         self.assertEqual(len(self.ctx.injected), 1)
         self.assertIn("sweep is not finished", self.ctx.injected[0])

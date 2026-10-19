@@ -1,6 +1,6 @@
 """Hermes adapter for the job-hunt plugin.
 
-Registers the plugin's skills, commands (as /job-hunt:<name> slash skills) and agent prompts, and wires
+Registers the plugin's skills, commands (as /j-hunt:<name> slash skills) and agent prompts, and wires
 four Hermes hooks to `node hooks/hermes.ts <event>`. All gate logic lives in hooks/gates.ts and is
 shared with Claude Code; keep this file thin.
 """

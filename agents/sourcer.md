@@ -1,6 +1,6 @@
 ---
 name: sourcer
-description: Pulls new job leads from exactly one source (e.g. linkedin, ashby-boards, hn, waas, wellfound, wttj, jack-and-jill), dedupes each with find_company, upserts new ones as found, and returns a compact lead list with every aggregator tag marked UNVERIFIED. Launched by /job-hunt:sweep, one instance per source, in parallel.
+description: Pulls new job leads from exactly one source (e.g. linkedin, ashby-boards, hn, waas, wellfound, wttj, jack-and-jill), dedupes each with find_company, upserts new ones as found, and returns a compact lead list with every aggregator tag marked UNVERIFIED. Launched by /j-hunt:sweep, one instance per source, in parallel.
 model: sonnet
 ---
 

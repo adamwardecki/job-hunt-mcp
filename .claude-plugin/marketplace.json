@@ -6,9 +6,12 @@
   },
   "plugins": [
     {
-      "name": "job-hunt",
+      "name": "j-hunt",
       "source": "./",
       "description": "Low-volume, high-precision job search with a tracker, hard gates and a daily report."
     }
-  ]
+  ],
+  "renames": {
+    "job-hunt": "j-hunt"
+  }
 }

@@ -5,7 +5,7 @@ argument-hint: "<source>  (e.g. jobcopilot | jack-and-jill | wellfound)"
 
 Triage the tracker board for source `$ARGUMENTS` with the user present.
 
-**If the tracker tools are missing** (search for them first if tools are deferred), or a hook error says `node` could not start: Node.js, which the plugin runs on, is missing or too old. Tell the user that in one sentence, offer to run `/job-hunt:setup` (it installs Node.js), and stop.
+**If the tracker tools are missing** (search for them first if tools are deferred), or a hook error says `node` could not start: Node.js, which the plugin runs on, is missing or too old. Tell the user that in one sentence, offer to run `/j-hunt:setup` (it installs Node.js), and stop.
 
 Load the `triage-tracker` skill and follow it exactly.
 
