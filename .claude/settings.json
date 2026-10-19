@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "enabledPlugins": {
+    "security-guidance@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true
+  }
+}

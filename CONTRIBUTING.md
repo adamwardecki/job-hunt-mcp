@@ -17,9 +17,11 @@ Node 22.18 or newer and Python 3 (for the Hermes plugin tests).
 ```
 npm install
 npm test
+npm run lint
 ```
 
-`npm test` type-checks with `tsc`, then runs the Node and Python tests. The triage guard tests need
+`npm test` type-checks with `tsc`, then runs the Node and Python tests. `npm run lint` runs Biome; CI runs
+both on every pull request. The triage guard tests need
 Google Chrome and the Windows installer tests need PowerShell (`pwsh`); each is skipped without it.
 
 ## Conventions
