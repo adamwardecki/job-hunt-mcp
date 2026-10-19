@@ -89,9 +89,10 @@ async function browserGate(payload: HookPayload, session: SessionState, short: s
     const intent = C.jsIntent(input.text || input.code || input.script || input.function || input.expression);
     if (intent === 'submit') return submitGate(payload, session, 'a scripted submit/apply click');
     if (intent === 'delete') return deleteGate(payload, session, steps, host, 'a scripted delete');
-    if (intent === 'personal')
+    if (intent === 'personal') {
       deny(payload, session, 'Scripted write into a personal-data or consent field. These are for the user to fill. Surface the field to the user.');
       return;
+    }
     return;
   }
 
