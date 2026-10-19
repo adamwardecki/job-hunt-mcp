@@ -69,7 +69,7 @@ export function renderReport(t: Tracker, { date, run_id, headline }: ArgsFor<'re
   const needs: string[] = [];
   for (const q of items.queue) {
     const why = q.question || (q.blocked_by === 'browser' ? 'Needs a browser session to apply.' : 'Apply or drop?');
-    needs.push(`**${q.company}**, ${q.title} (role ${q.id}): ${why}`);
+    needs.push(`**${q.company}**, ${q.title} (role ${q.id}): ${why} To apply: \`/job-hunt:apply ${q.id}\``);
   }
   for (const q of items.questions) needs.push(`**${q.company}**, ${q.title} (role ${q.id}, ${q.status}): ${q.question}`);
   for (const d of items.unverified_drafts) needs.push(`Draft ${d.draft_id}${d.company ? ` (${d.company})` : ''} was not confirmed by read-back. Check Gmail drafts.`);

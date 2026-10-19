@@ -86,7 +86,7 @@
   },
   {
     "name": "save_config",
-    "description": "Validate and save one config section. Unknown fields are rejected.",
+    "description": "Validate and save one config section. Unknown fields are rejected. Field names and types are in templates/settings.example.yaml; an invalid call returns the section's expected fields.",
     "inputSchema": {
       "type": "object",
       "properties": {

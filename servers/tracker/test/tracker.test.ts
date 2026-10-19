@@ -199,7 +199,7 @@ test('AC2: report names missing capabilities and what was queued because of them
   const { markdown } = renderReport(t, { date: today(), run_id, headline: 'One strong find queued; no browser this run.' });
   assert.match(markdown, /Missing this run: browser, local folder, LinkedIn/);
   assert.match(markdown, /Queued because of it: Acme \(role 1\)/);
-  assert.match(markdown, /## Needs you\n\n1\. \*\*Acme\*\*, Eng \(role 1\): Apply in a browser session\?/);
+  assert.match(markdown, /## Needs you\n\n1\. \*\*Acme\*\*, Eng \(role 1\): Apply in a browser session\? To apply: `\/job-hunt:apply 1`/);
   assert.match(markdown, /Emails or messages sent \| 0/);
 });
 
@@ -213,10 +213,20 @@ test('a stored capabilities.tracker from an older version is hidden, and the pro
   assert.equal('tracker' in t.section('capabilities'), false);
 });
 
+test('accounts saved with the old recruiter_email field read back as job_inbox_email and save again', () => {
+  const t = fresh();
+  t.run("INSERT INTO profile(key, value) VALUES('accounts', ?)", JSON.stringify({ recruiter_email: 'me@example.com', invite_calendar: 'personal' }));
+  const acc = t.section('accounts');
+  assert.equal(acc.job_inbox_email, 'me@example.com');
+  assert.equal('recruiter_email' in acc, false);
+  t.saveConfig({ section: 'accounts', data: { ...acc } });
+  assert.throws(() => t.saveConfig({ section: 'accounts', data: { recruiter_email: 'x', invite_calendar: 'y' } }), /accounts\.recruiter_email: unknown field/);
+});
+
 test('AC1: setup_status works with connectors only; no browser is amber with a recordable decision', () => {
   const t = fresh();
   t.saveDocument({ name: 'profile', content: '# Profile\n\n## Acme (2020-2024)\nStack: TypeScript, React' });
-  t.saveConfig({ section: 'accounts', data: { recruiter_email: 'personal', invite_calendar: 'personal', connected_calendar: 'personal' } });
+  t.saveConfig({ section: 'accounts', data: { job_inbox_email: 'personal', invite_calendar: 'personal', connected_calendar: 'personal' } });
   t.saveConfig({ section: 'schedule', data: { daily: { days: 'weekdays', time: '07:00', tz: 'Europe/Berlin' } } });
   t.startRun({ kind: 'setup', capabilities: { connectors: { gmail: true, calendar: true }, browser: null } });
   let s = t.setupStatus();
@@ -231,16 +241,27 @@ test('AC1: setup_status works with connectors only; no browser is amber with a r
 
 test('setup warns when invites land on a different calendar than the connected one', () => {
   const t = fresh();
-  t.saveConfig({ section: 'accounts', data: { recruiter_email: 'personal', invite_calendar: 'personal', connected_calendar: 'work' } });
+  t.saveConfig({ section: 'accounts', data: { job_inbox_email: 'personal', invite_calendar: 'personal', connected_calendar: 'work' } });
   const acc = t.setupStatus().items.find((i) => i.key === 'accounts');
   assert.equal(acc?.state, 'amber');
   assert.match(acc?.detail ?? '', /connected calendar is "work"/);
+});
+
+test('setup_status flags ats_boards enabled with no boards to fetch', () => {
+  const t = fresh();
+  const state = () => t.setupStatus().items.find((i) => i.key === 'sources');
+  t.saveConfig({ section: 'sources', data: { enabled: ['linkedin', 'ats_boards'] } });
+  assert.equal(state()?.state, 'amber');
+  assert.match(state()?.detail ?? '', /sources\.boards is empty/);
+  t.saveConfig({ section: 'sources', data: { enabled: ['linkedin', 'ats_boards'], boards: ['https://jobs.ashbyhq.com/acme'] } });
+  assert.equal(state()?.state, 'green');
 });
 
 test('config validation rejects unknown fields and unattended submit', () => {
   const t = fresh();
   assert.throws(() => t.saveConfig({ section: 'filters', data: { work_mode: ['anywhere'], residence_country: 'DE', timezone: 'x', pay_floor: { amount: 1, currency: 'EUR' } } }), /not one of/);
   assert.throws(() => t.saveConfig({ section: 'prefs', data: { titel: [] } }), /unknown field/);
+  assert.throws(() => t.saveConfig({ section: 'filters', data: { remote: 'fully_remote' } }), /Expected filters fields: work_mode \(required\): array of remote\|hybrid\|onsite, .*pay_floor \(required\): \{ amount \(required\): number/);
   assert.throws(() => t.saveConfig({ section: 'autonomy', data: { unattended: ['search', 'submit'] } }), /always need the user/);
 });
 

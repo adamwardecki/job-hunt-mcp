@@ -16,6 +16,7 @@ This is the command the weekday scheduled task runs. It runs as a local schedule
 - Every role you touch gets a tracker event (`upsert_role`, `transition` or `record`) with a reason; pass the `run_id` on events. A stop hook refuses to end this session until that is true and `render_report` was called (Claude Code: `Stop`; Hermes: a post-turn check that sends you back with a `[job-hunt]` note).
 - Hooks block send tools, unlinted drafts, submit clicks and similar. If a hook denies an action, report the denial in the run summary. Do not retry it another way.
 - Keep the final output short: the report, then nothing else.
+- **Commands the user types carry the real role id.** Write them filled in, next to the company and title, e.g. "Acme, Senior Engineer: `/job-hunt:apply 42`". Never show `<id>` or `<role_id>` placeholders: the user does not know the ids.
 
 ## Arguments
 

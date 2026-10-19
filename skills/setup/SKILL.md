@@ -16,6 +16,7 @@ The skill drives the conversation. The tracker tools validate and persist. Every
 - **Tell the user where personal data lives** before saving any of it: the tracker database (a local file in `~/.job-hunt`, readable only by their OS account), and any connector they add.
 - Templates in `${CLAUDE_PLUGIN_ROOT}/templates/` (Hermes: `${HERMES_SKILL_DIR}/../../templates/`) are the shape for documents and config. Never pre-fill them with example values as if they were the user's.
 - Each step ends with a `save_config` or `save_document` call, or a `record_setup_decision` call (item key and the user's decision in their words) when the user chooses to skip or accept an amber item. If `save_config` returns field errors, fix them with the user, do not drop the fields.
+- **Before each `save_config`, read that section in `templates/settings.example.yaml`** and use its field names and types exactly. Do not invent fields (`remote`, `locations`, `role_types` do not exist). Common mappings: where they can work from → `filters.work_authorisation`; contract types → `filters.pay_floor.contract_type` and `prefs.contract_ok`; target roles → `prefs.titles` and `prefs.seniority`; roles to avoid → `filters.excluded_role_shapes`. If an answer fits no field, tell the user and offer `add_rule`. Never drop it silently. On a validation error, the error lists the section's expected fields: fix the call from that list.
 
 ## Steps
 
@@ -62,9 +63,11 @@ Scripts live in `${CLAUDE_PLUGIN_ROOT}/scripts/` (Hermes: `${HERMES_SKILL_DIR}/.
 Ask, in order: work mode (remote, hybrid, onsite; multi-select); for hybrid, max days per week and acceptable cities; residence country; timezone and acceptable overlap window; work authorisation (where no sponsorship is needed); pay floor (amount, currency, period, gross or net, and contract type); the equity rule (default: floor unchanged, equity may justify a "negotiable" answer inside the band); excluded industries; excluded role shapes (e.g. backend-only, forward-deployed, people manager); culture red lines.
 - Explain the band rule: a role drops on pay only if the band **maximum** is below the floor; straddling bands are kept and flagged.
 - Echo all filters back on one screen, then `save_config` with `section: "filters"`.
+- Fields: `work_mode`, `hybrid`, `residence_country`, `timezone`, `overlap_window`, `work_authorisation`, `pay_floor`, `pay_rule_with_equity`, `band_rule`, `excluded_industries`, `excluded_role_shapes`, `culture_red_lines`.
 
 ### 3. Soft preferences (`prefs`)
 Titles, seniority, company stage, stack want and avoid, domains they like, contract openness, availability date. These only affect the score. `save_config` with `section: "prefs"`.
+- Fields: `titles`, `seniority`, `stage`, `stack_want`, `stack_avoid`, `domains_like`, `contract_ok`, `availability`.
 
 ### 4. Writing rules (`writing`)
 - Offer to learn the user's voice from 2 to 5 samples they wrote (emails, cover letters, posts). If they agree, summarise the voice (sentence length, register, words they use and avoid) and `save_document` with `name: "voice"`.
@@ -72,12 +75,14 @@ Titles, seniority, company stage, stack want and avoid, domains they like, contr
 - Show the list of **personal fields the plugin will never fill**: passport, nationality or citizenship, age or date of birth, marital status, gender, ethnicity, disability, veteran status, religion, sexual orientation, national ID, tax or social security numbers, photos, passwords. Also: consent boxes stay on the privacy-preserving option unless the user allows them per role.
 - Seed `reusable-answers` from `templates/reusable-answers.md` with the user's answers to the common fields (notice period, salary answer wording, work authorisation statement, how they heard). `save_document` with `name: "reusable-answers"`.
 - `save_config` with `section: "writing"`.
+- Fields: `voice_profile`, `humanizer`, `max_words_cover_note`, `never_volunteer_gaps`, `signature_style`.
 
 ### 5. Accounts (`accounts`)
-- Ask which inbox recruiters actually write to, and **which calendar interview invites land on**.
-- Compare with the connected Google account(s) and record it as `connected_calendar`. If the connected calendar is a different account, warn plainly: invites will not be visible to the pipeline, and colleagues may book over interviews. Offer to connect the right account. Why: interviews once sat on a personal calendar the pipeline could not see.
+- Ask which of the user's own inboxes recruiters actually write to (`job_inbox_email`), and **which calendar interview invites land on** (`invite_calendar`). Both are required. Store the address or a label such as `personal` or `work`.
+- Compare with the connected Google account(s) and record the connected one as `connected_calendar`. If the connected calendar is a different account, warn plainly: invites will not be visible to the pipeline, and colleagues may book over interviews. Offer to connect the right account. Why: interviews once sat on a personal calendar the pipeline could not see.
 - Ask whether the browser autofills a different (e.g. work) email into forms; record it as `chrome_autofill_risk`.
-- `save_config` with `section: "accounts"`.
+- `save_config` with `section: "accounts"`. Job-site logins are not accounts: they go in `sources.need_login` in step 8.
+- Fields: `job_inbox_email`, `invite_calendar`, `connected_calendar`, `chrome_autofill_risk`.
 
 ### 6. Connectors
 - Search the connector registry (or the host's connector suggestion tool) and suggest: Gmail, Google Calendar, and LinkedIn (read-only use: job search and inbox). The tracker is already connected: it ships with the plugin.
@@ -87,11 +92,12 @@ Titles, seniority, company stage, stack want and avoid, domains they like, contr
 
 ### 7. Browser check
 - Detect Claude in Chrome, the built-in browser, or Hermes `browser_*` tools (check the tool list; use tool search if tools are deferred). If neither is present, show install steps and move on. The browser is optional.
-- If one is present: open a harmless page, then check which job sites are logged in (Wellfound, LinkedIn, YC Work at a Startup, Welcome to the Jungle, any tracker boards). A login redirect on a **guessed** URL is not proof of being logged out; use URLs from the user or from emails.
+- If one is present: open a harmless page, then check which job sites are logged in (Wellfound, LinkedIn, YC Work at a Startup, Welcome to the Jungle, any tracker boards). Use the start URLs in the `source-roles` reference for those sites, and URLs from the user or from emails for anything else. A login redirect on a **guessed** URL is not proof of being logged out.
 - Capabilities are recorded by `start_run`; no `save_config` needed. Note logged-in sites for step 8. No browser at all: `record_setup_decision` (key from `setup_status`) with the user's choice, e.g. "no browser, connectors only".
 
 ### 8. Sources
-Show the catalogue from the `source-roles` skill with each source's mode and reliability. Let the user pick. Mark which need login and which need a browser, and which are retired by default. Save with `save_config` (`section: "sources"`, `data: {enabled, need_login, disabled}`), and call `set_source_status` with `disabled` for each disabled source.
+Show the catalogue from the `source-roles` skill with each source's mode and reliability. Let the user pick. Mark which need login and which need a browser, and which are retired by default. If they enable `ats_boards`, ask for the job board URLs of companies they want to watch (e.g. `https://jobs.ashbyhq.com/<company>`, a Greenhouse or Lever board); without at least one, leave `ats_boards` disabled. The other sources start from fixed URLs in the `source-roles` reference: do not ask for those. Save with `save_config` (`section: "sources"`), and call `set_source_status` with `disabled` for each disabled source.
+- Fields: `enabled`, `need_login`, `disabled`, `boards`.
 
 ### 9. Autonomy (`autonomy`)
 Show the defaults and confirm them:
@@ -104,10 +110,11 @@ Explain that hooks enforce the second list regardless of this config. `save_conf
 - Say plainly that the task only runs while the machine is awake and the app is open, and save the window as `desktop_usually_on`.
 - Ask how the daily report should arrive: as the run's output (`artifact`), a file in the local folder (`file`, desktop runs only), or a Gmail draft to themselves (`email_draft`). Save it as `report_delivery`.
 - `save_config` with `section: "schedule"`.
+- Fields: `daily` (`days`, `time`, `tz`), `desktop_usually_on`, `report_delivery`.
 
 ### 11. Calibration run
 - Run the sweep procedure from `/job-hunt:sweep` with `--limit 5 --calibration`.
-- Show the 5 results with the verdict and the one-line reason for each.
+- Show the 5 results with the verdict and the one-line reason for each. For queued ones, add the ready-to-type command with the real id, e.g. `/job-hunt:apply 42`, never a `<id>` placeholder.
 - For each "no, because..." from the user, call `add_rule` with the text, the user's reason and the example. For each "yes, but you dropped it", follow `/job-hunt:correct`.
 - Offer `/job-hunt:import` if the user has a legacy pipeline.
 
