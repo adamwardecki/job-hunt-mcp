@@ -2,7 +2,7 @@
 
 const CMDS = {
   sweep: {
-    line: "/job-hunt:sweep",
+    line: "/j-hunt:sweep",
     out: [
       "Inbox: 6 threads · 2 reply drafts, read back ✓",
       "Sources: 6 · 46 leads · 12 known companies skipped",
@@ -11,16 +11,16 @@ const CMDS = {
     ],
   },
   setup: {
-    line: "/job-hunt:setup",
+    line: "/j-hunt:setup",
     out: [
       "Step 2 of 11 · Hard filters",
       "Work mode: remote, hybrid (Lisbon)",
       "Pay floor: €80k, dropped only if the top of the band is lower",
-      "Saved. Resume any time with /job-hunt:setup",
+      "Saved. Resume any time with /j-hunt:setup",
     ],
   },
   status: {
-    line: "/job-hunt:status",
+    line: "/j-hunt:status",
     out: [
       "Needs you: 1 question about Pinecrest",
       "Thu 14:00 · Halyard · technical screen",
@@ -28,16 +28,16 @@ const CMDS = {
     ],
   },
   apply: {
-    line: "/job-hunt:apply 42",
+    line: "/j-hunt:apply 42",
     out: [
       "Opened Halyard application in browser",
       "Filled 14 fields · read back ✓",
       "Left 2 consent boxes unticked",
-      "!Waiting for /job-hunt:approve 42",
+      "!Waiting for /j-hunt:approve 42",
     ],
   },
   approve: {
-    line: "/job-hunt:approve 42",
+    line: "/j-hunt:approve 42",
     out: [
       "Approval noted · gate check passed",
       "Final read-back matches ✓",
@@ -46,7 +46,7 @@ const CMDS = {
     ],
   },
   consent: {
-    line: "/job-hunt:allow-consent 42",
+    line: "/j-hunt:allow-consent 42",
     out: [
       "Consent allowed for role 42 in this session",
       'Ticked "I agree to the processing of my data for this application"',
@@ -54,14 +54,14 @@ const CMDS = {
     ],
   },
   cover: {
-    line: "/job-hunt:cover-letter 43 --pdf",
+    line: "/j-hunt:cover-letter 43 --pdf",
     out: [
       "Drafted 184 words in your voice · writing check passed",
       "Exported one A4 page · checked visually",
     ],
   },
   prep: {
-    line: "/job-hunt:prep pinecrest",
+    line: "/j-hunt:prep pinecrest",
     out: [
       "Prep sheet · Pinecrest Health · technical screen",
       "10 likely questions mapped to your stories",
@@ -70,7 +70,7 @@ const CMDS = {
     ],
   },
   correct: {
-    line: "/job-hunt:correct",
+    line: "/j-hunt:correct",
     out: [
       'Noted: "Fintech is fine, crypto isn\'t"',
       "+Saved as rule 12, with your reason and the example",
@@ -78,7 +78,7 @@ const CMDS = {
     ],
   },
   triage: {
-    line: "/job-hunt:triage jobcopilot",
+    line: "/j-hunt:triage jobcopilot",
     out: [
       "Applied column reconciled · 2 cards recorded in the tracker",
       "6 new leads from Saved",
@@ -86,7 +86,7 @@ const CMDS = {
     ],
   },
   import: {
-    line: "/job-hunt:import ~/notes/job-search",
+    line: "/j-hunt:import ~/notes/job-search",
     out: [
       "Read applied-log.md · 23 rows",
       "Imported 19 roles, 14 rules, 3 queue notes",
@@ -101,7 +101,7 @@ const CLIENTS = {
     step2:
       "The local tracker starts automatically and keeps its data in ~/.job-hunt/tracker.db",
     config:
-      "/plugin marketplace add adamwardecki/job-hunt-mcp\n/plugin install job-hunt@job-hunt-mcp",
+      "/plugin marketplace add adamwardecki/job-hunt-mcp\n/plugin install j-hunt@job-hunt-mcp",
   },
   hermes: {
     step1: "Install the native plugin from a checkout",
@@ -121,7 +121,7 @@ function initCopy() {
   btn.addEventListener("click", async () => {
     clearTimeout(timer);
     try {
-      await navigator.clipboard.writeText("/job-hunt:setup");
+      await navigator.clipboard.writeText("/j-hunt:setup");
       label.textContent = "Copied!";
     } catch {
       label.textContent = "Select & copy";

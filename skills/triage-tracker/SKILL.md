@@ -1,6 +1,6 @@
 ---
 name: triage-tracker
-description: Safely reconciles and cleans third-party job tracker boards (JobCopilot-style kanban columns such as Saved, Applied, Contacted) in the browser, resolving columns by header text and running guard.js before every delete round. Use for /job-hunt:triage, for reconciling an auto-apply tool's Applied column against the tracker, or before any delete, archive or bulk action on a job board.
+description: Safely reconciles and cleans third-party job tracker boards (JobCopilot-style kanban columns such as Saved, Applied, Contacted) in the browser, resolving columns by header text and running guard.js before every delete round. Use for /j-hunt:triage, for reconciling an auto-apply tool's Applied column against the tracker, or before any delete, archive or bulk action on a job board.
 ---
 
 # Triage tracker

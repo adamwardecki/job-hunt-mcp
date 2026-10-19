@@ -3,7 +3,7 @@
 <!--
 Rules are your standing preferences and corrections. They live in the tracker (add_rule, list_rules,
 deactivate_rule), not in this file. This template shows what a good rule looks like, so the ones
-you add by hand or via /job-hunt:correct are usable by a future run that has never seen the conversation.
+you add by hand or via /j-hunt:correct are usable by a future run that has never seen the conversation.
 -->
 
 Every rule has four parts:

@@ -107,7 +107,7 @@ async function browserGate(payload: HookPayload, session: SessionState, short: s
       return;
     }
     if (label && C.CONSENT.test(label) && C.truthy(input.value) && !consentAllowed(session, page)) {
-      deny(payload, session, `"${accName}" is a consent (recording, marketing, talent pool). Choose the privacy-preserving option, or ask the user to type /job-hunt:allow-consent <role_id>.`);
+      deny(payload, session, `"${accName}" is a consent (recording, marketing, talent pool). Choose the privacy-preserving option, or ask the user to type /j-hunt:allow-consent <role_id>.`);
       return;
     }
     return;
@@ -124,7 +124,7 @@ async function browserGate(payload: HookPayload, session: SessionState, short: s
     return;
   }
   if (C.CONSENT.test(label) && /checkbox|radio|switch/i.test(label) && !C.isDecline(accName) && !consentAllowed(session, page)) {
-    deny(payload, session, `"${accName}" ticks a consent. Leave it unticked (privacy-preserving), or ask the user to type /job-hunt:allow-consent <role_id>.`);
+    deny(payload, session, `"${accName}" ticks a consent. Leave it unticked (privacy-preserving), or ask the user to type /j-hunt:allow-consent <role_id>.`);
     return;
   }
   if (C.SUBMIT.test(accName) && !/^apply (?:filters?|changes)$/i.test(accName)) return submitGate(payload, session, `"${accName}"`, page);
@@ -139,7 +139,7 @@ function consentAllowed(session: SessionState, page: { url: string; tab_id?: str
 async function submitGate(payload: HookPayload, session: SessionState, what: string, page: { url: string; tab_id?: string } | null): Promise<void> {
   const approvals = activeApprovals(session.approvals);
   if (!approvals.length) {
-    deny(payload, session, `Submit blocked: ${what} needs the user's approval in this session. Stop here, show the filled form, and ask the user to type /job-hunt:approve <role_id>. Do not work around this.`);
+    deny(payload, session, `Submit blocked: ${what} needs the user's approval in this session. Stop here, show the filled form, and ask the user to type /j-hunt:approve <role_id>. Do not work around this.`);
     return;
   }
   if (!page) {
@@ -235,7 +235,7 @@ const USER_COMMANDS = new Set(['sweep', 'apply', 'triage', 'setup', 'prep', 'sta
 function userCommand(text: string): { name: string; args: string } | null {
   // Approval must be the user's whole prompt. Mentions, quotations, negations and code examples do
   // not count as authorization.
-  const match = text.trim().match(/^\/(?:job-hunt:)?([a-z-]+)(?:\s+([\s\S]*?))?\s*$/);
+  const match = text.trim().match(/^\/(?:j-hunt:)?([a-z-]+)(?:\s+([\s\S]*?))?\s*$/);
   if (!match?.[1] || !USER_COMMANDS.has(match[1])) return null;
   return { name: match[1], args: (match[2] || '').trim() };
 }

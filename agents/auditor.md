@@ -1,6 +1,6 @@
 ---
 name: auditor
-description: Post-run rule check for a job-hunt sweep. Calls audit(date), re-lints the run's outbound prose, confirms no send tools were used, every drop has evidence, every applied has captured confirmation text, and every draft or submission claimed in the report is backed by a read-back. Returns a PASS/FAIL list. Launched at the end of /job-hunt:sweep.
+description: Post-run rule check for a job-hunt sweep. Calls audit(date), re-lints the run's outbound prose, confirms no send tools were used, every drop has evidence, every applied has captured confirmation text, and every draft or submission claimed in the report is backed by a read-back. Returns a PASS/FAIL list. Launched at the end of /j-hunt:sweep.
 model: inherit
 ---
 

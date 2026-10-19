@@ -324,47 +324,47 @@
         <div class="command-workbench">
           <div class="command-list" aria-label="Command examples">
             <button class="cmd" data-cmd="sweep" type="button">
-              <span>/job-hunt:sweep</span>
+              <span>/j-hunt:sweep</span>
               <span>Your daily search routine</span>
             </button>
             <button class="cmd" data-cmd="setup" type="button">
-              <span>/job-hunt:setup</span>
+              <span>/j-hunt:setup</span>
               <span>Profile, filters, sources</span>
             </button>
             <button class="cmd" data-cmd="status" type="button">
-              <span>/job-hunt:status</span>
+              <span>/j-hunt:status</span>
               <span>Pipeline at a glance</span>
             </button>
             <button class="cmd" data-cmd="apply" type="button">
-              <span>/job-hunt:apply &lt;role-id&gt;</span>
+              <span>/j-hunt:apply &lt;role-id&gt;</span>
               <span>Fill the form, read it back</span>
             </button>
             <button class="cmd" data-cmd="approve" type="button">
-              <span>/job-hunt:approve &lt;role-id&gt;</span>
+              <span>/j-hunt:approve &lt;role-id&gt;</span>
               <span>Approve a waiting application</span>
             </button>
             <button class="cmd" data-cmd="consent" type="button">
-              <span>/job-hunt:allow-consent &lt;role-id&gt;</span>
+              <span>/j-hunt:allow-consent &lt;role-id&gt;</span>
               <span>Let it tick a consent box</span>
             </button>
             <button class="cmd" data-cmd="cover" type="button">
-              <span>/job-hunt:cover-letter &lt;role-id&gt;</span>
+              <span>/j-hunt:cover-letter &lt;role-id&gt;</span>
               <span>Full letter, optional PDF</span>
             </button>
             <button class="cmd" data-cmd="prep" type="button">
-              <span>/job-hunt:prep &lt;company&gt;</span>
+              <span>/j-hunt:prep &lt;company&gt;</span>
               <span>Interview prep sheet</span>
             </button>
             <button class="cmd" data-cmd="correct" type="button">
-              <span>/job-hunt:correct</span>
+              <span>/j-hunt:correct</span>
               <span>Turn a mistake into a rule</span>
             </button>
             <button class="cmd" data-cmd="triage" type="button">
-              <span>/job-hunt:triage &lt;source&gt;</span>
+              <span>/j-hunt:triage &lt;source&gt;</span>
               <span>Clean up third-party boards</span>
             </button>
             <button class="cmd" data-cmd="import" type="button">
-              <span>/job-hunt:import [path]</span>
+              <span>/j-hunt:import [path]</span>
               <span>Bring in your old notes</span>
             </button>
           </div>
@@ -375,13 +375,13 @@
             </div>
             <div class="terminal-body">
               <p class="terminal-prompt">
-                › <span id="cmd-line">/job-hunt:apply 42</span>
+                › <span id="cmd-line">/j-hunt:apply 42</span>
               </p>
               <div id="cmd-out" aria-live="polite">
                 <div>Opened Halyard application in browser</div>
                 <div>Filled 14 fields · read back ✓</div>
                 <div>Left 2 consent boxes unticked</div>
-                <div>Waiting for /job-hunt:approve 42</div>
+                <div>Waiting for /j-hunt:approve 42</div>
               </div>
             </div>
             <p class="terminal-caption">
@@ -442,7 +442,7 @@
                 </h3>
                 <pre id="install-config">
 /plugin marketplace add adamwardecki/job-hunt-mcp
-/plugin install job-hunt@job-hunt-mcp</pre>
+/plugin install j-hunt@job-hunt-mcp</pre>
               </div>
             </div>
             <div class="install-step">
@@ -459,7 +459,7 @@
               <div>
                 <h3>Let’s get to know you.</h3>
                 <button id="copy-setup" class="copy-command" type="button">
-                  <code>/job-hunt:setup</code
+                  <code>/j-hunt:setup</code
                   ><span id="copy-label" aria-live="polite">Copy</span>
                 </button>
                 <p>

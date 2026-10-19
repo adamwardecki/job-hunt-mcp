@@ -5,18 +5,18 @@ argument-hint: "[--limit N] [--calibration]"
 
 Run today's job-hunt sweep. Arguments: `$ARGUMENTS`
 
-**If the tracker tools are missing** (search for them first if tools are deferred), or a hook error says `node` could not start: Node.js, which the plugin runs on, is missing or too old. Record nothing. End the run with one sentence saying so and that `/job-hunt:setup` installs it.
+**If the tracker tools are missing** (search for them first if tools are deferred), or a hook error says `node` could not start: Node.js, which the plugin runs on, is missing or too old. Record nothing. End the run with one sentence saying so and that `/j-hunt:setup` installs it.
 
 This is the command the weekday scheduled task runs. It runs as a local scheduled task, and the browser may not be connected, so it must complete with **connectors and the tracker only**. A browser or a local folder is a bonus, never a requirement.
 
 ## Hard rules
 
-- **Never submit an application, never send anything.** Drafts only. Applying happens later in `/job-hunt:apply` with the user present. Why: the unattended run has no approval from the user, and submissions are irreversible.
+- **Never submit an application, never send anything.** Drafts only. Applying happens later in `/j-hunt:apply` with the user present. Why: the unattended run has no approval from the user, and submissions are irreversible.
 - Never report work you could not do. If a capability is missing, say so in the report and queue the work.
 - Every role you touch gets a tracker event (`upsert_role`, `transition` or `record`) with a reason; pass the `run_id` on events. A stop hook refuses to end this session until that is true and `render_report` was called (Claude Code: `Stop`; Hermes: a post-turn check that sends you back with a `[job-hunt]` note).
 - Hooks block send tools, unlinted drafts, submit clicks and similar. If a hook denies an action, report the denial in the run summary. Do not retry it another way.
 - Keep the final output short: the report, then nothing else.
-- **Commands the user types carry the real role id.** Write them filled in, next to the company and title, e.g. "Acme, Senior Engineer: `/job-hunt:apply 42`". Never show `<id>` or `<role_id>` placeholders: the user does not know the ids.
+- **Commands the user types carry the real role id.** Write them filled in, next to the company and title, e.g. "Acme, Senior Engineer: `/j-hunt:apply 42`". Never show `<id>` or `<role_id>` placeholders: the user does not know the ids.
 
 ## Arguments
 
@@ -25,7 +25,7 @@ This is the command the weekday scheduled task runs. It runs as a local schedule
 
 ## Procedure
 
-**Agents.** "Launch a `sourcer`/`scorer`/`auditor` agent" means: on Claude Code, the plugin subagent of that name; on Hermes, `delegate_task` with the goal as stated and `context` set to the full text of skill `job-hunt:agent-<name>` (load it with `skill_view`) plus the inputs listed here.
+**Agents.** "Launch a `sourcer`/`scorer`/`auditor` agent" means: on Claude Code, the plugin subagent of that name; on Hermes, `delegate_task` with the goal as stated and `context` set to the full text of skill `j-hunt:agent-<name>` (load it with `skill_view`) plus the inputs listed here.
 
 1. **Status and capabilities.**
    - Call `setup_status`. If the tracker itself is unreachable, stop and say so: there is nowhere to record work.
