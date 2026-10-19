@@ -9,7 +9,7 @@ const SUFFIXES = new Set([
 
 export function normalizeName(name: string | null | undefined): string {
   if (!name) return '';
-  let s = String(name)
+  const s = String(name)
     .normalize('NFKD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
@@ -27,7 +27,7 @@ export function normalizeDomain(input: string | null | undefined): string {
   if (!input) return '';
   let s = String(input).trim().toLowerCase();
   try {
-    if (!/^[a-z]+:\/\//.test(s)) s = 'https://' + s;
+    if (!/^[a-z]+:\/\//.test(s)) s = `https://${s}`;
     s = new URL(s).hostname;
   } catch {
     return '';
@@ -43,7 +43,7 @@ export interface AtsMatch {
 // Slug of the employer on a hosted ATS, e.g. jobs.ashbyhq.com/<slug>/...
 export function atsFromUrl(url: string | null | undefined): AtsMatch {
   if (!url) return { ats: null, slug: null };
-  let u;
+  let u: URL;
   try {
     u = new URL(url);
   } catch {

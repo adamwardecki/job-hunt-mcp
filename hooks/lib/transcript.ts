@@ -1,7 +1,7 @@
 // Read the session transcript (JSONL) to see what the model has already seen and done:
 // element labels behind browser refs, the current page URL, tool calls and their results.
 
-import { openSync, readSync, fstatSync, closeSync } from 'node:fs';
+import { closeSync, fstatSync, openSync, readSync } from 'node:fs';
 import { isRecord } from '../../servers/tracker/src/util.ts';
 import type { ToolInput, ToolStep } from './types.ts';
 

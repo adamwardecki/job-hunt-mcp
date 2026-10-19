@@ -1,13 +1,14 @@
 // scripts/install-node.{sh,ps1}: newest LTS from index.tab, checksum verified, nothing opened in a dry run,
 // --check honours the 22.18 / 23.4 floor and an older Node first on PATH. Runs against a fixture dist dir,
 // never the network.
-import { test } from 'node:test';
+
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, chmodSync, existsSync, readFileSync, readdirSync } from 'node:fs';
-import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, dirname } from 'node:path';
+import { dirname, join } from 'node:path';
+import { test } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const SH = fileURLToPath(new URL('../scripts/install-node.sh', import.meta.url));
@@ -21,7 +22,7 @@ const row = (v: string, lts: string) => [v, '2026-10-14', 'osx-x64-pkg,win-x64-m
 function fixtureDist({ corrupt = false, badVersion = false }: { corrupt?: boolean; badVersion?: boolean } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'jh-dist-'));
   const rows = [row('v99.0.0', '-'), ...(badVersion ? [row('v1/../../x', 'Evil')] : []), row('v98.1.0', 'Fixture'), row('v97.0.0', 'Older')];
-  writeFileSync(join(dir, 'index.tab'), [HEADER, ...rows].join('\n') + '\n');
+  writeFileSync(join(dir, 'index.tab'), `${[HEADER, ...rows].join('\n')}\n`);
   for (const v of ['v99.0.0', 'v98.1.0', 'v97.0.0']) {
     mkdirSync(join(dir, v));
     const sums = [];
@@ -30,7 +31,7 @@ function fixtureDist({ corrupt = false, badVersion = false }: { corrupt?: boolea
       writeFileSync(join(dir, v, file), body);
       sums.push(`${createHash('sha256').update(corrupt ? 'tampered' : body).digest('hex')}  ${file}`);
     }
-    writeFileSync(join(dir, v, 'SHASUMS256.txt'), sums.join('\n') + '\n');
+    writeFileSync(join(dir, v, 'SHASUMS256.txt'), `${sums.join('\n')}\n`);
   }
   return pathToFileURL(dir).href;
 }
@@ -134,7 +135,7 @@ test('sh: a new Node in the default location but not on PATH is fine', { skip: n
 test('sh: an old Node is reported before the LTS is downloaded', { skip: noBash }, () => {
   const r = sh(['--dry-run'], { JOB_HUNT_NODE: fakeNode('v22.12.0'), JOB_HUNT_NODE_DIST: fixtureDist() });
   assert.equal(r.status, 0, r.stderr);
-  assert.match(r.stdout, /too old; the plugin needs 22\.18 or newer \(23\.x needs 23\.4 or newer\)\.\nInstalling the current LTS\.\n[^]*Downloading[^]*about 90 MB/);
+  assert.match(r.stdout, /too old; the plugin needs 22\.18 or newer \(23\.x needs 23\.4 or newer\)\.\nInstalling the current LTS\.\n[\s\S]*Downloading[\s\S]*about 90 MB/);
 });
 
 test('sh: an LTS version that is not vX.Y.Z is refused before any download', { skip: noBash }, () => {
@@ -296,7 +297,7 @@ test('ps1: a new Node in the default location but not on PATH is fine', { skip: 
 test('ps1: an old Node is reported before the LTS is downloaded', { skip: noPwsh }, () => {
   const r = ps(['-DryRun'], { JOB_HUNT_NODE: fakeNode('v22.12.0'), JOB_HUNT_NODE_DIST: fixtureDist() });
   assert.equal(r.status, 0, r.stderr);
-  assert.match(r.stdout, /too old; the plugin needs 22\.18 or newer \(23\.x needs 23\.4 or newer\)\.\r?\nInstalling the current LTS\.\r?\n[^]*Downloading[^]*about 30 MB/);
+  assert.match(r.stdout, /too old; the plugin needs 22\.18 or newer \(23\.x needs 23\.4 or newer\)\.\r?\nInstalling the current LTS\.\r?\n[\s\S]*Downloading[\s\S]*about 30 MB/);
 });
 
 test('ps1: an LTS version that is not vX.Y.Z is refused before any download', { skip: noPwsh }, () => {
