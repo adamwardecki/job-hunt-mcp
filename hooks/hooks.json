@@ -1,0 +1,25 @@
+{
+  "description": "job-hunt hard gates: no sends, approved and verified submits only, guarded board deletes, no personal data or consents, drafts read back, sweeps finish with events and a report. Mail, LinkedIn and browser tools are blocked if the gate cannot start or times out.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^mcp__.*(?:[Bb]rowser|[Cc]hrome|[Pp]laywright|[Pp]uppeteer|[Cc]omputer|[Mm]ail|[Oo]utlook|[Ll]inked[Ii]n).*$",
+        "hooks": [{ "type": "command", "command": "node --no-warnings \"${CLAUDE_PLUGIN_ROOT}/hooks/main.ts\" pre-tool", "timeout": 15, "onFailure": "block" }]
+      },
+      {
+        "matcher": "^mcp__(?!.*(?:[Bb]rowser|[Cc]hrome|[Pp]laywright|[Pp]uppeteer|[Cc]omputer|[Mm]ail|[Oo]utlook|[Ll]inked[Ii]n)).*$",
+        "hooks": [{ "type": "command", "command": "node --no-warnings \"${CLAUDE_PLUGIN_ROOT}/hooks/main.ts\" pre-tool", "timeout": 15 }]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [{ "type": "command", "command": "node --no-warnings \"${CLAUDE_PLUGIN_ROOT}/hooks/main.ts\" prompt", "timeout": 15 }]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [{ "type": "command", "command": "node --no-warnings \"${CLAUDE_PLUGIN_ROOT}/hooks/main.ts\" stop", "timeout": 15 }]
+      }
+    ]
+  }
+}

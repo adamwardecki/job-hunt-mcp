@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JobHunt · Good work is out there.</title>
+    <meta
+      name="description"
+      content="A little help with the job hunt. JobHunt finds roles that fit, checks the fine print, and drafts your applications. You decide what goes out. For Claude Code and Hermes Agent."
+    />
+    <meta property="og:title" content="JobHunt · Good work is out there." />
+    <meta
+      property="og:description"
+      content="Fewer tabs. Better matches. A job-search companion for Claude Code and Hermes Agent."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://adamwardecki.github.io/job-hunt-mcp/" />
+    <meta
+      property="og:image"
+      content="https://adamwardecki.github.io/job-hunt-mcp/assets/og.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href="https://adamwardecki.github.io/job-hunt-mcp/" />
+    <meta name="theme-color" content="#f6f3eb" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="preload"
+      href="assets/fonts/geist-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="assets/style.css" />
+    <script src="assets/main.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="#top" class="brand" aria-label="JobHunt home"
+          ><span class="brand-mark" aria-hidden="true">j<span>h</span></span
+          >JobHunt</a
+        >
+        <nav aria-label="Main navigation">
+          <a href="#how">The idea</a><a href="#commands">Take a look</a
+          ><a class="nav-github" href="https://github.com/adamwardecki/job-hunt-mcp"
+            >GitHub ↗</a
+          >
+        </nav>
+        <a class="button button-small" href="#install"
+          >Get JobHunt <span aria-hidden="true">↗</span></a
+        >
+      </div>
+    </header>
+    <main id="main">
+      <section class="hero container" id="top">
+        <div class="hero-copy">
+          <h1>Good work<br />is out there.<br /><em>Let’s find yours.</em></h1>
+          <ul class="hero-bullets">
+            <li>Free and always will be</li>
+            <li>Local, so your data stays yours</li>
+            <li>Extensible and customizable</li>
+          </ul>
+          <div class="hero-actions">
+            <a class="button" href="#install"
+              >Find your next thing <span aria-hidden="true">↗</span></a
+            ><a class="text-link" href="#how"
+              >How it works <span aria-hidden="true">↓</span></a
+            >
+          </div>
+          <div class="works-with">
+            <span>At home in</span><a href="#install">✳ Claude Code</a
+            ><span class="works-divider">/</span
+            ><a href="#install">Hermes Agent ↗</a>
+          </div>
+        </div>
+        <div class="hero-art">
+          <div class="orbit-label" aria-hidden="true">
+            <svg viewBox="0 0 80 80">
+              <g fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="40" cy="40" r="17" />
+                <path
+                  d="M40 0v17m0 46v17M0 40h17m46 0h17M12 12l12 12m32 32 12 12M12 68l12-12m32-32 12-12M24 3l7 16m18 42 7 16M3 24l16 7m42 18 16 7M3 56l16-7m42-18 16-7M24 77l7-16M49 19l7-16"
+                />
+              </g></svg
+            ><span>Less scrolling.<br />More living.</span>
+          </div>
+          <article
+            class="morning-note"
+            aria-label="Illustrative morning shortlist"
+          >
+            <div class="note-top">
+              <span class="eyebrow">Your morning shortlist</span
+              ><span class="note-date">FRI / 07:33</span>
+            </div>
+            <h2>Morning.<br />A few good possibilities.</h2>
+            <p class="note-intro">
+              46 roles checked. These 3 are worth a look.
+            </p>
+            <div class="role">
+              <span class="role-number">01</span>
+              <div>
+                <h3>Senior Platform Engineer</h3>
+                <p>Halyard · Remote, EU · €95–115k</p>
+                <span class="role-detail"
+                  >Matches your remote + salary preferences</span
+                >
+              </div>
+              <span class="match-mark" aria-label="Match">↗</span>
+            </div>
+            <div class="role">
+              <span class="role-number">02</span>
+              <div>
+                <h3>Backend Engineer, Payments</h3>
+                <p>Ostra · Hybrid, Lisbon · €80–98k</p>
+                <span class="role-detail"
+                  >Cover note drafted. Sounds like you.</span
+                >
+              </div>
+              <span class="match-mark" aria-label="Match">↗</span>
+            </div>
+            <div class="role">
+              <span class="role-number">03</span>
+              <div>
+                <h3>Staff Engineer</h3>
+                <p>Pinecrest Health · Remote, Europe</p>
+                <span class="role-detail role-question"
+                  >One catch: 2 days a month in Berlin.</span
+                >
+              </div>
+              <span class="match-mark question-mark" aria-label="Needs review"
+                >?</span
+              >
+            </div>
+            <div class="note-bottom">
+              <span><span class="status-dot"></span> Ready when you are</span
+              ><span>0 applications sent</span>
+            </div>
+          </article>
+          <div class="handwritten" aria-hidden="true">
+            <svg viewBox="0 0 66 50" fill="none">
+              <path
+                d="M60 43C30 46 8 34 12 4m-9 9L12 3l10 10"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              /></svg
+            >you get the final say.
+          </div>
+        </div>
+      </section>
+      <div class="belief-strip">
+        <div class="container">
+          <span>Your search. <em>Your pace.</em></span
+          ><span
+            >Fewer, better applications.
+            <span aria-hidden="true">✳</span></span
+          >
+        </div>
+      </div>
+      <section class="section container" id="how">
+        <div class="section-heading">
+          <p class="eyebrow">01 / A calmer routine</p>
+          <h2>The job hunt can take<br />over your day. <em>Let’s not.</em></h2>
+          <p>
+            Give JobHunt your must-haves, your deal-breakers, and a sense of who
+            you are. Then let it handle the repetitive part.
+          </p>
+        </div>
+        <div class="steps">
+          <article class="step">
+            <div class="step-illustration preferences" aria-hidden="true">
+              <span>✓ Remote in Europe</span><span>✓ €80k or above</span
+              ><span class="crossed">Anything with “rockstar”</span
+              ><span class="pencil-note">your rules, always.</span>
+            </div>
+            <div class="step-title">
+              <span>01</span>
+              <h3>Start with what matters.</h3>
+            </div>
+            <p>
+              Bring your CV and tell it what you want next. A five-role trial
+              helps you fine-tune the fit. Every “no, because…” makes the next
+              search better.
+            </p>
+          </article>
+          <article class="step">
+            <div class="step-illustration search-stack" aria-hidden="true">
+              <span>Job boards, company pages, the usual places</span>
+              <div class="search-line">
+                <i></i><i></i><i></i><i></i><i></i><i></i>
+              </div>
+              <div class="shortlist-chip">↓ &nbsp; The roles that fit</div>
+            </div>
+            <div class="step-title">
+              <span>02</span>
+              <h3>Leave the tab-hopping to it.</h3>
+            </div>
+            <p>
+              On your schedule, JobHunt searches your chosen sources, checks the
+              employer’s actual posting, and skips companies you’ve already
+              spoken to.
+            </p>
+          </article>
+          <article class="step">
+            <div class="step-illustration draft-note" aria-hidden="true">
+              <span>Hello, Halyard team.</span>
+              <div></div>
+              <div></div>
+              <div></div>
+              <span class="draft-stamp">DRAFT · FOR YOUR EYES FIRST</span>
+            </div>
+            <div class="step-title">
+              <span>03</span>
+              <h3>Show up as yourself.</h3>
+            </div>
+            <p>
+              Get matching roles with cover notes grounded in your experience.
+              JobHunt fills in the form and reads it back. Nothing is submitted
+              until you approve it.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section class="detail-section">
+        <div class="container detail-grid">
+          <div class="detail-copy">
+            <p class="eyebrow">02 / A second pair of eyes</p>
+            <h2>
+              “Remote.”<br /><em>Until you read<br /> the fine print.</em>
+            </h2>
+            <p>
+              You know the one. A promising role, followed by a catch three
+              paragraphs down. JobHunt checks the employer’s own posting before a
+              role reaches your shortlist.
+            </p>
+            <p class="detail-footnote">
+              And if something doesn’t add up, it asks you.
+            </p>
+          </div>
+          <div class="fact-check">
+            <div class="fact-heading">
+              <span class="eyebrow">A closer look</span><span>↙</span>
+            </div>
+            <div class="listing-source">
+              <span class="small-label">THE JOB BOARD SAYS</span>
+              <p><s>Remote · $140–180k</s></p>
+            </div>
+            <div class="employer-source">
+              <span class="small-label">THE EMPLOYER ACTUALLY SAYS</span>
+              <blockquote>
+                “Hybrid, <mark>3 days in our Austin office.</mark> $125–150k.”
+              </blockquote>
+            </div>
+            <div class="fact-verdict">
+              <span>↳</span>
+              <div>
+                <strong>Off the list. Here’s why.</strong>
+                <p>You asked for remote. This one isn’t.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="section control-section" id="gate">
+        <div class="container">
+          <div class="control-heading">
+            <div>
+              <p class="eyebrow">03 / Still your call</p>
+              <h2>JobHunt does the legwork.<br /><em>You make the move.</em></h2>
+            </div>
+            <p>
+              This is your name, your experience, your next chapter. You should
+              know exactly what’s going out under it.
+            </p>
+          </div>
+          <div class="control-grid">
+            <article>
+              <span class="control-icon">↗</span>
+              <h3>Nothing goes out without you.</h3>
+              <p>
+                Every application waits for your approval before it is
+                submitted. Emails and recruiter replies stay as drafts for you
+                to send yourself.
+              </p>
+            </article>
+            <article>
+              <span class="control-icon">≈</span>
+              <h3>A quiet day is a quiet day.</h3>
+              <p>
+                No good matches? It’ll say so. Your standards don’t get quietly
+                lowered just to fill a report.
+              </p>
+            </article>
+            <article>
+              <span class="control-icon">⌂</span>
+              <h3>Your search has a home.</h3>
+              <p>
+                Your profile, rules, applications, and threads stay in your own
+                tracker, in a local database on your machine.
+              </p>
+            </article>
+          </div>
+          <a
+            class="control-link"
+            href="https://github.com/adamwardecki/job-hunt-mcp#hooks-hard-gates"
+            >See how the approval checks work
+            <span aria-hidden="true">↗</span></a
+          >
+        </div>
+      </section>
+      <section class="section container commands-section" id="commands">
+        <div class="section-heading command-heading">
+          <p class="eyebrow">04 / Meet your new routine</p>
+          <h2>A few words.<br /><em>A lot off your plate.</em></h2>
+          <p>
+            Use these commands in Claude Code or Hermes Agent. Pick one below to
+            see an example.
+          </p>
+        </div>
+        <div class="command-workbench">
+          <div class="command-list" aria-label="Command examples">
+            <button class="cmd" data-cmd="sweep" type="button">
+              <span>/job-hunt:sweep</span>
+              <span>Your daily search routine</span>
+            </button>
+            <button class="cmd" data-cmd="setup" type="button">
+              <span>/job-hunt:setup</span>
+              <span>Profile, filters, sources</span>
+            </button>
+            <button class="cmd" data-cmd="status" type="button">
+              <span>/job-hunt:status</span>
+              <span>Pipeline at a glance</span>
+            </button>
+            <button class="cmd" data-cmd="apply" type="button">
+              <span>/job-hunt:apply &lt;role-id&gt;</span>
+              <span>Fill the form, read it back</span>
+            </button>
+            <button class="cmd" data-cmd="approve" type="button">
+              <span>/job-hunt:approve &lt;role-id&gt;</span>
+              <span>Approve a waiting application</span>
+            </button>
+            <button class="cmd" data-cmd="consent" type="button">
+              <span>/job-hunt:allow-consent &lt;role-id&gt;</span>
+              <span>Let it tick a consent box</span>
+            </button>
+            <button class="cmd" data-cmd="cover" type="button">
+              <span>/job-hunt:cover-letter &lt;role-id&gt;</span>
+              <span>Full letter, optional PDF</span>
+            </button>
+            <button class="cmd" data-cmd="prep" type="button">
+              <span>/job-hunt:prep &lt;company&gt;</span>
+              <span>Interview prep sheet</span>
+            </button>
+            <button class="cmd" data-cmd="correct" type="button">
+              <span>/job-hunt:correct</span>
+              <span>Turn a mistake into a rule</span>
+            </button>
+            <button class="cmd" data-cmd="triage" type="button">
+              <span>/job-hunt:triage &lt;source&gt;</span>
+              <span>Clean up third-party boards</span>
+            </button>
+            <button class="cmd" data-cmd="import" type="button">
+              <span>/job-hunt:import [path]</span>
+              <span>Bring in your old notes</span>
+            </button>
+          </div>
+          <div class="terminal">
+            <div class="terminal-top">
+              <span><i></i><i></i><i></i></span
+              ><span>JobHunt / a little preview</span>
+            </div>
+            <div class="terminal-body">
+              <p class="terminal-prompt">
+                › <span id="cmd-line">/job-hunt:apply 42</span>
+              </p>
+              <div id="cmd-out" aria-live="polite">
+                <div>Opened Halyard application in browser</div>
+                <div>Filled 14 fields · read back ✓</div>
+                <div>Left 2 consent boxes unticked</div>
+                <div>Waiting for /job-hunt:approve 42</div>
+              </div>
+            </div>
+            <p class="terminal-caption">
+              Example output. Your next chapter will look different.
+            </p>
+          </div>
+        </div>
+        <div class="sources">
+          <span>Looking in familiar places</span>
+          <p>
+            LinkedIn <b>·</b> Company careers pages <b>·</b> Wellfound
+            <b>·</b> YC Work at a Startup <b>·</b> HN Who is hiring
+            <b>·</b> Welcome to the Jungle
+          </p>
+        </div>
+      </section>
+      <section class="install-section" id="install">
+        <div class="container install-grid">
+          <div class="install-copy">
+            <p class="eyebrow">05 / Your next chapter starts here</p>
+            <h2>Make a little room<br /><em>for what’s next.</em></h2>
+            <p>
+              Bring the assistant you already use. JobHunt runs natively in
+              Claude Code and Hermes Agent, with its own tracker to keep things
+              together.
+            </p>
+            <div
+              class="client-tabs"
+              role="group"
+              aria-label="Choose your assistant"
+            >
+              <button
+                class="client-tab"
+                data-client="claude"
+                type="button"
+                aria-pressed="true"
+              >
+                ✳ Claude Code</button
+              ><button
+                class="client-tab"
+                data-client="hermes"
+                type="button"
+                aria-pressed="false"
+              >
+                Hermes Agent
+              </button>
+            </div>
+            <p class="install-requirement">
+              Requires Node 22.18+. No runtime npm dependencies.
+            </p>
+          </div>
+          <div class="install-card">
+            <div class="install-step">
+              <span class="install-number">1</span>
+              <div>
+                <h3 id="install-step1">
+                  Add the marketplace and install the plugin
+                </h3>
+                <pre id="install-config">
+/plugin marketplace add adamwardecki/job-hunt-mcp
+/plugin install job-hunt@job-hunt</pre>
+              </div>
+            </div>
+            <div class="install-step">
+              <span class="install-number">2</span>
+              <div>
+                <h3 id="install-step2">
+                  The local tracker starts automatically and keeps its data in
+                  ~/.job-hunt/tracker.db
+                </h3>
+              </div>
+            </div>
+            <div class="install-step">
+              <span class="install-number">3</span>
+              <div>
+                <h3>Let’s get to know you.</h3>
+                <button id="copy-setup" class="copy-command" type="button">
+                  <code>/job-hunt:setup</code
+                  ><span id="copy-label" aria-live="polite">Copy</span>
+                </button>
+                <p>
+                  Your CV, preferences, and a five-role trial. You can pause and
+                  pick it up whenever you like.
+                </p>
+              </div>
+            </div>
+            <a
+              class="install-docs"
+              id="install-docs"
+              href="https://github.com/adamwardecki/job-hunt-mcp#install"
+              >Read the Claude Code setup guide ↗</a
+            >
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="container site-footer">
+      <div class="footer-main">
+        <a href="#top" class="brand"
+          ><span class="brand-mark" aria-hidden="true">j<span>h</span></span
+          >JobHunt</a
+        >
+        <a class="text-link" href="https://github.com/adamwardecki/job-hunt-mcp"
+          >Made to be made yours ↗</a
+        >
+      </div>
+      <div class="footer-bottom">
+        <span>Open source. MIT licensed.</span>
+        <div>
+          <a
+            href="https://github.com/adamwardecki/job-hunt-mcp/blob/main/docs/SPEC.md"
+            >The spec</a
+          ><a href="https://github.com/adamwardecki/job-hunt-mcp/issues"
+            >Feedback &amp; ideas</a
+          ><a
+            href="https://github.com/adamwardecki/job-hunt-mcp/blob/main/docs/hermes.md"
+            >Hermes guide</a
+          >
+        </div>
+        <span>A little less job hunt. A little more life.</span>
+      </div>
+    </footer>
+  </body>
+</html>
