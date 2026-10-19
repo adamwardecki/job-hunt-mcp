@@ -1,16 +1,17 @@
 #!/usr/bin/env node
+
 // Hermes entry point: node hooks/hermes.ts pre_tool_call | post_tool_call | pre_llm_call | post_llm_call
 // The Hermes plugin (../__init__.py) pipes the hook kwargs as JSON on stdin. This prints a Hermes
 // directive, or nothing. The gate logic is shared with Claude Code (hooks/gates.ts); only the payload
 // and output shapes are translated here.
 
-import { handlers, setOutput } from './gates.ts';
-import { loadSession, saveSession } from './lib/session.ts';
-import { normalizeToolName, stepsPath, appendStep, unwrapSkillInvocation, userText } from './lib/hosts/hermes.ts';
-import type { HermesPayload } from './lib/hosts/hermes.ts';
-import { splitToolName, isBrowser, isSendTool } from './lib/classify.ts';
-import type { HookOutput } from './lib/types.ts';
 import { errorText } from '../servers/tracker/src/util.ts';
+import { handlers, setOutput } from './gates.ts';
+import { isBrowser, isSendTool, splitToolName } from './lib/classify.ts';
+import type { HermesPayload } from './lib/hosts/hermes.ts';
+import { appendStep, normalizeToolName, stepsPath, unwrapSkillInvocation, userText } from './lib/hosts/hermes.ts';
+import { loadSession, saveSession } from './lib/session.ts';
+import type { HookOutput } from './lib/types.ts';
 
 const event = process.argv[2];
 // Declared wide: setOutput's callback assigns it, which flow analysis cannot see.
@@ -38,7 +39,7 @@ try {
     if (!p.parent_session_id) {
       // Subagent turns are written by the model, never by the user, so they cannot approve anything.
       const typed = userText(p.user_message);
-      await handlers.prompt({ session_id: sid, prompt: typed });
+      await handlers.prompt({ session_id: sid, prompt: typed, transcript_path: stepsPath(sid) });
       if (captured?.hookSpecificOutput?.additionalContext) notes.push(captured.hookSpecificOutput.additionalContext);
       const { skill, args } = unwrapSkillInvocation(typeof p.user_message === 'string' ? p.user_message : '');
       if (skill?.startsWith('job-hunt:') && args) notes.push(`[job-hunt] In this command, $ARGUMENTS = "${args}".`);

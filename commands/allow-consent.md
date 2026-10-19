@@ -5,7 +5,7 @@ argument-hint: "<role-id>"
 
 The user typed `/job-hunt:allow-consent $ARGUMENTS`.
 
-A prompt hook (Claude Code `UserPromptSubmit`, Hermes `pre_llm_call`) has already processed this message: it records permission to tick consent checkboxes or radios for role `$ARGUMENTS` in this session, or rejects it. You do not record anything yourself.
+A prompt hook (Claude Code `UserPromptSubmit`, Hermes `pre_llm_call`) has already processed this message: it records permission to tick consent checkboxes or radios for role `$ARGUMENTS` on the current browser page and tab, or rejects it. You do not record anything yourself.
 
 1. Check the hook output in context.
    - **Rejected**: tell the user why (for example, unknown role id) and leave the consent boxes as they are.

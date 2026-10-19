@@ -1,11 +1,12 @@
 // Runs skills/triage-tracker/guard.js against the synthetic board in headless Chrome (AC8).
 // Skips when Chrome is not installed.
-import { test } from 'node:test';
+
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync, mkdtempSync, existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -40,9 +41,12 @@ async function runGuard(input: Record<string, unknown>, check: [string, string][
   writeFileSync(file, board.replace('</body>', `<script>${script}</script></body>`));
   // Chrome on macOS prints the DOM but may not exit; stop it once the document is out.
   const dom = await new Promise<string>((resolve, reject) => {
-    const p = spawn(CHROME, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', `--user-data-dir=${join(dir, 'profile-' + Math.random().toString(36).slice(2))}`, '--dump-dom', `file://${file}`], { stdio: ['ignore', 'pipe', 'ignore'] });
+    const p = spawn(CHROME, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', `--user-data-dir=${join(dir, `profile-${Math.random().toString(36).slice(2)}`)}`, '--dump-dom', `file://${file}`], { stdio: ['ignore', 'pipe', 'ignore'] });
     let buf = '';
-    const timer = setTimeout(() => (p.kill('SIGKILL'), reject(new Error('Chrome timed out'))), 30000);
+    const timer = setTimeout(() => {
+      p.kill('SIGKILL');
+      reject(new Error('Chrome timed out'));
+    }, 30000);
     p.stdout.on('data', (d: Buffer) => {
       buf += d;
       if (buf.includes('</html>')) {
@@ -51,7 +55,10 @@ async function runGuard(input: Record<string, unknown>, check: [string, string][
         resolve(buf);
       }
     });
-    p.on('exit', () => (clearTimeout(timer), resolve(buf)));
+    p.on('exit', () => {
+      clearTimeout(timer);
+      resolve(buf);
+    });
   });
   const m = dom.match(/<pre id="out">JOBHUNT_TRIAGE_GUARD (\{.*?\}) JOBHUNT_END<\/pre>/s);
   assert.ok(m, `guard produced no output: ${(dom.match(/<pre id="err">[^<]*/) || [dom.slice(-300)])[0]}`);

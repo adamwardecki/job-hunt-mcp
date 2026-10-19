@@ -1,14 +1,14 @@
 // Daily report (spec §9) and post-run audit (spec §11). Both are pure reads.
 
 import type { SQLInputValue } from 'node:sqlite';
-import { lintProse } from './lint.ts';
-import { LIVE } from './tracker.ts';
-import type { Tracker, Scope } from './tracker.ts';
-import type { ArtifactRow, EventRow, SourceRow } from './db.ts';
 import type { CapabilitiesConfig } from './config.ts';
-import type { ArgsFor } from './tools.ts';
-import { parseJson } from './util.ts';
+import type { ArtifactRow, EventRow, SourceRow } from './db.ts';
+import { lintProse } from './lint.ts';
 import { formatLocal, isValidTimeZone } from './time.ts';
+import type { ArgsFor } from './tools.ts';
+import type { Scope, Tracker } from './tracker.ts';
+import { LIVE } from './tracker.ts';
+import { parseJson } from './util.ts';
 
 type ScopedEvent = EventRow & { title: string; url: string | null; industry: string | null; company_id: number; company: string };
 
@@ -115,7 +115,10 @@ export function renderReport(t: Tracker, { date, run_id, headline }: ArgsFor<'re
     for (const e of dropped) {
       const key = e.category || 'other';
       let group = groups.get(key);
-      if (!group) groups.set(key, (group = []));
+      if (!group) {
+        group = [];
+        groups.set(key, group);
+      }
       group.push(`${e.company} (${e.reason})`);
     }
     for (const [k, v] of groups) out.push(`- ${k}: ${v.join('; ')}`);

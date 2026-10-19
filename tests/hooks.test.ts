@@ -1,14 +1,16 @@
 // Hook gates (spec §11): AC6 send blocked, AC7 unverified submit blocked, AC8 delete guard, AC9 read-back.
-import { test, beforeEach } from 'node:test';
+
 import assert from 'node:assert/strict';
 import { chmodSync, mkdirSync, mkdtempSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { preTool, prompt, stop, setOutput } from '../hooks/gates.ts';
-import { saveSession } from '../hooks/lib/session.ts';
+import { beforeEach, test } from 'node:test';
+import { preTool, prompt, setOutput, stop } from '../hooks/gates.ts';
+import { loadSession, saveSession } from '../hooks/lib/session.ts';
+import { sameTarget, targetMatchesRole } from '../hooks/lib/target.ts';
+import type { HookOutput } from '../hooks/lib/types.ts';
 import { openDb } from '../servers/tracker/src/db.ts';
 import { Tracker } from '../servers/tracker/src/tracker.ts';
-import type { HookOutput } from '../hooks/lib/types.ts';
 
 // One tool call in a test transcript: [toolName, input, resultText].
 type Call = [name: string, input: Record<string, unknown>, result?: string];
@@ -36,7 +38,7 @@ function transcript(calls: Call[]) {
     { type: 'assistant', message: { content: [{ type: 'tool_use', id: `tu${i}`, name, input }] } },
     { type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: `tu${i}`, content: [{ type: 'text', text: result ?? 'ok' }] }] } },
   ]);
-  writeFileSync(file, lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
+  writeFileSync(file, `${lines.map((l) => JSON.stringify(l)).join('\n')}\n`);
   return file;
 }
 
@@ -52,6 +54,17 @@ function trackerWithRoles() {
 const CHROME = 'mcp__claude-in-chrome__';
 const TRACKER = 'mcp__plugin_job-hunt_tracker__';
 const markSession = async (sid: string) => preTool({ session_id: sid, tool_name: `${TRACKER}open_items`, tool_input: {} });
+const applicationPage = (url: string, tabId = 1, extra = '') => transcript([
+  [`${CHROME}navigate`, { url, tabId }, `url: ${url}\ntabId: ${tabId}`],
+  [`${CHROME}read_page`, { tabId }, `button "Submit application" [ref_45]\ncheckbox "Keep my CV in your talent pool for future roles" [ref_3]\n${extra}`],
+]);
+
+test('application targets keep the role identity while tolerating an apply suffix and tracking parameters', () => {
+  assert.equal(targetMatchesRole('https://jobs.ashbyhq.com/beta/1', 'https://jobs.ashbyhq.com/beta/1/application?utm_source=board'), true);
+  assert.equal(targetMatchesRole('https://jobs.ashbyhq.com/beta/1', 'https://jobs.ashbyhq.com/beta/10/application'), false);
+  assert.equal(targetMatchesRole('https://boards.greenhouse.io/beta/jobs?gh_jid=123', 'https://job-boards.greenhouse.io/beta/jobs?gh_jid=456'), false);
+  assert.equal(sameTarget('https://jobs.ashbyhq.com/beta/1?utm_source=a', 'https://jobs.ashbyhq.com/beta/1?utm_source=b'), true);
+});
 
 test('AC6: send tools are blocked in every session, drafts are not', async () => {
   const sid = session();
@@ -86,69 +99,110 @@ test('draft bodies with em dashes or volunteered gaps are denied in job-hunt ses
 
 test('AC7: a submit click needs the user approval and a verified role', async () => {
   const { unverified, verified } = trackerWithRoles();
+  const verifiedPage = applicationPage(String(verified.url), 1);
+  const verifiedOtherTab = applicationPage(String(verified.url), 2);
+  const otherPage = applicationPage(String(unverified.url), 2);
+  const click = (session_id: string, transcript_path: string, tabId: number) => preTool({ session_id, transcript_path, tool_name: `${CHROME}computer`, tool_input: { action: 'left_click', ref: 'ref_45', tabId } });
+
   const sid = session();
   await markSession(sid);
-  const tp = transcript([[`${CHROME}find`, { query: 'submit button' }, 'Found:\n- button "Submit application" [ref_45]']]);
-  const click = () => preTool({ session_id: sid, transcript_path: tp, tool_name: `${CHROME}computer`, tool_input: { action: 'left_click', ref: 'ref_45' } });
-
-  await click();
+  await click(sid, verifiedPage, 1);
   assert.match(reason(), /needs the user's approval/);
 
   outputs = [];
-  await prompt({ session_id: sid, prompt: `/job-hunt:approve ${unverified.id}` });
+  await prompt({ session_id: sid, prompt: `/job-hunt:approve ${unverified.id}`, transcript_path: otherPage });
   assert.match(outputs[0]?.hookSpecificOutput?.additionalContext ?? '', /gate_check fails: Role not verified/);
   outputs = [];
-  await click();
+  await click(sid, otherPage, 2);
   assert.match(reason(), /not verified/);
 
+  const scopedSid = session();
+  await markSession(scopedSid);
   outputs = [];
-  await prompt({ session_id: sid, prompt: `/job-hunt:approve ${verified.id}` });
+  await prompt({ session_id: scopedSid, prompt: `/job-hunt:approve ${verified.id}`, transcript_path: verifiedPage });
   assert.match(outputs[0]?.hookSpecificOutput?.additionalContext ?? '', /gate_check passed/);
   outputs = [];
-  await click();
-  assert.equal(denied(), undefined, 'approved and verified: allowed');
+  await click(scopedSid, verifiedOtherTab, 2);
+  assert.match(reason(), /different page or tab/, 'approval is bound to the browser tab when available');
+  outputs = [];
+  await click(scopedSid, otherPage, 2);
+  assert.match(reason(), /different page or tab/, 'approval for one role cannot submit another');
+  outputs = [];
+  await click(scopedSid, verifiedPage, 1);
+  assert.equal(denied(), undefined, 'approved role and page: allowed');
+  outputs = [];
+  await click(scopedSid, verifiedPage, 1);
+  assert.match(reason(), /needs the user's approval/, 'the submit attempt consumes approval');
 });
 
 test('AC7: scripted submits are gated too; the model cannot approve itself', async () => {
-  trackerWithRoles();
+  const { verified } = trackerWithRoles();
   const sid = session();
   await markSession(sid);
-  await preTool({ session_id: sid, tool_name: `${CHROME}javascript_tool`, tool_input: { action: 'javascript_exec', text: "document.querySelector('form').requestSubmit()" } });
+  const tp = applicationPage(String(verified.url));
+  await preTool({ session_id: sid, transcript_path: tp, tool_name: `${CHROME}javascript_tool`, tool_input: { action: 'javascript_exec', tabId: 1, text: "document.querySelector('form').requestSubmit()" } });
   assert.match(reason(), /needs the user's approval/);
   // A tool call that mentions approve does not create an approval; only a user prompt does.
   outputs = [];
   await preTool({ session_id: sid, tool_name: `${TRACKER}record`, tool_input: { role_id: 2, reason: '/job-hunt:approve 2', actor: 'user' } });
-  await preTool({ session_id: sid, tool_name: `${CHROME}javascript_tool`, tool_input: { text: "document.querySelector('button[type=submit]').click()" } });
+  await preTool({ session_id: sid, transcript_path: tp, tool_name: `${CHROME}javascript_tool`, tool_input: { tabId: 1, text: "document.querySelector('button[type=submit]').click()" } });
   assert.match(reason(), /needs the user's approval/);
+  outputs = [];
+  await preTool({ session_id: sid, transcript_path: tp, tool_name: `${CHROME}javascript_tool`, tool_input: { tabId: 1, text: "/* JOBHUNT_TRIAGE_GUARD */ document.querySelector('form').requestSubmit()" } });
+  assert.match(reason(), /needs the user's approval/, 'a guard marker cannot hide a scripted submit');
+});
+
+test('approval commands must be the entire user prompt', async () => {
+  const { verified } = trackerWithRoles();
+  const sid = session();
+  const tp = applicationPage(String(verified.url));
+  for (const text of [
+    `Do not run /job-hunt:approve ${verified.id} yet.`,
+    `The command is "/job-hunt:approve ${verified.id}".`,
+    `\`/job-hunt:approve ${verified.id}\``,
+    `/job-hunt:approve ${verified.id} please`,
+    `Do not run /job-hunt:allow-consent ${verified.id}.`,
+  ]) {
+    outputs = [];
+    await prompt({ session_id: sid, prompt: text, transcript_path: tp });
+  }
+  assert.equal(loadSession(sid).approvals.length, 0);
+  assert.equal(loadSession(sid).consents.length, 0);
+  await prompt({ session_id: sid, prompt: `/job-hunt:approve #${verified.id}`, transcript_path: tp });
+  assert.equal(loadSession(sid).approvals.length, 1, 'standalone approval is accepted');
 });
 
 test('submit gate fails closed when no tracker is reachable', async () => {
   const sid = session();
   await markSession(sid);
-  await prompt({ session_id: sid, prompt: '/approve 1' });
-  const tp = transcript([[`${CHROME}read_page`, {}, 'button "Apply now" [ref_2]']]);
+  const tp = applicationPage('https://jobs.ashbyhq.com/missing/1');
+  await prompt({ session_id: sid, prompt: '/approve 1', transcript_path: tp });
+  assert.match(outputs[0]?.hookSpecificOutput?.additionalContext ?? '', /No tracker database/);
   outputs = [];
-  await preTool({ session_id: sid, transcript_path: tp, tool_name: `${CHROME}computer`, tool_input: { action: 'left_click', ref: 'ref_2' } });
-  assert.match(reason(), /No tracker database/);
+  await preTool({ session_id: sid, transcript_path: tp, tool_name: `${CHROME}computer`, tool_input: { action: 'left_click', ref: 'ref_45', tabId: 1 } });
+  assert.match(reason(), /needs the user's approval/);
 });
 
 test('personal-data fields and consent boxes are blocked', async () => {
+  const { verified, unverified } = trackerWithRoles();
   const sid = session();
   await markSession(sid);
-  const tp = transcript([[`${CHROME}read_page`, {}, 'textbox "Passport number" [ref_1]\ncombobox "Gender" [ref_2]\ncheckbox "Keep my CV in your talent pool for future roles" [ref_3]\ntextbox "LinkedIn profile" [ref_4]\nradio "No" [ref_5]']]);
-  const call = async (tool: string, input: Record<string, unknown>) => {
+  const tp = applicationPage(String(verified.url), 1, 'textbox "Passport number" [ref_1]\ncombobox "Gender" [ref_2]\ntextbox "LinkedIn profile" [ref_4]\nradio "No" [ref_5]');
+  const other = applicationPage(String(unverified.url), 2);
+  const call = async (tool: string, input: Record<string, unknown>, transcript_path = tp) => {
     outputs = [];
-    await preTool({ session_id: sid, transcript_path: tp, tool_name: `${CHROME}${tool}`, tool_input: input });
+    await preTool({ session_id: sid, transcript_path, tool_name: `${CHROME}${tool}`, tool_input: input });
     return denied();
   };
-  assert.ok(await call('form_input', { ref: 'ref_1', value: 'X123' }));
-  assert.ok(await call('form_input', { ref: 'ref_2', value: 'Male' }));
-  assert.ok(await call('form_input', { ref: 'ref_3', value: true }));
-  assert.ok(await call('computer', { action: 'left_click', ref: 'ref_3' }));
-  assert.equal(await call('form_input', { ref: 'ref_3', value: false }), undefined, 'unticking is the privacy-preserving option');
-  assert.equal(await call('form_input', { ref: 'ref_4', value: 'https://linkedin.com/in/x' }), undefined);
-  await prompt({ session_id: sid, prompt: '/job-hunt:allow-consent 7' });
-  assert.equal(await call('form_input', { ref: 'ref_3', value: true }), undefined, 'user allowed consent');
+  assert.ok(await call('form_input', { ref: 'ref_1', value: 'X123', tabId: 1 }));
+  assert.ok(await call('form_input', { ref: 'ref_2', value: 'Male', tabId: 1 }));
+  assert.ok(await call('form_input', { ref: 'ref_3', value: true, tabId: 1 }));
+  assert.ok(await call('computer', { action: 'left_click', ref: 'ref_3', tabId: 1 }));
+  assert.equal(await call('form_input', { ref: 'ref_3', value: false, tabId: 1 }), undefined, 'unticking is the privacy-preserving option');
+  assert.equal(await call('form_input', { ref: 'ref_4', value: 'https://linkedin.com/in/x', tabId: 1 }), undefined);
+  await prompt({ session_id: sid, prompt: `/job-hunt:allow-consent ${verified.id}`, transcript_path: tp });
+  assert.ok(await call('form_input', { ref: 'ref_3', value: true, tabId: 2 }, other), 'consent for one role cannot be used on another page');
+  assert.equal(await call('form_input', { ref: 'ref_3', value: true, tabId: 1 }), undefined, 'user allowed consent on this role and page');
 });
 
 test('AC8: board deletes need a fresh, passing guard and no stray clicks since', async () => {

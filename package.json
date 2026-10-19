@@ -5,14 +5,19 @@
   "license": "MIT",
   "type": "module",
   "description": "Claude plugin for a disciplined, low-volume job search. Zero runtime dependencies.",
-  "engines": { "node": ">=22.18" },
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
     "test": "npm run typecheck && node --no-warnings --test servers/tracker/test/*.test.ts tests/*.test.ts && python3 -m unittest discover -s tests -p 'test_*.py'",
     "test:node": "node --no-warnings --test servers/tracker/test/*.test.ts tests/*.test.ts",
     "typecheck": "tsc",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
     "tracker": "node --no-warnings servers/tracker/src/index.ts"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.15",
     "@types/node": "^22.18.0",
     "typescript": "^7.0.2"
   }

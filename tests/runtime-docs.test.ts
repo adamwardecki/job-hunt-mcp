@@ -1,7 +1,8 @@
 // The markdown that tells the model what to do when Node.js is missing (spec 2026-10-17, parts 2 and 3).
-import { test } from 'node:test';
+
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { test } from 'node:test';
 
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
 const step0 = () => {
@@ -39,9 +40,9 @@ test('setup step 0 never loops on restarts and never reinstalls over a shadowed 
 test('every tracker command explains a missing runtime in one sentence', () => {
   const missing = /\*\*If the tracker tools are missing\*\* \(search for them first if tools are deferred\), or a hook error says `node` could not start:/;
   for (const name of ['apply', 'status', 'prep', 'cover-letter', 'triage', 'correct', 'import']) {
-    assert.match(read(`commands/${name}.md`), new RegExp(missing.source + '.*offer to run `\\/job-hunt:setup`'), name);
+    assert.match(read(`commands/${name}.md`), new RegExp(`${missing.source}.*offer to run \`\\/job-hunt:setup\``), name);
   }
-  assert.match(read('commands/sweep.md'), new RegExp(missing.source + '.*Record nothing\\.'));
+  assert.match(read('commands/sweep.md'), new RegExp(`${missing.source}.*Record nothing\\.`));
 });
 
 test('setup field lists and settings.example.yaml match the config schema', async () => {

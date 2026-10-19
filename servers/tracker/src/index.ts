@@ -4,9 +4,9 @@
 // Env: JOB_HUNT_HOME (default ~/.job-hunt), JOB_HUNT_DB (default $JOB_HUNT_HOME/tracker.db). Flag: --db <path>.
 
 import { createInterface } from 'node:readline';
-import { openDb, defaultDbPath } from './db.ts';
-import { Tracker } from './tracker.ts';
+import { defaultDbPath, openDb } from './db.ts';
 import { makeHandler } from './mcp.ts';
+import { Tracker } from './tracker.ts';
 import { errorMessage, isRecord } from './util.ts';
 
 const argv = process.argv.slice(2);
@@ -37,16 +37,16 @@ async function onLine(line: string): Promise<void> {
   try {
     msg = JSON.parse(line);
   } catch {
-    process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } }) + '\n');
+    process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } })}\n`);
     return;
   }
   try {
     const res = await handle(msg);
-    if (res) process.stdout.write(JSON.stringify(res) + '\n');
+    if (res) process.stdout.write(`${JSON.stringify(res)}\n`);
   } catch (err) {
     log('reply failed:', errorMessage(err));
     const id = isRecord(msg) ? msg.id : undefined;
-    if (id !== undefined && id !== null) process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id, error: { code: -32603, message: 'Internal error' } }) + '\n');
+    if (id !== undefined && id !== null) process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', id, error: { code: -32603, message: 'Internal error' } })}\n`);
   }
 }
 

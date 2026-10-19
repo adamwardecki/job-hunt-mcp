@@ -1,14 +1,15 @@
 // Database layer: locking, migrations and file permissions.
-import { test } from 'node:test';
+
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { chmodSync, existsSync, mkdtempSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { openDb, tx, SCHEMA_V1, SCHEMA_VERSION } from '../src/db.ts';
-import { Tracker } from '../src/tracker.ts';
+import { test } from 'node:test';
+import { openDb, SCHEMA_V1, SCHEMA_VERSION, tx } from '../src/db.ts';
 import { secureDir, secureFile } from '../src/fsperm.ts';
+import { Tracker } from '../src/tracker.ts';
 
 const tempDb = () => join(mkdtempSync(join(tmpdir(), 'jh-db-')), 'tracker.db');
 const addRule = (db: ReturnType<typeof openDb>, text: string) =>
@@ -231,7 +232,10 @@ test('permission tightening is best effort: unsupported chmod warns, anything el
   };
   const lines: string[] = [];
   const realWrite = process.stderr.write;
-  process.stderr.write = ((chunk: string) => (lines.push(String(chunk)), true)) as typeof process.stderr.write;
+  process.stderr.write = ((chunk: string) => {
+    lines.push(String(chunk));
+    return true;
+  }) as typeof process.stderr.write;
   try {
     for (const code of ['EPERM', 'ENOTSUP', 'EROFS']) {
       secureFile(file, failWith(code));

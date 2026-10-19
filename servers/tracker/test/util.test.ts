@@ -1,5 +1,5 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { test } from 'node:test';
 import { errorMessage, errorText, isRecord, oneOf, parseJson } from '../src/util.ts';
 
 test('parseJson: parses, and falls back on null, undefined or bad JSON', () => {
