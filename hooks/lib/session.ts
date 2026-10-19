@@ -1,7 +1,7 @@
 // Per-session hook state: whether this is a job-hunt session, user approvals, stop-block count.
 // Approvals are written only by the UserPromptSubmit hook, i.e. only from what the user typed.
 
-import { readFileSync, writeFileSync, renameSync, unlinkSync } from 'node:fs';
+import { readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { secureDir, secureFile } from '../../servers/tracker/src/fsperm.ts';
@@ -31,12 +31,12 @@ export function saveSession(sessionId: string | undefined, state: SessionState):
   secureDir(home());
   secureDir(join(home(), 'sessions'));
   try {
-    unlinkSync(f + '.tmp'); // a leftover keeps its old mode: { mode } below only applies on create
+    unlinkSync(`${f}.tmp`); // a leftover keeps its old mode: { mode } below only applies on create
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
   }
-  writeFileSync(f + '.tmp', JSON.stringify(state, null, 2), { mode: 0o600 });
-  renameSync(f + '.tmp', f);
+  writeFileSync(`${f}.tmp`, JSON.stringify(state, null, 2), { mode: 0o600 });
+  renameSync(`${f}.tmp`, f);
   secureFile(f); // best effort where the mode above was not honoured
 }
 

@@ -1,14 +1,14 @@
 // Tool catalogue: JSON Schemas for tools/list and handlers for tools/call.
 
-import { STATUSES, OUTCOMES } from './tracker.ts';
-import type { Tracker } from './tracker.ts';
-import { renderReport, runAudit } from './report.ts';
-import { importLegacy } from './legacy.ts';
-import type { LegacyQueueFile } from './legacy.ts';
-import { lintProse } from './lint.ts';
 import type { CapabilitiesConfig } from './config.ts';
-import { str, int, num, bool, strList, typed, obj } from './schema.ts';
+import type { LegacyQueueFile } from './legacy.ts';
+import { importLegacy } from './legacy.ts';
+import { lintProse } from './lint.ts';
+import { renderReport, runAudit } from './report.ts';
 import type { ArgsOf, ObjSchema, Props } from './schema.ts';
+import { bool, int, num, obj, str, strList, typed } from './schema.ts';
+import type { Tracker } from './tracker.ts';
+import { OUTCOMES, STATUSES } from './tracker.ts';
 import { isRecord } from './util.ts';
 
 const roleFields = {
@@ -55,7 +55,7 @@ export const SCHEMAS = {
     to: str(STATUSES.join(' | ')),
     reason: str('Why, one sentence'),
     evidence: str('Verbatim quote with URL, rule:<id>, or confirmation text'),
-    outcome: str(OUTCOMES.join(' | ') + ' (closed only)'),
+    outcome: str(`${OUTCOMES.join(' | ')} (closed only)`),
     category: str('For drops: location | pay | industry | role_shape | stack | culture | duplicate | gated | other'),
     question: str('For queued: the single blocking question for the user'),
     blocked_by: str('For queued: browser | user | login | captcha | other'),
@@ -67,7 +67,7 @@ export const SCHEMAS = {
   }, ['role_id', 'to', 'reason']),
   record: obj({
     role_id: int('Role id'),
-    status: str(STATUSES.join(' | ') + ' (omit for a note)'),
+    status: str(`${STATUSES.join(' | ')} (omit for a note)`),
     reason: str('Why'),
     evidence: str('Verbatim quote, feedback, or URL'),
     outcome: str(OUTCOMES.join(' | ')),
@@ -163,7 +163,7 @@ export const TOOLS: Tool[] = [
   defineTool('add_artifact', 'Save a cover note, PDF, Gmail draft id, form answers, confirmation or note. Prose is linted. gmail_draft stays unverified until verify_artifact.', (t, a) => t.addArtifact(a)),
   defineTool('list_artifacts', 'Artifacts for a run, a local day or a role, with lint results and read-back state. The auditor uses this.', (t, a) => t.listArtifacts(a)),
   defineTool('verify_artifact', 'Mark an artifact verified after reading it back. For gmail_draft, readback must be the get_draft/list_drafts output containing the draft id.', (t, a) => t.verifyArtifact(a)),
-  defineTool('lint_prose', 'Lint outbound prose: em/en dashes, "not X but Y", fake-candid openers, volunteered gaps, length.', (t, a) => lintProse(a.text, { max_words: a.max_words })),
+  defineTool('lint_prose', 'Lint outbound prose: em/en dashes, "not X but Y", fake-candid openers, volunteered gaps, length.', (_t, a) => lintProse(a.text, { max_words: a.max_words })),
   defineTool('open_items', 'Queue (fresh and stale), unverified drafts, interviews to book, upcoming interviews.', (t, a) => t.openItems(a)),
   defineTool('pipeline_summary', 'Counts by status, live processes, rejections, queue (fresh and stale).', (t, a) => t.pipelineSummary(a)),
   defineTool('add_rule', 'Add a user preference or correction as a rule, with reason and example.', (t, a) => t.addRule(a)),

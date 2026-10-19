@@ -1,18 +1,18 @@
 // Domain logic behind the tracker tools. Every write goes through here; nothing else touches the DB.
 
 import type { DatabaseSync, SQLInputValue, StatementResultingChanges } from 'node:sqlite';
-import { ToolError } from './errors.ts';
-import { tx, now } from './db.ts';
-import type { ArtifactRow, CompanyRow, EventRow, InterviewRow, RoleRow, RuleRow, RunRow, SourceRow } from './db.ts';
-import { nameScore, normalizeDomain, normalizeName, atsFromUrl } from './fuzzy.ts';
-import { checkPay } from './pay.ts';
-import { lintProse } from './lint.ts';
-import type { LintResult } from './lint.ts';
-import { validateSection, DEFAULTS, SECTION_NAMES } from './config.ts';
 import type { ConfigSections, Profile, SectionName } from './config.ts';
+import { DEFAULTS, SECTION_NAMES, validateSection } from './config.ts';
+import type { ArtifactRow, CompanyRow, EventRow, InterviewRow, RoleRow, RuleRow, RunRow, SourceRow } from './db.ts';
+import { now, tx } from './db.ts';
+import { ToolError } from './errors.ts';
+import { atsFromUrl, nameScore, normalizeDomain, normalizeName } from './fuzzy.ts';
+import type { LintResult } from './lint.ts';
+import { lintProse } from './lint.ts';
+import { checkPay } from './pay.ts';
+import { dayBounds, isValidTimeZone, toUtcIso, zoneError } from './time.ts';
 import type { ArgsFor } from './tools.ts';
 import { isRecord, oneOf, parseJson } from './util.ts';
-import { toUtcIso, isValidTimeZone, dayBounds, zoneError } from './time.ts';
 
 export { ToolError };
 
@@ -203,7 +203,7 @@ export class Tracker {
       saved.has('capabilities') ? `gmail: ${!!conn.gmail}, calendar: ${!!conn.calendar}, linkedin: ${!!conn.linkedin}` : 'No capability detection recorded yet.');
     add('browser', caps.browser ? 'green' : 'amber', caps.browser ? `Browser: ${caps.browser}` : 'No browser detected. Browser sources and applying are queued for interactive sessions.');
     add('sources', saved.has('sources') ? 'green' : 'amber', saved.has('sources') ? `${(p.sources?.enabled || []).length} sources enabled` : 'No sources chosen; defaults will be used.');
-    add('autonomy', saved.has('autonomy') ? 'green' : 'amber', 'Unattended: ' + (p.autonomy?.unattended || []).join(', '));
+    add('autonomy', saved.has('autonomy') ? 'green' : 'amber', `Unattended: ${(p.autonomy?.unattended || []).join(', ')}`);
     add('schedule', saved.has('schedule') ? 'green' : 'red', saved.has('schedule') ? `Daily: ${JSON.stringify(p.schedule?.daily || {})}` : 'No daily task scheduled.');
     add('stories', docs.has('stories') ? 'green' : 'amber', docs.has('stories') ? 'stories.md saved' : 'No interview stories yet (needed for /prep).');
     const rules = this.one<{ n: number }>('SELECT COUNT(*) AS n FROM rules WHERE active = 1')?.n ?? 0;
@@ -347,7 +347,7 @@ export class Tracker {
       let role = f.id ? this.roleRow(f.id) : null;
       req(!f.id || role, `No role ${f.id}`);
       let company: Company;
-      let dedupe;
+      let dedupe: ReturnType<Tracker['findCompany']> | undefined;
       if (role) {
         company = this.mustCompany(role.company_id);
       } else {
@@ -512,7 +512,7 @@ export class Tracker {
     if (kind) where.push('a.kind = ?') && params.push(kind);
     type Listed = Pick<ArtifactRow, 'id' | 'role_id' | 'kind' | 'path_or_ref' | 'content' | 'lint' | 'verified_at' | 'created_at'> & { company: string | null };
     const rows = this.q<Listed>(`SELECT a.id, a.role_id, a.kind, a.path_or_ref, a.content, a.lint, a.verified_at, a.created_at, c.name AS company FROM artifacts a
-      LEFT JOIN roles r ON r.id = a.role_id LEFT JOIN companies c ON c.id = r.company_id ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY a.id`, ...params);
+      LEFT JOIN roles r ON r.id = a.role_id LEFT JOIN companies c ON c.id = r.company_id ${where.length ? `WHERE ${where.join(' AND ')}` : ''} ORDER BY a.id`, ...params);
     return { artifacts: rows.map((a) => ({ ...a, lint: parseJson<LintResult | null>(a.lint, null) })) };
   }
 

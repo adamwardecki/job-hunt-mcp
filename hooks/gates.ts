@@ -3,10 +3,10 @@
 
 import { lintProse } from '../servers/tracker/src/lint.ts';
 import { errorText } from '../servers/tracker/src/util.ts';
-import { readTranscript, toolSteps, labelForRef, currentUrl } from './lib/transcript.ts';
-import { loadSession, saveSession, activeApprovals } from './lib/session.ts';
-import { gateCheck } from './lib/tracker-client.ts';
 import * as C from './lib/classify.ts';
+import { activeApprovals, loadSession, saveSession } from './lib/session.ts';
+import { gateCheck } from './lib/tracker-client.ts';
+import { currentUrl, readTranscript, toolSteps } from './lib/transcript.ts';
 import type { GuardResult, HookOutput, HookPayload, ResultStep, SessionState, ToolInput, ToolStep, UseStep } from './lib/types.ts';
 
 const GUARD_MAX_AGE_STEPS = 40;
@@ -48,7 +48,8 @@ export async function preTool(payload: HookPayload): Promise<void> {
 
   // Sending is never done by this plugin, in any session.
   if (C.isSendTool(server, short)) {
-    return deny(payload, session, `Sending is blocked: the job-hunt plugin only creates drafts. "${short}" on ${server} would send in the user's name. Create a draft instead and tell the user it is waiting.`);
+    deny(payload, session, `Sending is blocked: the job-hunt plugin only creates drafts. "${short}" on ${server} would send in the user's name. Create a draft instead and tell the user it is waiting.`);
+    return;
   }
 
   if (C.isTracker(server)) {
@@ -68,7 +69,8 @@ export async function preTool(payload: HookPayload): Promise<void> {
     const lint = lintProse(body);
     if (!lint.ok) {
       const issues = lint.issues.filter((i) => i.severity === 'error').map((i) => `${i.kind}: "${i.match}" (${i.hint})`);
-      return deny(payload, session, `Draft fails the writing rules. Fix and retry:\n- ${issues.join('\n- ')}`);
+      deny(payload, session, `Draft fails the writing rules. Fix and retry:\n- ${issues.join('\n- ')}`);
+      return;
     }
     return;
   }
@@ -88,7 +90,8 @@ async function browserGate(payload: HookPayload, session: SessionState, short: s
     if (intent === 'submit') return submitGate(payload, session, 'a scripted submit/apply click');
     if (intent === 'delete') return deleteGate(payload, session, steps, host, 'a scripted delete');
     if (intent === 'personal')
-      return deny(payload, session, 'Scripted write into a personal-data or consent field. These are for the user to fill. Surface the field to the user.');
+      deny(payload, session, 'Scripted write into a personal-data or consent field. These are for the user to fill. Surface the field to the user.');
+      return;
     return;
   }
 
@@ -97,10 +100,12 @@ async function browserGate(payload: HookPayload, session: SessionState, short: s
 
   if (action === 'input') {
     if (label && C.PERSONAL.test(label)) {
-      return deny(payload, session, `"${accName}" asks for personal data (passport, nationality, age, marital status, gender, ID and similar). The plugin never fills these. Leave it and list it for the user.`);
+      deny(payload, session, `"${accName}" asks for personal data (passport, nationality, age, marital status, gender, ID and similar). The plugin never fills these. Leave it and list it for the user.`);
+      return;
     }
     if (label && C.CONSENT.test(label) && C.truthy(input.value) && !consentAllowed(session)) {
-      return deny(payload, session, `"${accName}" is a consent (recording, marketing, talent pool). Choose the privacy-preserving option, or ask the user to type /job-hunt:allow-consent <role_id>.`);
+      deny(payload, session, `"${accName}" is a consent (recording, marketing, talent pool). Choose the privacy-preserving option, or ask the user to type /job-hunt:allow-consent <role_id>.`);
+      return;
     }
     return;
   }
@@ -108,13 +113,16 @@ async function browserGate(payload: HookPayload, session: SessionState, short: s
   // Clicks.
   if (!label) return; // Coordinate click with no resolvable element. Skills require ref clicks for submits; the auditor checks.
   if (C.SEND.test(accName) || (/mail\.google\.com|linkedin\.com/.test(host) && /^send\b/i.test(accName))) {
-    return deny(payload, session, `Clicking "${accName}" would send a message in the user's name. Sending is blocked; leave it as a draft.`);
+    deny(payload, session, `Clicking "${accName}" would send a message in the user's name. Sending is blocked; leave it as a draft.`);
+    return;
   }
   if (C.PERSONAL_OPTION.test(accName) || (C.PERSONAL.test(label) && /radio|checkbox|option/i.test(label))) {
-    return deny(payload, session, `"${accName}" answers a personal-data question. Leave it for the user.`);
+    deny(payload, session, `"${accName}" answers a personal-data question. Leave it for the user.`);
+    return;
   }
   if (C.CONSENT.test(label) && /checkbox|radio|switch/i.test(label) && !C.isDecline(accName) && !consentAllowed(session)) {
-    return deny(payload, session, `"${accName}" ticks a consent. Leave it unticked (privacy-preserving), or ask the user to type /job-hunt:allow-consent <role_id>.`);
+    deny(payload, session, `"${accName}" ticks a consent. Leave it unticked (privacy-preserving), or ask the user to type /job-hunt:allow-consent <role_id>.`);
+    return;
   }
   if (C.SUBMIT.test(accName) && !/^apply (?:filters?|changes)$/i.test(accName)) return submitGate(payload, session, `"${accName}"`);
   if (C.DELETE.test(accName)) return deleteGate(payload, session, steps, host, `"${accName}"`);
@@ -127,12 +135,14 @@ function consentAllowed(session: SessionState): boolean {
 async function submitGate(payload: HookPayload, session: SessionState, what: string): Promise<void> {
   const approvals = activeApprovals(session.approvals);
   if (!approvals.length) {
-    return deny(payload, session, `Submit blocked: ${what} needs the user's approval in this session. Stop here, show the filled form, and ask the user to type /job-hunt:approve <role_id>. Do not work around this.`);
+    deny(payload, session, `Submit blocked: ${what} needs the user's approval in this session. Stop here, show the filled form, and ask the user to type /job-hunt:approve <role_id>. Do not work around this.`);
+    return;
   }
   const latest = approvals[approvals.length - 1]!; // approvals is not empty (checked above).
   const gate = await gateCheck(latest.role_id);
   if (!gate.ok) {
-    return deny(payload, session, `Submit blocked for role ${latest.role_id}: ${(gate.problems || []).join(' ')}`);
+    deny(payload, session, `Submit blocked for role ${latest.role_id}: ${(gate.problems || []).join(' ')}`);
+    return;
   }
 }
 
@@ -151,13 +161,16 @@ function deleteGate(payload: HookPayload, session: SessionState, steps: ToolStep
     }
   }
   if (!guard) {
-    return deny(payload, session, `Delete blocked: ${what} needs a fresh triage guard. Run skills/triage-tracker/guard.js with javascript_tool (column by header text, intended list, protected columns) and retry.`);
+    deny(payload, session, `Delete blocked: ${what} needs a fresh triage guard. Run skills/triage-tracker/guard.js with javascript_tool (column by header text, intended list, protected columns) and retry.`);
+    return;
   }
   if (guard.ok !== true) {
-    return deny(payload, session, `Delete blocked: the last triage guard failed: ${(guard.problems || []).join(' ') || 'ok is not true'}. Fix the selection and re-run the guard.`);
+    deny(payload, session, `Delete blocked: the last triage guard failed: ${(guard.problems || []).join(' ') || 'ok is not true'}. Fix the selection and re-run the guard.`);
+    return;
   }
   if (steps.length - guardIdx > GUARD_MAX_AGE_STEPS) {
-    return deny(payload, session, 'Delete blocked: the triage guard is stale. Re-run it immediately before deleting.');
+    deny(payload, session, 'Delete blocked: the triage guard is stale. Re-run it immediately before deleting.');
+    return;
   }
   // Since the guard, only the delete control and its confirm dialog may have been clicked.
   for (const s of steps.slice(guardIdx + 1)) {
@@ -166,7 +179,8 @@ function deleteGate(payload: HookPayload, session: SessionState, steps: ToolStep
     if (!C.isBrowser(server) || C.browserAction(short, s.input) !== 'click') continue;
     const name = C.accessibleName(C.resolveLabel(s.input, steps)) || '';
     if (!name || !(C.DELETE.test(name) || C.CONFIRM.test(name))) {
-      return deny(payload, session, `Delete blocked: "${name || 'a coordinate click'}" was clicked after the guard ran, so the selection may have changed. Re-run the guard.`);
+      deny(payload, session, `Delete blocked: "${name || 'a coordinate click'}" was clicked after the guard ran, so the selection may have changed. Re-run the guard.`);
+      return;
     }
   }
 }
@@ -188,7 +202,8 @@ function checkReadback(payload: HookPayload, session: SessionState, input: ToolI
   const reads = steps.filter(isResult).filter((s) => !s.isError && /(get|list|search)_?drafts?|get_message|get_thread/i.test(s.name));
   const seen = reads.some((r) => tokens.some((tok) => r.text.includes(tok)));
   if (!seen) {
-    return deny(payload, session, 'verify_artifact needs a real read-back: call get_draft or list_drafts in this session and pass its output. A tool result containing the draft id was not found.');
+    deny(payload, session, 'verify_artifact needs a real read-back: call get_draft or list_drafts in this session and pass its output. A tool result containing the draft id was not found.');
+    return;
   }
 }
 

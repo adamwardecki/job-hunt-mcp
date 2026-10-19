@@ -1,15 +1,15 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { openDb } from '../src/db.ts';
-import { Tracker } from '../src/tracker.ts';
-import { makeHandler } from '../src/mcp.ts';
+import { importLegacy, mapStatus } from '../src/legacy.ts';
 import { lintProse } from '../src/lint.ts';
-import { mapStatus, importLegacy } from '../src/legacy.ts';
-import { renderReport, runAudit } from '../src/report.ts';
 import type { RpcResponse } from '../src/mcp.ts';
-import { localDate, formatLocal } from '../src/time.ts';
+import { makeHandler } from '../src/mcp.ts';
+import { renderReport, runAudit } from '../src/report.ts';
+import { formatLocal, localDate } from '../src/time.ts';
+import { Tracker } from '../src/tracker.ts';
 
 const fixture = (name: string) => readFileSync(fileURLToPath(new URL(`../../../tests/fixtures/${name}`, import.meta.url)), 'utf8');
 // fresh() sets filters.timezone to Europe/Berlin; "today" is that local day.

@@ -1,7 +1,7 @@
 // Minimal MCP (JSON-RPC 2.0) handler: initialize, ping, tools/list, tools/call.
 
-import { TOOLS, TOOL_MAP, checkArgs } from './tools.ts';
 import { ToolError } from './errors.ts';
+import { checkArgs, TOOL_MAP, TOOLS } from './tools.ts';
 import type { Tracker } from './tracker.ts';
 import { errorMessage, errorText, isRecord } from './util.ts';
 
