@@ -57,9 +57,11 @@ schedule:
   report_delivery: artifact      # artifact | file | email_draft (a draft to yourself, never sent)
 
 sources:                         # chosen in setup from the source-roles catalogue
-  enabled: []                    # e.g. [linkedin, ats_boards, hn, waas, wellfound]
+  enabled: []                    # source IDs, e.g. [linkedin, ats_boards, hn, waas, wellfound, wwr, indeed, builtin]
+                                 # IDs: linkedin ats_boards hn waas wellfound wttj wwr indeed glassdoor ziprecruiter
+                                 #      dice builtin usajobs jack-and-jill jobcopilot
   need_login: []                 # sources that need you logged in in the browser
-  disabled: [justjoin, nofluffjobs, remoteok, remotive]
+  disabled: [justjoin, nofluffjobs, remoteok, remotive, monster, careerbuilder, simplyhired]
   boards: []                     # employer job boards for ats_boards, e.g. [https://jobs.ashbyhq.com/<company>]
 
 capabilities:                    # written by start_run detection, not by you

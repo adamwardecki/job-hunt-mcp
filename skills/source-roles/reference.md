@@ -53,6 +53,56 @@ Start URL: `https://www.workatastartup.com/jobs`. Logged out it shows a small su
 - Cards only mount while the tab is painted. Keep the tab in front; a screenshot forces a render. The page can freeze the renderer every few pages; accept a partial sweep and record how far you got.
 - Keep only cards whose own label says fully remote (or matches the user's work mode), then verify each on the employer page.
 
+## We Work Remotely (RSS)
+
+- All jobs: `https://weworkremotely.com/remote-jobs.rss`. One feed per category: `https://weworkremotely.com/categories/<slug>.rss`, e.g. `remote-full-stack-programming-jobs`, `remote-back-end-programming-jobs`, `remote-front-end-programming-jobs`, `remote-devops-sysadmin-jobs`, `remote-design-jobs`, `remote-product-jobs`. Pick the categories that match `prefs.titles`; use the all-jobs feed only if none fits.
+- Each `<item>` has `<title>` as `Company: Job title`, `<region>`, `<country>`, `<state>`, `<type>`, `<pubDate>` and `<link>`. Keep items with `pubDate` after `last_run`.
+- The description starts with the company's headquarters and website; use the website as `company_domain`. `<region>` and `<country>` are tags, so they go in `raw_location`.
+- The `link` is the WWR posting. Its apply button usually leads to the employer's ATS; `verify-employer` follows it.
+
+## US job boards
+
+All of these are read-only lead sources. Build 2 to 4 title queries from `prefs.titles`, set the remote or location filter from `filters.work_mode`, and limit to postings since `last_run`. Open the posting only to find the employer link; never click the board's own apply button. Stop on a visible bot check (see the hard rules in `SKILL.md`).
+
+### Indeed
+
+- Search URL: `https://www.indeed.com/jobs?q=<title>&l=Remote&fromage=<days>&sort=date`. `fromage` takes 1, 3, 7 or 14: use the smallest that covers `last_run`. For hybrid or onsite, put the user's city in `l`.
+- Plain fetch is blocked (HTTP 403); use the browser.
+- Job links look like `https://www.indeed.com/viewjob?jk=<id>`. "Apply on company site" leads to the employer; prefer that URL for `url`. "Easily apply" means Indeed hosts the form: keep the Indeed URL and let `verify-employer` find the employer's own posting.
+- Collapse sponsored repeats and the same title from the same staffing agency before dedupe.
+
+### Glassdoor
+
+- Search URL: `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=<title>`, then use the page's own "Date posted" and "Remote" filters.
+- Logged in works best. A sign-in modal over the results when logged out means stop and report "Log in to Glassdoor in the browser"; do not try to dismiss it repeatedly.
+- Pay marked "Glassdoor est." is Glassdoor's estimate. "Employer provided" is still `raw_comp` until the employer's page says it.
+- Company ratings on the card are not evidence for any filter.
+
+### ZipRecruiter
+
+- Search URL: `https://www.ziprecruiter.com/jobs-search?search=<title>&location=Remote`, then the page's "Date posted" filter.
+- Many listings are syndicated from other boards or the employer's ATS; collapse duplicates by company and title. Prefer the employer link when the posting shows one.
+- Never use 1-Click Apply or Quick Apply.
+
+### Dice
+
+- Search URL: `https://www.dice.com/jobs?q=<title>`, then the page's filters for posted date, work setting (remote) and employment type. If `prefs.contract_ok` is false, filter to full-time.
+- A large share of cards are staffing agencies. The card's company is the agency; the posting text may name the client or only say "our client". Upsert it under the company the card shows and note "staffing agency" in the `found` reason; `verify-employer` decides who the employer is.
+- "C2C", "corp-to-corp" and "W2 only" in the title or card are contract tells; pass them on, do not drop at source unless the user's rules exclude contract work.
+
+### Built In
+
+- Remote listings: `https://builtin.com/jobs/remote?search=<title>`. Hub listings for hybrid or onsite users: use the page's location filter rather than building a city URL.
+- Listing pages render with a plain fetch. Postings live at `https://builtin.com/job/<slug>/<id>` and usually have an apply link to the employer's ATS: use it as `url`.
+
+### USAJOBS
+
+- Search URL: `https://www.usajobs.gov/search/results/?k=<title>`. Results render with JavaScript, so use the browser. Use the page's filters for remote or telework and for opening date.
+- The public API at `data.usajobs.gov` needs a personal API key. Do not ask the user for one; the browser is enough.
+- Postings live at `https://www.usajobs.gov/job/<id>`. Read "This job is open to" (who may apply), "Remote job", "Telework eligible", "Location" and "Salary" (a pay range with a GS grade). These are the agency's own words: `verify-employer` can quote them directly.
+- Most postings require US citizenship. That is a work-authorisation question for `verify-employer` and `score-role`; never record or ask about the user's nationality.
+- Applying goes through a USAJOBS profile and Login.gov. Never start an application from a sweep.
+
 ## Jack & Jill
 
 - Two inputs: the agent's pick emails in Gmail (search by the sender of the most recent pick email) and the logged-in dashboard kanban at `https://app.jackandjill.ai/jack/dashboard/home`.
@@ -73,5 +123,7 @@ Start URL: `https://www.workatastartup.com/jobs`. Logged out it shows a small su
 - **nofluffjobs**: blocked by a CDN error in past runs.
 - **RemoteOK**: feed went weeks stale.
 - **Remotive**: public API mostly recruiter spam.
+- **Monster, CareerBuilder**: the merged company filed for bankruptcy in June 2025 and sold the job boards. Not tested since.
+- **SimplyHired**: owned by Indeed, mostly the same listings. Run `indeed` instead.
 
 Enable any of these only at the user's request, and retire again after two empty runs.
