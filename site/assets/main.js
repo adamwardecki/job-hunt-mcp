@@ -101,7 +101,7 @@ const CLIENTS = {
     step2:
       "The local tracker starts automatically and keeps its data in ~/.job-hunt/tracker.db",
     config:
-      "/plugin marketplace add adamwardecki/job-hunt-mcp\n/plugin install job-hunt@job-hunt",
+      "/plugin marketplace add adamwardecki/job-hunt-mcp\n/plugin install job-hunt@job-hunt-mcp",
   },
   hermes: {
     step1: "Install the native plugin from a checkout",

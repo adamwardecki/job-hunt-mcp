@@ -46,7 +46,7 @@ Claude Code:
 
 ```
 /plugin marketplace add adamwardecki/job-hunt-mcp
-/plugin install job-hunt@job-hunt
+/plugin install job-hunt@job-hunt-mcp
 /job-hunt:setup
 ```
 
