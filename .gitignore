@@ -1,0 +1,9 @@
+node_modules/
+*.db
+*.db-shm
+*.db-wal
+.DS_Store
+__pycache__/
+
+# Local working notes (design specs and implementation plans)
+docs/superpowers/

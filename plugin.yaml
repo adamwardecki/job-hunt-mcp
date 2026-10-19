@@ -1,0 +1,9 @@
+name: job-hunt
+version: "0.1.0"
+description: "A disciplined, low-volume job search: daily sourcing against hard filters, verification on the employer's own posting, dedupe, tailored applications submitted only with your approval, and one short daily report. Drafts only; never sends. Requires Node >= 22.18 and the tracker MCP server (scripts/hermes-install.sh)."
+author: "Adam Wardecki"
+provides_hooks:
+  - pre_tool_call
+  - post_tool_call
+  - pre_llm_call
+  - post_llm_call

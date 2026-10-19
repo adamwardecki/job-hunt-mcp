@@ -1,0 +1,870 @@
+[
+  {
+    "name": "setup_status",
+    "description": "Checklist of what is configured, missing or degraded. Call at the start of every run.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "record_setup_decision",
+    "description": "Record the user decision for an amber setup item (e.g. \"no browser, accepted\"), so setup can complete.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "setup_status item key"
+        },
+        "decision": {
+          "type": "string",
+          "description": "The user's decision, in their words"
+        }
+      },
+      "required": [
+        "key",
+        "decision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "start_run",
+    "description": "Start a run and record detected capabilities (connectors, browser, local folder). Returns run_id.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "sweep | apply | triage | setup | calibration"
+        },
+        "capabilities": {
+          "type": "object",
+          "description": "{connectors: {gmail, calendar, linkedin}, browser: \"claude-in-chrome\" | \"built-in\" | null, local_folder: bool}"
+        }
+      },
+      "required": [
+        "kind",
+        "capabilities"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "finish_run",
+    "description": "Close a run with a one-paragraph summary.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "run_id": {
+          "type": "integer",
+          "description": "From start_run"
+        },
+        "summary": {
+          "type": "string",
+          "description": "What happened"
+        }
+      },
+      "required": [
+        "run_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_profile",
+    "description": "All config sections: filters, prefs, writing, accounts, autonomy, schedule, sources, capabilities.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "save_config",
+    "description": "Validate and save one config section. Unknown fields are rejected.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "section": {
+          "type": "string",
+          "description": "filters | prefs | writing | accounts | autonomy | schedule | sources | capabilities"
+        },
+        "data": {
+          "type": "object",
+          "description": "Section contents"
+        }
+      },
+      "required": [
+        "section",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_document",
+    "description": "Read a user document: profile (CV distilled), stories, reusable-answers, voice.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "profile | stories | reusable-answers | voice"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "save_document",
+    "description": "Save a user document (markdown).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "profile | stories | reusable-answers | voice"
+        },
+        "content": {
+          "type": "string",
+          "description": "Markdown"
+        }
+      },
+      "required": [
+        "name",
+        "content"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "find_company",
+    "description": "Dedupe check. Fuzzy match on name, aliases, domain and ATS slug. verdict: new | seen | skip (live application, same posting, or no_cold_apply).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Company name"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Website domain"
+        },
+        "url": {
+          "type": "string",
+          "description": "Posting URL"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "set_no_cold_apply",
+    "description": "Mark a company as no_cold_apply (an intro or recruiter process is open), or clear it.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "company_id": {
+          "type": "integer",
+          "description": "Company id"
+        },
+        "on": {
+          "type": "boolean",
+          "description": "true to set, false to clear"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why"
+        }
+      },
+      "required": [
+        "company_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "add_alias",
+    "description": "Add an alias to a company (brand, former name, parent) so dedupe catches it.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "company_id": {
+          "type": "integer",
+          "description": "Company id"
+        },
+        "alias": {
+          "type": "string",
+          "description": "Alias"
+        }
+      },
+      "required": [
+        "company_id",
+        "alias"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "upsert_role",
+    "description": "Create or update a role (creates the company if needed). New roles start as found. Returns the dedupe result for new roles.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Existing role id to update"
+        },
+        "company": {
+          "type": "string",
+          "description": "Company name as the employer writes it"
+        },
+        "company_aliases": {
+          "type": "array",
+          "description": "Other names, e.g. a brand vs the legal entity",
+          "items": {
+            "type": "string"
+          }
+        },
+        "company_domain": {
+          "type": "string",
+          "description": "Employer website domain"
+        },
+        "title": {
+          "type": "string",
+          "description": "Role title, verbatim"
+        },
+        "url": {
+          "type": "string",
+          "description": "Posting URL (employer ATS preferred)"
+        },
+        "ats": {
+          "type": "string",
+          "description": "ashby | greenhouse | lever | workable | teamtailor | personio | join | workday | other"
+        },
+        "location_line": {
+          "type": "string",
+          "description": "Verbatim location line from the employer ATS"
+        },
+        "location_type": {
+          "type": "string",
+          "description": "remote | hybrid | onsite | unknown"
+        },
+        "comp_min": {
+          "type": "number",
+          "description": "Band minimum"
+        },
+        "comp_max": {
+          "type": "number",
+          "description": "Band maximum"
+        },
+        "comp_currency": {
+          "type": "string",
+          "description": "ISO currency code"
+        },
+        "comp_period": {
+          "type": "string",
+          "description": "year | month | day | hour"
+        },
+        "equity": {
+          "type": "string",
+          "description": "Equity as stated"
+        },
+        "stack": {
+          "type": "string",
+          "description": "Stack as stated"
+        },
+        "industry": {
+          "type": "string",
+          "description": "Industry of the business line the role sits in"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where the lead came from"
+        },
+        "posted_at": {
+          "type": "string",
+          "description": "Posting date if shown"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_role",
+    "description": "Role with its company, full event history, artifacts and interviews.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "role_id": {
+          "type": "integer",
+          "description": "Role id"
+        }
+      },
+      "required": [
+        "role_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "transition",
+    "description": "Move a role through found → verified → scored → queued → applied → interviewing → offer (dropped from found/verified/scored/queued; closed from queued/applied/interviewing/offer). Rejects illegal moves. verified needs evidence (URL + verbatim location line), location_line and location_type. dropped needs evidence (quote or rule:<id>). applied needs the confirmation text. closed needs outcome.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "role_id": {
+          "type": "integer",
+          "description": "Role id"
+        },
+        "to": {
+          "type": "string",
+          "description": "found | verified | scored | queued | applied | interviewing | offer | dropped | closed"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why, one sentence"
+        },
+        "evidence": {
+          "type": "string",
+          "description": "Verbatim quote with URL, rule:<id>, or confirmation text"
+        },
+        "outcome": {
+          "type": "string",
+          "description": "rejected | withdrawn | role_closed (closed only)"
+        },
+        "category": {
+          "type": "string",
+          "description": "For drops: location | pay | industry | role_shape | stack | culture | duplicate | gated | other"
+        },
+        "question": {
+          "type": "string",
+          "description": "For queued: the single blocking question for the user"
+        },
+        "blocked_by": {
+          "type": "string",
+          "description": "For queued: browser | user | login | captcha | other"
+        },
+        "location_line": {
+          "type": "string",
+          "description": "verified only: verbatim from the ATS"
+        },
+        "location_type": {
+          "type": "string",
+          "description": "verified only: remote | hybrid | onsite | unknown"
+        },
+        "score": {
+          "type": "number",
+          "description": "scored only: 0 to 10"
+        },
+        "score_notes": {
+          "type": "string",
+          "description": "scored only: short notes, including gaps kept internal"
+        },
+        "run_id": {
+          "type": "integer",
+          "description": "Current run id"
+        }
+      },
+      "required": [
+        "role_id",
+        "to",
+        "reason"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "record",
+    "description": "Append a validated event without the state-machine check: outcomes from outside (rejection, invite, user decision) or a note (omit status).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "role_id": {
+          "type": "integer",
+          "description": "Role id"
+        },
+        "status": {
+          "type": "string",
+          "description": "found | verified | scored | queued | applied | interviewing | offer | dropped | closed (omit for a note)"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why"
+        },
+        "evidence": {
+          "type": "string",
+          "description": "Verbatim quote, feedback, or URL"
+        },
+        "outcome": {
+          "type": "string",
+          "description": "rejected | withdrawn | role_closed"
+        },
+        "category": {
+          "type": "string",
+          "description": "Drop category"
+        },
+        "question": {
+          "type": "string",
+          "description": "Blocking question for the user (shown under Needs you until a later event)"
+        },
+        "blocked_by": {
+          "type": "string",
+          "description": "browser | user | login | captcha | other"
+        },
+        "actor": {
+          "type": "string",
+          "description": "user | employer | pipeline"
+        },
+        "run_id": {
+          "type": "integer",
+          "description": "Current run id"
+        }
+      },
+      "required": [
+        "role_id",
+        "reason",
+        "actor"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "check_pay",
+    "description": "Deterministic pay-floor check. Drops only if the band maximum is below the floor; straddling bands are kept and flagged. Pass fx_rate when the currency differs from the floor (look it up, never guess).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "comp_min": {
+          "type": "number",
+          "description": "Band minimum"
+        },
+        "comp_max": {
+          "type": "number",
+          "description": "Band maximum"
+        },
+        "currency": {
+          "type": "string",
+          "description": "ISO code"
+        },
+        "period": {
+          "type": "string",
+          "description": "year | month | week | day | hour"
+        },
+        "fx_rate": {
+          "type": "number",
+          "description": "Floor-currency units per 1 unit of currency"
+        },
+        "equity": {
+          "type": "string",
+          "description": "Equity, if any"
+        }
+      },
+      "required": [
+        "currency"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "gate_check",
+    "description": "Pre-submit check: role verified, dedupe clean, not no_cold_apply, no live application at the company.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "role_id": {
+          "type": "integer",
+          "description": "Role id"
+        }
+      },
+      "required": [
+        "role_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "add_artifact",
+    "description": "Save a cover note, PDF, Gmail draft id, form answers, confirmation or note. Prose is linted. gmail_draft stays unverified until verify_artifact.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "role_id": {
+          "type": "integer",
+          "description": "Role id (omit for drafts not tied to a role)"
+        },
+        "kind": {
+          "type": "string",
+          "description": "cover_note | cover_letter_pdf | gmail_draft | form_answers | confirmation | note"
+        },
+        "ref": {
+          "type": "string",
+          "description": "Path, URL or Gmail draft id"
+        },
+        "content": {
+          "type": "string",
+          "description": "Text content"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_artifacts",
+    "description": "Artifacts for a run, a local day or a role, with lint results and read-back state. The auditor uses this.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "YYYY-MM-DD, a day in filters.timezone (ignored when run_id is given)"
+        },
+        "run_id": {
+          "type": "integer",
+          "description": "Artifacts from this run"
+        },
+        "role_id": {
+          "type": "integer",
+          "description": "Role id"
+        },
+        "kind": {
+          "type": "string",
+          "description": "Artifact kind"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "verify_artifact",
+    "description": "Mark an artifact verified after reading it back. For gmail_draft, readback must be the get_draft/list_drafts output containing the draft id.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "artifact_id": {
+          "type": "integer",
+          "description": "Artifact id"
+        },
+        "readback": {
+          "type": "string",
+          "description": "Read-back output"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "readback"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "lint_prose",
+    "description": "Lint outbound prose: em/en dashes, \"not X but Y\", fake-candid openers, volunteered gaps, length.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Text to lint"
+        },
+        "max_words": {
+          "type": "integer",
+          "description": "Word limit"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "open_items",
+    "description": "Queue (fresh and stale), unverified drafts, interviews to book, upcoming interviews.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "stale_after_days": {
+          "type": "integer",
+          "description": "Queue items untouched this long are listed as stale (default 14)"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "pipeline_summary",
+    "description": "Counts by status, live processes, rejections, queue (fresh and stale).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "stale_after_days": {
+          "type": "integer",
+          "description": "Default 14"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "add_rule",
+    "description": "Add a user preference or correction as a rule, with reason and example.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The rule, imperative"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why (the incident or the user words)"
+        },
+        "example": {
+          "type": "string",
+          "description": "Concrete example"
+        },
+        "added_by": {
+          "type": "string",
+          "description": "user | pipeline"
+        }
+      },
+      "required": [
+        "text",
+        "reason"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_rules",
+    "description": "Active rules with provenance.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "include_inactive": {
+          "type": "boolean",
+          "description": "Include deactivated rules"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "deactivate_rule",
+    "description": "Deactivate a rule.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Rule id"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "source_health",
+    "description": "Per-source status, consecutive failures, yield.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "set_source_status",
+    "description": "Record a source result for this run. Three consecutive failures mark it degraded.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Source name"
+        },
+        "status": {
+          "type": "string",
+          "description": "ok | degraded | failed | disabled"
+        },
+        "found": {
+          "type": "integer",
+          "description": "Leads found"
+        },
+        "applied": {
+          "type": "integer",
+          "description": "Applications from it"
+        },
+        "error": {
+          "type": "string",
+          "description": "Error text"
+        }
+      },
+      "required": [
+        "name",
+        "status"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "add_interview",
+    "description": "Record an interview (or a booking link still to book: omit starts_at). Moves the role to interviewing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "role_id": {
+          "type": "integer",
+          "description": "Role id"
+        },
+        "starts_at": {
+          "type": "string",
+          "description": "ISO datetime, omit if not booked yet"
+        },
+        "tz": {
+          "type": "string",
+          "description": "IANA timezone"
+        },
+        "stage": {
+          "type": "string",
+          "description": "Stage name"
+        },
+        "people": {
+          "type": "string",
+          "description": "Interviewers"
+        },
+        "link": {
+          "type": "string",
+          "description": "Booking or meeting link"
+        },
+        "booked_by": {
+          "type": "string",
+          "description": "user | employer"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Notes"
+        }
+      },
+      "required": [
+        "role_id",
+        "stage"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "render_report",
+    "description": "Markdown daily report. With run_id it covers that run; otherwise the local day. Lead with the outcome via headline. Only read-back drafts and confirmed submissions are claimed.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "YYYY-MM-DD, a day in filters.timezone (report title; ignored for scope when run_id is given)"
+        },
+        "run_id": {
+          "type": "integer",
+          "description": "Run id (preferred)"
+        },
+        "headline": {
+          "type": "string",
+          "description": "One or two sentences: the outcome"
+        }
+      },
+      "required": [
+        "date"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "audit",
+    "description": "Post-run rule check for a run (preferred) or a local day: excluded industries, drops without evidence, applied without confirmation, prose lint, drafts not read back, no_cold_apply. Pass run_id or date.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "run_id": {
+          "type": "integer",
+          "description": "Run id"
+        },
+        "date": {
+          "type": "string",
+          "description": "YYYY-MM-DD, a day in filters.timezone (ignored when run_id is given)"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "import_legacy",
+    "description": "One-off import of the manual pipeline: applied-log.md, outreach-preferences.md, queue/*.md, and user documents. Pass the contents, or path to a local pipeline/ folder.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "applied_log": {
+          "type": "string",
+          "description": "applied-log.md contents"
+        },
+        "preferences": {
+          "type": "string",
+          "description": "outreach-preferences.md contents"
+        },
+        "queue": {
+          "type": "array",
+          "description": "Queue notes",
+          "items": {
+            "type": "object",
+            "properties": {
+              "filename": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "filename",
+              "content"
+            ]
+          }
+        },
+        "documents": {
+          "type": "object",
+          "description": "{profile, stories, \"reusable-answers\"} markdown"
+        },
+        "path": {
+          "type": "string",
+          "description": "Local path to the pipeline/ folder"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  }
+]

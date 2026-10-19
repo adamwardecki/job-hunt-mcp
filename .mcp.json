@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "tracker": {
+      "command": "node",
+      "args": ["--no-warnings", "${CLAUDE_PLUGIN_ROOT}/servers/tracker/src/index.ts"]
+    }
+  }
+}

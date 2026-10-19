@@ -1,0 +1,14 @@
+{
+  "name": "job-hunt",
+  "description": "A disciplined, low-volume job search plugin with a tracker, hard gates and a daily report.",
+  "owner": {
+    "name": "Adam Wardecki"
+  },
+  "plugins": [
+    {
+      "name": "job-hunt",
+      "source": "./",
+      "description": "Low-volume, high-precision job search with a tracker, hard gates and a daily report."
+    }
+  ]
+}
