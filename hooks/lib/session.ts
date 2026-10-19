@@ -41,5 +41,6 @@ export function saveSession(sessionId: string | undefined, state: SessionState):
 }
 
 export function activeApprovals(list: Approval[] | undefined, now = Date.now()): Approval[] {
-  return (list || []).filter((a) => now - Date.parse(a.at) < APPROVAL_TTL_MS);
+  // Old, unscoped approvals are deliberately invalid after the target-binding upgrade.
+  return (list || []).filter((a) => typeof a.target_url === 'string' && now - Date.parse(a.at) < APPROVAL_TTL_MS);
 }

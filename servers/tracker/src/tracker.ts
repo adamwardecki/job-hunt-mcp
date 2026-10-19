@@ -22,6 +22,7 @@ export interface GateResult {
   role_id?: number;
   company?: string;
   title?: string;
+  url?: string;
   verified?: boolean;
   dedupe_clean?: boolean;
   no_cold_apply?: boolean;
@@ -476,6 +477,7 @@ export class Tracker {
       role_id,
       company: company.name,
       title: role.title,
+      url: role.url || undefined,
       verified: !!role.verified_at,
       dedupe_clean: others.length === 0,
       no_cold_apply: !!company.no_cold_apply,

@@ -58,7 +58,7 @@ closed (from queued | applied | interviewing | offer), with outcome: rejected | 
 | `get_role` | `role_id` | Role, company, full event history, artifacts, interviews. |
 | `record` | `role_id`, `status?`, `reason`, `evidence?`, `outcome?`, `category?`, `question?`, `blocked_by?`, `actor` (`user`\|`employer`\|`pipeline`), `run_id?` | Appends a validated event without the machine check. For outcomes that arrive from outside (rejection, invite, user decision) and for notes (`status` omitted = note). A `question` on the latest event shows under Needs you. |
 | `check_pay` | `comp_min?`, `comp_max`, `currency`, `period` (`year`\|`month`\|`day`\|`hour`), `fx_rate?` (units of floor currency per 1 unit of `currency`), `equity?` | `{verdict: "keep"\|"straddles"\|"drop"\|"unknown", reason}`. Drop only if the band max is below the floor. |
-| `gate_check` | `role_id` | `{ok, verified, dedupe_clean, no_cold_apply, live_elsewhere, problems[]}`. Hooks call this before a submit click. |
+| `gate_check` | `role_id` | `{ok, role_id, company, title, url, verified, dedupe_clean, no_cold_apply, live_elsewhere, problems[]}`. Hooks call this before a submit click and bind approval to `url`. |
 | `add_artifact` | `role_id`, `kind` (`cover_note`\|`cover_letter_pdf`\|`gmail_draft`\|`form_answers`\|`confirmation`\|`note`), `ref`, `content?` | `{artifact_id}`. Prose kinds are linted; issues are returned. `gmail_draft` starts unverified. |
 | `list_artifacts` | `run_id?`, `date?`, `role_id?`, `kind?` | Artifacts with lint results and read-back state (the auditor uses this). |
 | `verify_artifact` | `artifact_id`, `readback` (the text returned by `get_draft`/`list_drafts`) | Marks verified. The tracker checks the draft id is in the read-back; a hook checks a real `get_draft`/`list_drafts` result in the session contains it. |
@@ -74,10 +74,12 @@ closed (from queued | applied | interviewing | offer), with outcome: rejected | 
 
 ## Session approvals (hooks, not tools)
 
-Approvals come only from the user's own prompt, never from a tool call. The `UserPromptSubmit` hook
-recognises `/job-hunt:approve <role_id>` (or `/approve <role_id>`) and stores an approval for that role
-in the session state at `$JOB_HUNT_HOME/sessions/<session_id>.json`. The submit-click hook requires
-it. Similarly `/job-hunt:allow-consent <role_id>` lets a consent checkbox be ticked for one role.
+Approvals come only from a standalone command in the user's own prompt, never from a command mention
+or tool call. The `UserPromptSubmit` hook recognises `/job-hunt:approve <role_id>` (or `/approve
+<role_id>`) and stores a one-use approval for that role, browser page and tab in the session state at
+`$JOB_HUNT_HOME/sessions/<session_id>.json`. The submit-click hook requires an exact target match and
+consumes the approval before allowing the attempt. Similarly `/job-hunt:allow-consent <role_id>` lets
+consent boxes be ticked only on that role's current page and tab.
 
 ## Triage guard (hooks)
 

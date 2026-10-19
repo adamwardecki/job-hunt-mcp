@@ -115,8 +115,8 @@ You answer the "Needs you" items, run `/job-hunt:apply` for the roles you want, 
 | `/job-hunt:setup` | Guided setup; resumable. |
 | `/job-hunt:sweep [--limit N]` | The daily run (what the scheduled task runs). Inbox, sourcing, verify, score, prepare, report, audit. Never submits. |
 | `/job-hunt:apply [role-id\|url]` | Interactive apply: verify, write, fill, read back, then wait for your approval. |
-| `/job-hunt:approve <role-id>` | **You** type this to allow one submit for that role in this session (2 hours). |
-| `/job-hunt:allow-consent <role-id>` | **You** type this to allow ticking consent boxes for one role. |
+| `/job-hunt:approve <role-id>` | **You** type this on the filled form to allow one submit attempt for that role and page (up to 2 hours). |
+| `/job-hunt:allow-consent <role-id>` | **You** type this on the form to allow ticking consent boxes for that role and page. |
 | `/job-hunt:triage <source>` | Reconcile and clean a tracker board (JobCopilot-style) with the delete guard. |
 | `/job-hunt:prep <company>` | Interview prep from your stories. |
 | `/job-hunt:status` | Pipeline summary and open items. |
@@ -166,7 +166,7 @@ the machine is awake and the app is open.
 |---|---|
 | Send | Any Gmail/email send, reply or forward, and any LinkedIn message or connection request, is denied in every session. Browser clicks on "Send" are denied in job-hunt sessions. |
 | Drafts | Gmail `create_draft`/`update_draft` bodies are linted; em/en dashes, "not X but Y", fake-candid openers and volunteered gaps are denied. |
-| Submit | A click on a submit/apply element (resolved from the page's accessibility tree) or a scripted submit needs your `/job-hunt:approve` in this session and a passing `gate_check` (verified, not `no_cold_apply`, no live application at the company). No reachable tracker means no submit. |
+| Submit | A click on a submit/apply element (resolved from the page's accessibility tree) or a scripted submit needs your `/job-hunt:approve` on that role's current form and a passing `gate_check` (verified, not `no_cold_apply`, no live application at the company). Approval is consumed by one submit attempt. No identifiable page or reachable tracker means no submit. |
 | Board delete | Needs a fresh `JOBHUNT_TRIAGE_GUARD` with `ok: true` and nothing but the delete control and its confirm button clicked since. |
 | Personal data and consent | `form_input` into passport, nationality, age, DOB, gender, marital, ID and similar fields is denied; consent boxes stay unticked unless you allow them. |
 | Read-back | `verify_artifact` is denied unless a real `get_draft`/`list_drafts` result in the session contains the draft id. |
