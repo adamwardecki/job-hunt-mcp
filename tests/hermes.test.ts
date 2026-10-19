@@ -2,7 +2,7 @@
 
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { beforeEach, test } from 'node:test';
@@ -144,4 +144,16 @@ test('plugin.yaml, plugin.json and package.json carry the same version', () => {
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
   assert.equal(yaml, claude);
   assert.equal(pkg, claude);
+});
+
+test('the plugin root has no lockfile, so Claude Code installs nothing for users', () => {
+  // Claude Code installs the packages a lockfile next to the root package.json lists, on every install and
+  // update. The plugin needs none at runtime; the dev tools and their lockfile live in dev/.
+  const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+  for (const lock of ['package-lock.json', 'npm-shrinkwrap.json', 'bun.lock', 'bun.lockb']) {
+    assert.equal(existsSync(join(root, lock)), false, `${lock} in the plugin root`);
+  }
+  const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+  assert.equal(pkg.dependencies, undefined, 'no runtime dependencies');
+  assert.equal(pkg.devDependencies, undefined, 'dev dependencies belong in dev/package.json');
 });

@@ -22,8 +22,9 @@ jobs:
         with:
           node-version: 24.x
           cache: npm
-      - run: npm ci
-      - run: npx biome ci .
+          cache-dependency-path: dev/package-lock.json
+      - run: npm run setup
+      - run: npm --prefix dev exec --no -- biome ci .
 
   test:
     # 22.18 is the floor in package.json engines; keep it in the matrix so nothing newer sneaks in.
@@ -39,6 +40,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: npm
-      - run: npm ci
+          cache-dependency-path: dev/package-lock.json
+      - run: npm run setup
       # Typecheck, Node tests (Chrome and pwsh suites run where the runner has them), Python Hermes tests.
       - run: npm test
