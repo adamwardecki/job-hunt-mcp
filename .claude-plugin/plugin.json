@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "description": "A disciplined, low-volume job search: daily sourcing against hard filters, verification on the employer's own posting, dedupe against everything you have touched, tailored applications submitted only with your approval, and one short daily report. Drafts only; never sends.",
   "author": { "name": "Adam Wardecki" },
-  "homepage": "https://adamwardecki.github.io/job-hunt-mcp/",
+  "homepage": "https://jobhuntmcp.com/",
   "repository": "https://github.com/adamwardecki/job-hunt-mcp",
   "license": "MIT",
   "keywords": ["jobs", "job-search", "applications", "tracker", "career"]
