@@ -268,7 +268,11 @@ Exit criterion: `setup_status()` all green, or every amber item has a recorded u
 | Welcome to the Jungle | browser (logged in) | Matcher ignores remote preference unless the location is set in the profile. |
 | Jack & Jill | browser + email | Intro-brokering. Its salary figures and company attributions need ATS verification. Open intros set `no_cold_apply`. |
 | WWR JobCopilot | browser | **Save-only.** Never enable auto-apply. See §12.3 for safe triage. |
-| justjoin.it, nofluffjobs, RemoteOK, Remotive | — | Retire or disable by default: low yield or blocked. |
+| We Work Remotely | fetch (RSS) | Remote-only; per-category feeds. Region tags are unverified. |
+| Indeed, Glassdoor, ZipRecruiter, Dice | browser | US boards. Frequent bot checks (stop, never solve); heavy duplication and staffing-agency reposts; pay shown is often the board's own estimate. |
+| Built In | fetch / browser | US tech hubs and remote; postings usually link to the employer ATS. |
+| USAJOBS | browser | US federal jobs; most need US citizenship. The posting is the agency's own text. |
+| justjoin.it, nofluffjobs, RemoteOK, Remotive, Monster, CareerBuilder, SimplyHired | — | Retire or disable by default: low yield, blocked, or duplicate listings. |
 
 Source health is tracked per run. A source that fails N consecutive runs is marked `degraded` and shown in the report once, not every day.
 
