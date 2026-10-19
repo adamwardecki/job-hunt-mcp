@@ -11,7 +11,7 @@ Show the user a short job-hunt status.
    - **Needs you**: numbered, each with the single blocking question.
    - **Interviews**: upcoming (local time, stage, people), then links still to book.
    - **Live processes**: company, role, current status, days since last event.
-   - **Queue**: queued roles with id, company, title, score.
+   - **Queue**: queued roles with company, title, score and the ready-to-type command, e.g. `/job-hunt:apply 42`. Never a `<id>` placeholder: the user does not know the ids.
    - **Unverified drafts**: say they are not confirmed in Gmail yet.
    - Counts by status in one line.
 3. Lead with the most urgent item. No recap, no closing summary.

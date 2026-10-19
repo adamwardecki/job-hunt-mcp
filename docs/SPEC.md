@@ -204,7 +204,7 @@ writing:
   never_volunteer_gaps: true
   signature_style: name_only   # no bare URLs in email signatures
 accounts:
-  recruiter_email: personal    # which inbox recruiters actually use
+  job_inbox_email: personal    # the user's own inbox that recruiters write to
   invite_calendar: personal    # which calendar invites land on (!)
   chrome_autofill_risk: "work email autofills; always read back"
 autonomy:

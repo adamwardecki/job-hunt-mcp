@@ -42,7 +42,7 @@ writing:
   signature_style: name_only     # no bare URLs in email signatures (Gmail rewrites them)
 
 accounts:
-  recruiter_email: null          # which inbox recruiters write to, e.g. personal | work
+  job_inbox_email: null          # your own inbox that recruiters write to, e.g. you@example.com | personal | work
   invite_calendar: null          # which calendar interview invites land on (check this one!)
   connected_calendar: null       # which calendar account is connected to Claude; setup warns if it differs
   chrome_autofill_risk: null     # e.g. "browser autofills a work email; always read back"
@@ -60,6 +60,7 @@ sources:                         # chosen in setup from the source-roles catalog
   enabled: []                    # e.g. [linkedin, ats_boards, hn, waas, wellfound]
   need_login: []                 # sources that need you logged in in the browser
   disabled: [justjoin, nofluffjobs, remoteok, remotive]
+  boards: []                     # employer job boards for ats_boards, e.g. [https://jobs.ashbyhq.com/<company>]
 
 capabilities:                    # written by start_run detection, not by you
   connectors: {}

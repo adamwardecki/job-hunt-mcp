@@ -114,7 +114,7 @@ You answer the "Needs you" items, run `/job-hunt:apply` for the roles you want, 
 |---|---|
 | `/job-hunt:setup` | Guided setup; resumable. |
 | `/job-hunt:sweep [--limit N]` | The daily run (what the scheduled task runs). Inbox, sourcing, verify, score, prepare, report, audit. Never submits. |
-| `/job-hunt:apply [role-id\|url]` | Interactive apply: verify, write, fill, read back, then wait for your approval. |
+| `/job-hunt:apply [role-id\|company\|url]` | Interactive apply: verify, write, fill, read back, then wait for your approval. |
 | `/job-hunt:approve <role-id>` | **You** type this on the filled form to allow one submit attempt for that role and page (up to 2 hours). |
 | `/job-hunt:allow-consent <role-id>` | **You** type this on the form to allow ticking consent boxes for that role and page. |
 | `/job-hunt:triage <source>` | Reconcile and clean a tracker board (JobCopilot-style) with the delete guard. |

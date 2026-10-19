@@ -2,7 +2,7 @@
 
 import type { DatabaseSync, SQLInputValue, StatementResultingChanges } from 'node:sqlite';
 import type { ConfigSections, Profile, SectionName } from './config.ts';
-import { DEFAULTS, SECTION_NAMES, validateSection } from './config.ts';
+import { DEFAULTS, describeSection, SECTION_NAMES, validateSection } from './config.ts';
 import type { ArtifactRow, CompanyRow, EventRow, InterviewRow, RoleRow, RuleRow, RunRow, SourceRow } from './db.ts';
 import { now, tx } from './db.ts';
 import { ToolError } from './errors.ts';
@@ -116,6 +116,11 @@ export class Tracker {
     }
     // Capabilities saved by an older version may carry the retired `tracker` field, which save_config rejects.
     if (isRecord(out.capabilities)) delete out.capabilities.tracker;
+    // accounts.recruiter_email was renamed to job_inbox_email (the user's own inbox that recruiters write to).
+    if (isRecord(out.accounts) && 'recruiter_email' in out.accounts) {
+      const { recruiter_email, ...rest } = out.accounts;
+      out.accounts = { job_inbox_email: recruiter_email, ...rest };
+    }
     // Sections saved with save_config passed validateSection; capabilities from start_run did not, and the rest are DEFAULTS or null.
     return out as Profile;
   }
@@ -162,7 +167,10 @@ export class Tracker {
     const defaults = oneOf(SECTION_NAMES, section) ? DEFAULTS[section] : undefined;
     const merged = section === 'capabilities' ? data : { ...(defaults || {}), ...data };
     const errors = validateSection(section, merged);
-    if (errors.length) throw new ToolError(`Invalid config:\n- ${errors.join('\n- ')}`);
+    if (errors.length) {
+      const shape = oneOf(SECTION_NAMES, section) ? `\nExpected ${describeSection(section)}` : '';
+      throw new ToolError(`Invalid config:\n- ${errors.join('\n- ')}${shape}`);
+    }
     this.run('INSERT INTO profile(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', section, JSON.stringify(merged));
     return { saved: section, value: merged };
   }
@@ -203,7 +211,10 @@ export class Tracker {
     add('connectors', conn.gmail && conn.calendar ? 'green' : saved.has('capabilities') ? 'amber' : 'red',
       saved.has('capabilities') ? `gmail: ${!!conn.gmail}, calendar: ${!!conn.calendar}, linkedin: ${!!conn.linkedin}` : 'No capability detection recorded yet.');
     add('browser', caps.browser ? 'green' : 'amber', caps.browser ? `Browser: ${caps.browser}` : 'No browser detected. Browser sources and applying are queued for interactive sessions.');
-    add('sources', saved.has('sources') ? 'green' : 'amber', saved.has('sources') ? `${(p.sources?.enabled || []).length} sources enabled` : 'No sources chosen; defaults will be used.');
+    const noBoards = (p.sources?.enabled || []).includes('ats_boards') && !(p.sources?.boards || []).length;
+    if (!saved.has('sources')) add('sources', 'amber', 'No sources chosen; defaults will be used.');
+    else if (noBoards) add('sources', 'amber', 'ats_boards is enabled but sources.boards is empty, so it has nothing to fetch. Ask for employer job board URLs, or disable ats_boards.');
+    else add('sources', 'green', `${(p.sources?.enabled || []).length} sources enabled`);
     add('autonomy', saved.has('autonomy') ? 'green' : 'amber', `Unattended: ${(p.autonomy?.unattended || []).join(', ')}`);
     add('schedule', saved.has('schedule') ? 'green' : 'red', saved.has('schedule') ? `Daily: ${JSON.stringify(p.schedule?.daily || {})}` : 'No daily task scheduled.');
     add('stories', docs.has('stories') ? 'green' : 'amber', docs.has('stories') ? 'stories.md saved' : 'No interview stories yet (needed for /prep).');

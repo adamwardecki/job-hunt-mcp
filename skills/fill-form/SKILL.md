@@ -57,7 +57,7 @@ For each field, in page order:
 1. Re-read every field. Re-check email, phone, salary (currency and period), links.
 2. Screenshot each section with dropdowns closed.
 3. Show the user: role id, company, title, location line, each field with its value, everything left blank and why (personal data, consent, AI policy, unanswerable).
-4. Say: "To submit, type `/job-hunt:approve <role_id>`. I will not submit without it." Stop.
+4. Say: "To submit, type `/job-hunt:approve 42`. I will not submit without it.", with this role's real id in place of 42. Stop.
 
 ### 6. Submit (after approval)
 1. Re-read the form once more (re-renders clear fields). Fresh `find` for the submit button.

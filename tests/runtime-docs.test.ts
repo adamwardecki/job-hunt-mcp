@@ -44,3 +44,19 @@ test('every tracker command explains a missing runtime in one sentence', () => {
   }
   assert.match(read('commands/sweep.md'), new RegExp(`${missing.source}.*Record nothing\\.`));
 });
+
+test('setup field lists and settings.example.yaml match the config schema', async () => {
+  const { CONFIG_SCHEMA } = await import('../servers/tracker/src/config.ts');
+  const skill = read('skills/setup/SKILL.md');
+  const yaml = read('templates/settings.example.yaml');
+  for (const section of ['filters', 'prefs', 'writing', 'accounts', 'schedule', 'sources'] as const) {
+    const keys = Object.keys(CONFIG_SCHEMA[section].fields);
+    const step = skill.split('\n### ').find((s) => s.includes(`section: "${section}"`)) ?? '';
+    // Top-level keys only: nested names like `daily` (`days`, ...) sit in parentheses.
+    const line = step.split('\n').find((l) => l.startsWith('- Fields: ')) ?? '';
+    const listed = [...line.replace(/\([^)]*\)/g, '').matchAll(/`([a-z_]+)`/g)].map((m) => m[1]);
+    assert.deepEqual(listed, keys, `setup step for ${section}`);
+    const block = yaml.slice(yaml.indexOf(`\n${section}:`) + 1).split(/\n(?=[a-z])/)[0] ?? '';
+    for (const k of keys) assert.match(block, new RegExp(`\\n  ${k}:`), `settings.example.yaml ${section}.${k}`);
+  }
+});

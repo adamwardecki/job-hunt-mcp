@@ -61,7 +61,7 @@ export interface WritingConfig {
 }
 
 export interface AccountsConfig {
-  recruiter_email: string;
+  job_inbox_email: string;
   invite_calendar: string;
   connected_calendar?: string | null;
   chrome_autofill_risk?: string | null;
@@ -82,6 +82,7 @@ export interface SourcesConfig {
   enabled?: string[];
   need_login?: string[];
   disabled?: string[];
+  boards?: string[];
 }
 
 export interface CapabilitiesConfig {
@@ -163,9 +164,9 @@ export const CONFIG_SCHEMA: { [K in SectionName]: SectionSchema } = {
     },
   },
   accounts: {
-    required: ['recruiter_email', 'invite_calendar'],
+    required: ['job_inbox_email', 'invite_calendar'],
     fields: {
-      recruiter_email: str,
+      job_inbox_email: str,
       invite_calendar: str,
       connected_calendar: strOrNull,
       chrome_autofill_risk: strOrNull,
@@ -182,7 +183,7 @@ export const CONFIG_SCHEMA: { [K in SectionName]: SectionSchema } = {
     },
   },
   sources: {
-    fields: { enabled: strList, need_login: strList, disabled: strList },
+    fields: { enabled: strList, need_login: strList, disabled: strList, boards: strList },
   },
   capabilities: {
     fields: {
@@ -242,6 +243,24 @@ function checkObject(spec: SectionSchema, obj: Record<string, unknown>, path: st
     }
     if (val !== undefined) check(f, val, `${path}.${key}`, errors);
   }
+}
+
+function describe(spec: FieldSpec): string {
+  if (spec.enum) return spec.enum.join('|');
+  if (spec.items) return `array of ${describe(spec.items)}`;
+  if (spec.fields) return `{ ${describeFields({ required: spec.required, fields: spec.fields })} }`;
+  return typeof spec.type === 'string' ? spec.type : spec.type.join('|');
+}
+
+function describeFields(spec: SectionSchema): string {
+  return Object.entries(spec.fields)
+    .map(([key, f]) => `${key}${spec.required?.includes(key) ? ' (required)' : ''}: ${describe(f)}`)
+    .join(', ');
+}
+
+// One line per section, appended to save_config errors so the agent can fix the call without guessing field names.
+export function describeSection(section: SectionName): string {
+  return `${section} fields: ${describeFields(CONFIG_SCHEMA[section])}`;
 }
 
 export function validateSection(section: string, data: unknown): string[] {

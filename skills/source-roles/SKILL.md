@@ -13,7 +13,7 @@ A source produces **leads**. A lead is never a verdict: every tag on it (locatio
 - **Dedupe before upsert.** Call `find_company` (name plus domain when known) for every lead. `skip` (live application or `no_cold_apply`) means do not upsert a new role; `seen` means update only if it is a different req.
 - **Capability-aware.** Skip browser sources when no browser is reachable, and say so in the report ("skipped: no browser"). Do not mark the source `failed` for that: only real errors from the source count towards degradation.
 - **Retry limits.** A failing call is retried at most twice, then the source is recorded with `set_source_status(name, "failed", error: <verbatim error>)` and the run moves on. Never loop.
-- **Never guess a URL.** Take board and tracker URLs from config, the user, or an email that contains them. A login redirect on a guessed URL is not evidence the session expired.
+- **Never guess a URL.** Sites with one fixed address (Work at a Startup, Wellfound, Welcome to the Jungle, Jack & Jill) start from the start URL in `reference.md`; that is not a guess, and they need nothing in config. User-specific URLs (employer boards in `sources.boards`, the JobCopilot tracker) come from config, the user, or an email that contains them. A login redirect on a guessed URL is not evidence the session expired.
 - **Never print secrets.** Some sources embed API keys in request URLs (e.g. the YC index). Do not echo those URLs into output or the tracker.
 - **Read-only.** No saving, liking, following, messaging, applying or changing preferences on any source. If a source's account settings would improve yield, tell the user and let them change it.
 - **One pass where one pass is enough.** Some boards return the same list for every keyword (see the table). Do not burn the run on repeat queries.
@@ -24,6 +24,7 @@ A source produces **leads**. A lead is never a verdict: every tag on it (locatio
 2. Drop browser-mode sources if `start_run` capabilities have `browser: null`. List them in the report as skipped.
 3. A `degraded` source runs once more per day only if it is cheap; the report mentions degradation once, not every day.
 4. Use `last_run` from `source_health` to fetch only what is new since the last run where the source supports it.
+5. A source that cannot run for a reason the user can fix (logged out, no `sources.boards`) goes in the report with the exact fix in plain words, e.g. "Log in to Wellfound in the browser" or "Send me the job board URLs of companies to watch". Never tell the user to edit config.
 
 ## Source catalogue
 

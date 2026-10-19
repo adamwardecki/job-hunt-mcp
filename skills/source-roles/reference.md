@@ -14,7 +14,7 @@ Build queries from `prefs.titles`, `prefs.stack_want` and `filters.work_mode`. K
 
 ## Employer ATS boards (fetch)
 
-Public posting APIs, no login. Use them to list a known employer's openings and as the verification source.
+Public posting APIs, no login. Use them to list a known employer's openings and as the verification source. The boards to sweep are the URLs in `sources.boards`; read the board token or company slug from each URL.
 
 - **Ashby**: `GET https://api.ashbyhq.com/posting-api/job-board/<board>?includeCompensation=true`. Each job has `title`, `location`, `secondaryLocations`, `workplaceType` / `isRemote`, `jobUrl`, `applyUrl`, and compensation when published. The HTML board also shows "Open Positions (N)".
 - **Greenhouse**: `GET https://boards-api.greenhouse.io/v1/boards/<token>/jobs?content=true`. Single job with screening questions: `.../jobs/<id>?questions=true`. A board that answers "no longer active" is dead; aggregators may keep circulating its listings.
@@ -25,7 +25,7 @@ Funnel tell: a board with a four-figure open-position count at a company of a fe
 
 ## YC Work at a Startup
 
-Logged out it shows a small subset; the logged-in view is the useful one.
+Start URL: `https://www.workatastartup.com/jobs`. Logged out it shows a small subset; the logged-in view is the useful one.
 
 - Do not try to scroll the infinite list. JS scrolling does not advance it.
 - Instead capture the page's own search-index request (patch `window.fetch` / XHR in the page, then trigger a search) and replay it in the page with a large `hitsPerPage`, `distinct=false` and all attributes. Hits include locations, a US-visa-required field, engineering type and the full description.
@@ -34,6 +34,7 @@ Logged out it shows a small subset; the logged-in view is the useful one.
 
 ## Wellfound
 
+- Start URL: `https://wellfound.com/jobs`.
 - Logged-in feed only. It already hides roles closed to the user's location, so the pool is small.
 - One keyword pass per run. More keywords return the same cards.
 - Expect many under-floor or US-gated cards; they still go through `verify-employer` unless an early drop applies.
@@ -47,14 +48,14 @@ Logged out it shows a small subset; the logged-in view is the useful one.
 
 ## Welcome to the Jungle
 
-- Logged in, `/en/jobs-matches?page=N` (10 per page).
+- Start URL: `https://www.welcometothejungle.com/en/jobs-matches`. Logged in, `?page=N` (10 per page).
 - The matcher ignores the remote preference unless the user's profile has a location set. If the feed is mostly onsite or another continent, tell the user once (account settings are theirs to change).
 - Cards only mount while the tab is painted. Keep the tab in front; a screenshot forces a render. The page can freeze the renderer every few pages; accept a partial sweep and record how far you got.
 - Keep only cards whose own label says fully remote (or matches the user's work mode), then verify each on the employer page.
 
 ## Jack & Jill
 
-- Two inputs: the agent's pick emails in Gmail (search by the sender of the most recent pick email) and the logged-in dashboard kanban.
+- Two inputs: the agent's pick emails in Gmail (search by the sender of the most recent pick email) and the logged-in dashboard kanban at `https://app.jackandjill.ai/jack/dashboard/home`.
 - On each card, take the "View job post" link (`[...document.querySelectorAll('a')].filter(a => /view job post/i.test(a.innerText))`) and open the employer's ATS. Read the location line and the About block first.
 - The card's summary can describe the recruiter's client while the posting belongs to a recruiting agency. The employer is whoever the ATS says.
 - Salary on the card is often the broker's estimate (small print says so). Never use it for a pay verdict.
