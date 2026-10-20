@@ -40,9 +40,6 @@ function isErrorResult(parsed: unknown): boolean {
   return isRecord(parsed) && parsed.error != null && parsed.error !== false;
 }
 
-// Hermes results are JSON strings, so snapshots arrive JSON-escaped on one line. The gates look for
-// lines like `button "Submit" [ref=e5]` and `url: https://...`, so emit one `key: value` line per leaf
-// first, then the raw JSON (the stop gate regex-matches raw tracker JSON such as "role":{"id":1}).
 function flatten(value: unknown, key: string, out: string[]): string[] {
   if (value == null) return out;
   if (typeof value === 'object') {
