@@ -156,8 +156,28 @@ Local storage does not mean nothing leaves your machine. Like any Claude Code or
 the model reads (your profile, postings, emails it classifies) goes to your model provider, and each
 connector you add has its own data policy.
 
-The full [privacy policy](PRIVACY.md) lists what is stored, what leaves your machine and how to delete
-it.
+### What leaves your machine
+
+The plugin declares one connector, the local tracker. Its skills also use the connectors, browser and web
+tools you give the host, and send data to:
+
+| Where | What is sent | When |
+|---|---|---|
+| Employer application platforms (Ashby, Greenhouse, Lever, Workable, Typeform, LinkedIn Easy Apply, careers-page forms) | Your name, contact details, CV, cover note and form answers | Only on submit, after you type `/job-tracker:approve` |
+| Gmail | Reply drafts in your mailbox (never sent); recruiter mail is read | Inbox step of a sweep, or when you ask |
+| Google Calendar | Nothing written in unattended runs; interview events are read | Inbox step of a sweep |
+| LinkedIn MCP (optional) | Job-search keywords; your inbox is read. Sending is blocked | Sourcing and inbox steps |
+| Job boards and trackers you are logged into (Wellfound, YC Work at a Startup, Welcome to the Jungle, Jack & Jill, JobCopilot, Glassdoor, Indeed, ZipRecruiter, Dice, Built In, USAJOBS) | Search queries, and saves, deletes or profile edits on your account that you asked for | Sourcing, `/job-tracker:triage` |
+| Public job APIs and feeds (Ashby, Greenhouse and Lever posting APIs, Hacker News via Algolia, We Work Remotely RSS) | A company board name or search term | Sourcing |
+| Employer careers pages | A request for the posting URL | Verifying a role |
+| Web search and the sites it finds | Company and interviewer names | `/job-tracker:prep` |
+| An exchange-rate source (e.g. the ECB reference rate) | A currency pair | Scoring a role paid in another currency |
+| nodejs.org | A download request, no personal data | Setup, only if Node.js is missing and you agree |
+
+Nothing is sent to the plugin's author: there is no telemetry, analytics or crash reporting.
+
+[Privacy policy](https://jobtrackermcp.com/privacy.html) ([source](PRIVACY.md)): what is stored, what
+leaves your machine and how to delete it.
 
 The daily sweep is a **local** scheduled task (Claude Desktop or Claude Code on your machine, or a
 Hermes cron job). It needs the browser for logged-in boards, employer pages and forms, and the browser is
