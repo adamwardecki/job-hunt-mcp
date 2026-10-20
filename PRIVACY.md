@@ -51,8 +51,8 @@ you choose, and each one handles data under its own policy:
 - **Third-party job trackers** you ask it to tidy (for example JobCopilot), through your browser.
 
 The plugin's own code makes one kind of network request: if Node.js is missing, setup can install it.
-On macOS this downloads the installer from nodejs.org; on Windows it uses winget, or nodejs.org when
-winget is not available. These requests contain no personal data beyond what any download sends (such
+On macOS this downloads the installer from nodejs.org; on Windows it asks winget, the package manager
+built into Windows, to install it. These requests contain no personal data beyond what any download sends (such
 as your IP address).
 
 ## Your choices and deleting data
