@@ -69,13 +69,13 @@ export function renderReport(t: Tracker, { date, run_id, headline }: ArgsFor<'re
   const needs: string[] = [];
   for (const q of items.queue) {
     const why = q.question || (q.blocked_by === 'browser' ? 'Needs a browser session to apply.' : 'Apply or drop?');
-    needs.push(`**${q.company}**, ${q.title} (role ${q.id}): ${why} To apply: \`/j-hunt:apply ${q.id}\``);
+    needs.push(`**${q.company}**, ${q.title} (role ${q.id}): ${why} To apply: \`/job-tracker:apply ${q.id}\``);
   }
   for (const q of items.questions) needs.push(`**${q.company}**, ${q.title} (role ${q.id}, ${q.status}): ${q.question}`);
   for (const d of items.unverified_drafts) needs.push(`Draft ${d.draft_id}${d.company ? ` (${d.company})` : ''} was not confirmed by read-back. Check Gmail drafts.`);
   for (const i of items.interviews_to_book) needs.push(`Book **${i.company}** ${i.stage}${i.link ? `: ${i.link}` : ''}`);
   for (const f of audit.failures) needs.push(`Audit: ${f.detail}`);
-  if (items.stale_queue.length) needs.push(`${items.stale_queue.length} queued role(s) untouched for 14+ days. Run /j-hunt:status to apply or drop them.`);
+  if (items.stale_queue.length) needs.push(`${items.stale_queue.length} queued role(s) untouched for 14+ days. Run /job-tracker:status to apply or drop them.`);
   if (needs.length) out.push('## Needs you', '', ...needs.map((n, i) => `${i + 1}. ${n}`), '');
 
   // 2. Interviews

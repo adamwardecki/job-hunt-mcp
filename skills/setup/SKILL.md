@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Drives the job-hunt plugin's setup conversation (CV import, hard filters, preferences, writing rules, accounts, connectors, browser check, sources, autonomy, schedule, calibration run). Use when the user runs /j-hunt:setup, says they want to start or reconfigure the job hunt, or when setup_status shows red items before a run.
+description: Drives the job-hunt plugin's setup conversation (CV import, hard filters, preferences, writing rules, accounts, connectors, browser check, sources, autonomy, schedule, calibration run). Use when the user runs /job-tracker:setup, says they want to start or reconfigure the job hunt, or when setup_status shows red items before a run.
 ---
 
 # Setup
@@ -32,9 +32,9 @@ Scripts live in `${CLAUDE_PLUGIN_ROOT}/scripts/` (Hermes: `${HERMES_SKILL_DIR}/.
    - macOS: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/install-node.sh" --check`
    - Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/install-node.ps1" -Check`
    - Linux: the macOS command. The scripts do not install on Linux, so if it exits 1, skip the question in step 5 and give the "I'll install it myself" instructions (step 7).
-3. **Exit 3** (an older copy of Node.js is in the way): show the script's message. Explain in plain words that there is an older copy of Node.js on this computer that the plugin would use instead of the new one, and that it has to be removed or updated, by them or by someone technical; after that, quit and reopen the app and type `/j-hunt:setup`. Stop. Do not offer the installer: installing again would not fix this.
+3. **Exit 3** (an older copy of Node.js is in the way): show the script's message. Explain in plain words that there is an older copy of Node.js on this computer that the plugin would use instead of the new one, and that it has to be removed or updated, by them or by someone technical; after that, quit and reopen the app and type `/job-tracker:setup`. Stop. Do not offer the installer: installing again would not fix this.
 4. **Check passes (exit 0)**: Node.js is there but the tracker is not running. Ask (multiple choice): "Have you quit and reopened the app since Node.js was installed?"
-   - **No**: ask them to quit the app completely (not just close the window), reopen it, and type `/j-hunt:setup`. Stop.
+   - **No**: ask them to quit the app completely (not just close the window), reopen it, and type `/job-tracker:setup`. Stop.
    - **Yes**: run the tracker once, with empty input, using the exact Node path the check printed:
      - macOS: `"<path>" --no-warnings "${CLAUDE_PLUGIN_ROOT}/servers/tracker/src/index.ts" < /dev/null`
      - Windows (PowerShell): `$null | & "<path>" --no-warnings "${CLAUDE_PLUGIN_ROOT}/servers/tracker/src/index.ts"` (from Git Bash, use the macOS form with the same path)
@@ -47,9 +47,9 @@ Scripts live in `${CLAUDE_PLUGIN_ROOT}/scripts/` (Hermes: `${HERMES_SKILL_DIR}/.
    - macOS: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/install-node.sh"`, then wait for the user to say the installer finished.
    - Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/install-node.ps1"`. If it opened the installer instead of finishing with winget, wait for the user to say it finished.
    Relay the script's last line. If it exits non-zero, show its message and offer the "install it myself" route. Never work around a checksum or signature failure.
-7. **I'll install it myself**, or no shell tool is available: give https://nodejs.org/en/download and say: choose the LTS installer for your computer, run it, then quit and reopen this app and type `/j-hunt:setup`.
+7. **I'll install it myself**, or no shell tool is available: give https://nodejs.org/en/download and say: choose the LTS installer for your computer, run it, then quit and reopen this app and type `/job-tracker:setup`.
 8. **Not now**: say that nothing else in the plugin works until Node.js is installed, and stop setup.
-9. After an install, run the check again. When it passes (exit 0), say: "Node.js is installed. Quit Claude completely and reopen it, then type /j-hunt:setup to carry on." Stop here: the tracker only starts when the app starts. If it still fails, show its message and stop; do not offer the installer again in this setup run.
+9. After an install, run the check again. When it passes (exit 0), say: "Node.js is installed. Quit Claude completely and reopen it, then type /job-tracker:setup to carry on." Stop here: the tracker only starts when the app starts. If it still fails, show its message and stop; do not offer the installer again in this setup run.
 
 ### 1. CV import
 - Ask the user to upload or paste their CV.
@@ -111,18 +111,18 @@ Show the defaults and confirm them:
 Explain that hooks enforce the second list regardless of this config. `save_config` with `section: "autonomy"`.
 
 ### 10. Schedule (`schedule`)
-- Ask when the computer is usually on with Claude open. Create a weekday **local** scheduled task inside that window that runs `/j-hunt:sweep`, using the host's local scheduling (a Claude Desktop or Claude Code local scheduled task, or a Hermes cron job created with the `cronjob` tool with skill `j-hunt:sweep` attached and the prompt "Run today's job-hunt sweep."). Do not schedule it in the cloud: it cannot reach the browser or the local tracker. If no scheduling tool is available, give the user the exact steps and the prompt text.
+- Ask when the computer is usually on with Claude open. Create a weekday **local** scheduled task inside that window that runs `/job-tracker:sweep`, using the host's local scheduling (a Claude Desktop or Claude Code local scheduled task, or a Hermes cron job created with the `cronjob` tool with skill `job-tracker:sweep` attached and the prompt "Run today's job-hunt sweep."). Do not schedule it in the cloud: it cannot reach the browser or the local tracker. If no scheduling tool is available, give the user the exact steps and the prompt text.
 - Say plainly that the task only runs while the machine is awake and the app is open, and save the window as `desktop_usually_on`.
 - Ask how the daily report should arrive: as the run's output (`artifact`), a file in the local folder (`file`, desktop runs only), or a Gmail draft to themselves (`email_draft`). Save it as `report_delivery`.
 - `save_config` with `section: "schedule"`.
 - Fields: `daily` (`days`, `time`, `tz`), `desktop_usually_on`, `report_delivery`.
 
 ### 11. Calibration run
-- Run the sweep procedure from `/j-hunt:sweep` with `--limit 5 --calibration`.
-- Show the 5 results with the verdict and the one-line reason for each. For queued ones, add the ready-to-type command with the real id, e.g. `/j-hunt:apply 42`, never a `<id>` placeholder.
-- For each "no, because..." from the user, call `add_rule` with the text, the user's reason and the example. For each "yes, but you dropped it", follow `/j-hunt:correct`.
-- Offer `/j-hunt:import` if the user has a legacy pipeline.
+- Run the sweep procedure from `/job-tracker:sweep` with `--limit 5 --calibration`.
+- Show the 5 results with the verdict and the one-line reason for each. For queued ones, add the ready-to-type command with the real id, e.g. `/job-tracker:apply 42`, never a `<id>` placeholder.
+- For each "no, because..." from the user, call `add_rule` with the text, the user's reason and the example. For each "yes, but you dropped it", follow `/job-tracker:correct`.
+- Offer `/job-tracker:import` if the user has a legacy pipeline.
 
 ## Exit
 
-Call `setup_status`. Done when `all_green`, or every amber item has a decision recorded with `record_setup_decision`. Tell the user what will happen tomorrow morning and how to see it (`/j-hunt:status`).
+Call `setup_status`. Done when `all_green`, or every amber item has a decision recorded with `record_setup_decision`. Tell the user what will happen tomorrow morning and how to see it (`/job-tracker:status`).

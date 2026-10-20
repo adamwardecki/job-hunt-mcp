@@ -5,7 +5,7 @@ argument-hint: "<role-id> [--pdf]"
 
 Write a cover letter for the role in `$ARGUMENTS`.
 
-**If the tracker tools are missing** (search for them first if tools are deferred), or a hook error says `node` could not start: Node.js, which the plugin runs on, is missing or too old. Tell the user that in one sentence, offer to run `/j-hunt:setup` (it installs Node.js), and stop.
+**If the tracker tools are missing** (search for them first if tools are deferred), or a hook error says `node` could not start: Node.js, which the plugin runs on, is missing or too old. Tell the user that in one sentence, offer to run `/job-tracker:setup` (it installs Node.js), and stop.
 
 1. Parse the role id and the optional `--pdf` flag. If the role id is missing, call `open_items` and ask which queued role.
 2. Load the `write-note` skill and follow it: read the role, the employer page, `profile`, `stories`, `reusable-answers`, `voice` (if present) and `list_rules`. Motivation first, 150 to 200 words unless config says otherwise. Humanizer pass. `lint_prose` must pass before saving.

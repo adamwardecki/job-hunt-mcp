@@ -6,7 +6,7 @@ Instructions for coding agents working on this repo. Humans: see [CONTRIBUTING.m
 This repo is a Claude Code (and Hermes Agent) plugin for a low-volume job search: a hand-rolled MCP server
 over stdio backed by `node:sqlite` (`servers/tracker/`), safety hooks (`hooks/`), and markdown skills,
 commands and subagents. Node runs the TypeScript directly. There is no build step and no runtime npm
-dependency. The plugin's name, and the prefix of its commands, is `j-hunt` (`/j-hunt:sweep`).
+dependency. The plugin's name, and the prefix of its commands, is `job-tracker` (`/job-tracker:sweep`).
 
 ## Commands
 

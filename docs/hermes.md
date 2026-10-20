@@ -6,7 +6,7 @@
 scripts/hermes-install.sh
 ```
 
-Restart Hermes, then run `/j-hunt:setup`.
+Restart Hermes, then run `/job-tracker:setup`.
 
 To enable the 32 tracker tools when the `hermes mcp add` prompt asks, type `Y`.
 
@@ -24,9 +24,9 @@ To enable the 32 tracker tools when the `hermes mcp add` prompt asks, type `Y`.
 | `additionalContext` | `{"context"}` |
 | `${CLAUDE_PLUGIN_ROOT}` in markdown | Add the equivalent `${HERMES_SKILL_DIR}` path next to it |
 | `$ARGUMENTS` | `pre_llm_call` injects a note: `$ARGUMENTS = "<args>"` |
-| subagents `agents/*.md` | skills `j-hunt:agent-<name>`, launched with `delegate_task` |
+| subagents `agents/*.md` | skills `job-tracker:agent-<name>`, launched with `delegate_task` |
 | `.mcp.json` tracker | `hermes mcp add job_hunt_tracker ...` (server name `job_hunt_tracker` → tools `mcp__job_hunt_tracker__*`) |
-| name clash: command `setup` and skill `setup` | command → `j-hunt:setup`, skill → `j-hunt:setup-guide` |
+| name clash: command `setup` and skill `setup` | command → `job-tracker:setup`, skill → `job-tracker:setup-guide` |
 
 ## Known differences
 
@@ -37,5 +37,5 @@ To enable the 32 tracker tools when the `hermes mcp add` prompt asks, type `Y`.
 2. **Approval parsing depends on Hermes' slash-skill message format** (`[IMPORTANT: The user has
    invoked the "..."`). Hermes could change that string. The markers are copied verbatim.
 3. **Browser bypass routes Hermes adds:** `browser_cdp` and `browser_press` (Enter in a field) are not checked by the submit rules. The Claude version has the same gap with key presses.
-4. **One skill namespace on Hermes:** the `setup` skill is named `j-hunt:setup-guide` on Hermes.
+4. **One skill namespace on Hermes:** the `setup` skill is named `job-tracker:setup-guide` on Hermes.
 5. **No per-agent model on Hermes:** `model: sonnet` in `agents/*.md` is ignored.

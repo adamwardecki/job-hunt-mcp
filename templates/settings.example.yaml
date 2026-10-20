@@ -1,6 +1,6 @@
 # job-hunt settings (example)
 #
-# The plugin stores these in the tracker with save_config(section, data); /j-hunt:setup fills them
+# The plugin stores these in the tracker with save_config(section, data); /job-tracker:setup fills them
 # in with you. This file documents the shape. Every value below is a neutral placeholder: replace it,
 # or leave it null/empty to be asked during setup.
 
@@ -52,7 +52,7 @@ autonomy:                        # hooks enforce needs_user regardless of this c
   needs_user: [submit, send, delete, consent, personal_data, account_login]
 
 schedule:
-  daily: {days: weekdays, time: "07:00", tz: Etc/UTC}   # local scheduled task running /j-hunt:sweep
+  daily: {days: weekdays, time: "07:00", tz: Etc/UTC}   # local scheduled task running /job-tracker:sweep
   desktop_usually_on: null       # e.g. "09:00-17:00"; the daily task is scheduled inside this window
   report_delivery: artifact      # artifact | file | email_draft (a draft to yourself, never sent)
 

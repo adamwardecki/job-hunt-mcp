@@ -1,6 +1,6 @@
 ---
 name: write-note
-description: Writes outbound prose in the user's name (cover notes, cover letters, form free-text answers, salary answers, recruiter reply drafts) with a humanizer pass, no volunteered gaps, field-length checks and lint_prose before saving. Use whenever text will be read by an employer or recruiter, including /j-hunt:cover-letter, the prepare step of a sweep, and every free-text field in fill-form.
+description: Writes outbound prose in the user's name (cover notes, cover letters, form free-text answers, salary answers, recruiter reply drafts) with a humanizer pass, no volunteered gaps, field-length checks and lint_prose before saving. Use whenever text will be read by an employer or recruiter, including /job-tracker:cover-letter, the prepare step of a sweep, and every free-text field in fill-form.
 ---
 
 # Write note

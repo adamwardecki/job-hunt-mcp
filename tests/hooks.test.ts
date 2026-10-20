@@ -52,7 +52,7 @@ function trackerWithRoles() {
 }
 
 const CHROME = 'mcp__claude-in-chrome__';
-const TRACKER = 'mcp__plugin_j-hunt_tracker__';
+const TRACKER = 'mcp__plugin_job-tracker_tracker__';
 const markSession = async (sid: string) => preTool({ session_id: sid, tool_name: `${TRACKER}open_items`, tool_input: {} });
 const applicationPage = (url: string, tabId = 1, extra = '') => transcript([
   [`${CHROME}navigate`, { url, tabId }, `url: ${url}\ntabId: ${tabId}`],
@@ -110,7 +110,7 @@ test('AC7: a submit click needs the user approval and a verified role', async ()
   assert.match(reason(), /needs the user's approval/);
 
   outputs = [];
-  await prompt({ session_id: sid, prompt: `/j-hunt:approve ${unverified.id}`, transcript_path: otherPage });
+  await prompt({ session_id: sid, prompt: `/job-tracker:approve ${unverified.id}`, transcript_path: otherPage });
   assert.match(outputs[0]?.hookSpecificOutput?.additionalContext ?? '', /gate_check fails: Role not verified/);
   outputs = [];
   await click(sid, otherPage, 2);
@@ -119,7 +119,7 @@ test('AC7: a submit click needs the user approval and a verified role', async ()
   const scopedSid = session();
   await markSession(scopedSid);
   outputs = [];
-  await prompt({ session_id: scopedSid, prompt: `/j-hunt:approve ${verified.id}`, transcript_path: verifiedPage });
+  await prompt({ session_id: scopedSid, prompt: `/job-tracker:approve ${verified.id}`, transcript_path: verifiedPage });
   assert.match(outputs[0]?.hookSpecificOutput?.additionalContext ?? '', /gate_check passed/);
   outputs = [];
   await click(scopedSid, verifiedOtherTab, 2);
@@ -144,7 +144,7 @@ test('AC7: scripted submits are gated too; the model cannot approve itself', asy
   assert.match(reason(), /needs the user's approval/);
   // A tool call that mentions approve does not create an approval; only a user prompt does.
   outputs = [];
-  await preTool({ session_id: sid, tool_name: `${TRACKER}record`, tool_input: { role_id: 2, reason: '/j-hunt:approve 2', actor: 'user' } });
+  await preTool({ session_id: sid, tool_name: `${TRACKER}record`, tool_input: { role_id: 2, reason: '/job-tracker:approve 2', actor: 'user' } });
   await preTool({ session_id: sid, transcript_path: tp, tool_name: `${CHROME}javascript_tool`, tool_input: { tabId: 1, text: "document.querySelector('button[type=submit]').click()" } });
   assert.match(reason(), /needs the user's approval/);
   outputs = [];
@@ -157,18 +157,18 @@ test('approval commands must be the entire user prompt', async () => {
   const sid = session();
   const tp = applicationPage(String(verified.url));
   for (const text of [
-    `Do not run /j-hunt:approve ${verified.id} yet.`,
-    `The command is "/j-hunt:approve ${verified.id}".`,
-    `\`/j-hunt:approve ${verified.id}\``,
-    `/j-hunt:approve ${verified.id} please`,
-    `Do not run /j-hunt:allow-consent ${verified.id}.`,
+    `Do not run /job-tracker:approve ${verified.id} yet.`,
+    `The command is "/job-tracker:approve ${verified.id}".`,
+    `\`/job-tracker:approve ${verified.id}\``,
+    `/job-tracker:approve ${verified.id} please`,
+    `Do not run /job-tracker:allow-consent ${verified.id}.`,
   ]) {
     outputs = [];
     await prompt({ session_id: sid, prompt: text, transcript_path: tp });
   }
   assert.equal(loadSession(sid).approvals.length, 0);
   assert.equal(loadSession(sid).consents.length, 0);
-  await prompt({ session_id: sid, prompt: `/j-hunt:approve #${verified.id}`, transcript_path: tp });
+  await prompt({ session_id: sid, prompt: `/job-tracker:approve #${verified.id}`, transcript_path: tp });
   assert.equal(loadSession(sid).approvals.length, 1, 'standalone approval is accepted');
 });
 
@@ -200,7 +200,7 @@ test('personal-data fields and consent boxes are blocked', async () => {
   assert.ok(await call('computer', { action: 'left_click', ref: 'ref_3', tabId: 1 }));
   assert.equal(await call('form_input', { ref: 'ref_3', value: false, tabId: 1 }), undefined, 'unticking is the privacy-preserving option');
   assert.equal(await call('form_input', { ref: 'ref_4', value: 'https://linkedin.com/in/x', tabId: 1 }), undefined);
-  await prompt({ session_id: sid, prompt: `/j-hunt:allow-consent ${verified.id}`, transcript_path: tp });
+  await prompt({ session_id: sid, prompt: `/job-tracker:allow-consent ${verified.id}`, transcript_path: tp });
   assert.ok(await call('form_input', { ref: 'ref_3', value: true, tabId: 2 }, other), 'consent for one role cannot be used on another page');
   assert.equal(await call('form_input', { ref: 'ref_3', value: true, tabId: 1 }), undefined, 'user allowed consent on this role and page');
 });
@@ -266,7 +266,7 @@ test('AC9: verify_artifact is denied without a real get_draft/list_drafts read-b
 
 test('Stop: a sweep cannot finish with unrecorded roles or no report', async () => {
   const sid = session();
-  await prompt({ session_id: sid, prompt: '/j-hunt:sweep' });
+  await prompt({ session_id: sid, prompt: '/job-tracker:sweep' });
   const up = (id: number): Call => [`${TRACKER}upsert_role`, { company: 'A', title: 'B' }, JSON.stringify({ role: { id, title: 'B' }, created: true })];
   outputs = [];
   await stop({ session_id: sid, transcript_path: transcript([up(1), up(2), [`${TRACKER}transition`, { role_id: 1, to: 'dropped' }, '{}']]) });
@@ -321,7 +321,7 @@ test('a leftover session tmp file does not keep its old mode', { skip: process.p
 
 test('Stop fails open when its reminder counter cannot be saved', { skip: process.platform === 'win32' }, async () => {
   const sid = session();
-  await prompt({ session_id: sid, prompt: '/j-hunt:sweep' });
+  await prompt({ session_id: sid, prompt: '/job-tracker:sweep' });
   assert.equal(outputs.length, 0);
   mkdirSync(join(home, 'sessions', `${sid}.json.tmp`)); // saveSession cannot clear this, so it throws
   // Without a saved counter the reminder cap cannot work, so blocking would loop forever.

@@ -3,7 +3,7 @@
 The tracker is the only writer to the job-hunt database. Skills, commands and agents read and write
 state through these tools only. There is no raw SQL tool.
 
-Server name in `.mcp.json`: `tracker`. The tools appear as `mcp__plugin_j-hunt_tracker__<tool>` in
+Server name in `.mcp.json`: `tracker`. The tools appear as `mcp__plugin_job-tracker_tracker__<tool>` in
 Claude Code and as `mcp__job_hunt_tracker__<tool>` in Hermes. Skills refer to them by the short tool name.
 
 Runtime: Node 22.18+ (`node:sqlite`, TypeScript run directly), zero runtime npm dependencies. Local only:
@@ -75,10 +75,10 @@ closed (from queued | applied | interviewing | offer), with outcome: rejected | 
 ## Session approvals (hooks, not tools)
 
 Approvals come only from a standalone command in the user's own prompt, never from a command mention
-or tool call. The `UserPromptSubmit` hook recognises `/j-hunt:approve <role_id>` (or `/approve
+or tool call. The `UserPromptSubmit` hook recognises `/job-tracker:approve <role_id>` (or `/approve
 <role_id>`) and stores a one-use approval for that role, browser page and tab in the session state at
 `$JOB_HUNT_HOME/sessions/<session_id>.json`. The submit-click hook requires an exact target match and
-consumes the approval before allowing the attempt. Similarly `/j-hunt:allow-consent <role_id>` lets
+consumes the approval before allowing the attempt. Similarly `/job-tracker:allow-consent <role_id>` lets
 consent boxes be ticked only on that role's current page and tab.
 
 ## Triage guard (hooks)

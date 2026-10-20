@@ -27,7 +27,7 @@ const TOOLS = {
     'mcp__puppeteer__puppeteer_click',
   ],
   open: [
-    'mcp__plugin_j-hunt_tracker__find_company',
+    'mcp__plugin_job-tracker_tracker__find_company',
     'mcp__claude_ai_Google_Drive__search_files',
     'mcp__claude_ai_Slack__slack_read_channel',
     'mcp__claude_ai_Linear__list_issues',
