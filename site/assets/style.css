@@ -1116,6 +1116,42 @@ mark {
 .footer-bottom a:hover {
   color: var(--accent);
 }
+.legal {
+  max-width: 720px;
+  padding-block: 72px 56px;
+}
+.legal h1 {
+  font-size: clamp(40px, 4.6vw, 62px);
+  margin: 14px 0 28px;
+}
+.legal h2 {
+  font-size: 26px;
+  letter-spacing: -0.03em;
+  margin: 44px 0 14px;
+}
+.legal p,
+.legal ul {
+  margin: 0 0 14px;
+}
+.legal ul {
+  padding-left: 20px;
+}
+.legal li + li {
+  margin-top: 8px;
+}
+.legal a {
+  border-bottom: 1px solid currentColor;
+}
+.legal a:hover {
+  color: var(--accent);
+}
+.legal code {
+  font-family: var(--mono);
+  font-size: 0.88em;
+}
+.legal + .site-footer .footer-bottom {
+  border-top: 1px solid var(--line);
+}
 .install-grid > *,
 .command-workbench > * {
   min-width: 0;
