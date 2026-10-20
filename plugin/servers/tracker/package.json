@@ -8,7 +8,6 @@
   "bin": { "job-hunt-tracker": "src/index.ts" },
   "engines": { "node": ">=22.18" },
   "scripts": {
-    "start": "node --no-warnings src/index.ts",
-    "test": "node --no-warnings --test test/*.test.ts"
+    "start": "node --no-warnings src/index.ts"
   }
 }

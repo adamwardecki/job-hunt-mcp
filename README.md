@@ -57,16 +57,16 @@ any point and run `/job-tracker:setup` again to resume.
 
 Already tracking applications in a markdown table? `/job-tracker:import <folder>` brings in an
 `applied-log.md` (`| date | company | role | source | action | status |`), a preferences file, queue
-notes and your profile and stories. See [`commands/import.md`](commands/import.md) for the expected files.
+notes and your profile and stories. See [`commands/import.md`](plugin/commands/import.md) for the expected files.
 
 ### Hermes Agent
 
-The same checkout is also a native Hermes plugin:
+The same checkout is also a native Hermes plugin (in `plugin/`):
 
 ```bash
 git clone https://github.com/adamwardecki/job-hunt-mcp.git
 cd job-hunt-mcp
-scripts/hermes-install.sh
+plugin/scripts/hermes-install.sh
 ```
 
 Restart Hermes and type `/job-tracker:setup`. Details and the differences from Claude Code are in
@@ -135,12 +135,12 @@ commands, scheduled task
                  └─ storage: tracker DB in ~/.job-hunt (never inside the plugin directory)
 ```
 
-- **Tracker** (`servers/tracker/`): the only writer to the database. Narrow tools, no raw SQL. An
+- **Tracker** (`plugin/servers/tracker/`): the only writer to the database. Narrow tools, no raw SQL. An
   append-only event log with a state machine (`found → verified → scored → queued → applied →
   interviewing → offer`, plus `dropped` and `closed`). Drops need an employer quote, `verified` needs
   the ATS URL and location line, `applied` needs the confirmation text. Tool reference:
   [`docs/tracker-api.md`](docs/tracker-api.md).
-- **Hooks** (`hooks/`): see below.
+- **Hooks** (`plugin/hooks/`): see below.
 - **Skills, commands, agents, templates**: the operating rules, including the incidents that shaped them.
   The original design document, with the reasoning behind each rule, is [`docs/SPEC.md`](docs/SPEC.md).
 

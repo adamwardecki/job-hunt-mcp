@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { errorMessage, errorText, isRecord, oneOf, parseJson } from '../src/util.ts';
+import { errorMessage, errorText, isRecord, oneOf, parseJson } from '../../plugin/servers/tracker/src/util.ts';
 
 test('parseJson: parses, and falls back on null, undefined or bad JSON', () => {
   assert.deepEqual(parseJson<string[]>('["a"]', []), ['a']);

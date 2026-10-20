@@ -2,14 +2,14 @@
 
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { beforeEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { browserAction, isBrowser, isSendTool, resolveLabel, splitToolName } from '../hooks/lib/classify.ts';
-import { normalizeToolName } from '../hooks/lib/hosts/hermes.ts';
-import type { ToolStep } from '../hooks/lib/types.ts';
+import { browserAction, isBrowser, isSendTool, resolveLabel, splitToolName } from '../plugin/hooks/lib/classify.ts';
+import { normalizeToolName } from '../plugin/hooks/lib/hosts/hermes.ts';
+import type { ToolStep } from '../plugin/hooks/lib/types.ts';
 
 let home: string;
 beforeEach(() => {
@@ -46,8 +46,8 @@ test('Hermes browser actions and @refs are understood', () => {
 
 // --- Steps log ---
 
-import { appendStep, stepsPath, unwrapSkillInvocation, userText } from '../hooks/lib/hosts/hermes.ts';
-import { currentUrl, readTranscript, toolSteps } from '../hooks/lib/transcript.ts';
+import { appendStep, stepsPath, unwrapSkillInvocation, userText } from '../plugin/hooks/lib/hosts/hermes.ts';
+import { currentUrl, readTranscript, toolSteps } from '../plugin/hooks/lib/transcript.ts';
 
 const FIXTURE = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'hermes-skill-invocation.txt'), 'utf8');
 
@@ -76,10 +76,10 @@ test('slash-skill messages unwrap to the typed command; only the user instructio
 
 // --- hooks/hermes.ts e2e ---
 
-import { openDb } from '../servers/tracker/src/db.ts';
-import { Tracker } from '../servers/tracker/src/tracker.ts';
+import { openDb } from '../plugin/servers/tracker/src/db.ts';
+import { Tracker } from '../plugin/servers/tracker/src/tracker.ts';
 
-const HOOK = join(dirname(fileURLToPath(import.meta.url)), '..', 'hooks', 'hermes.ts');
+const HOOK = join(dirname(fileURLToPath(import.meta.url)), '..', 'plugin', 'hooks', 'hermes.ts');
 const TRACKER = 'mcp__job_hunt_tracker__';
 
 function hermes(event: string, payload: Record<string, unknown>) {
@@ -137,23 +137,38 @@ test('hermes.ts: an unfinished sweep queues a nudge that the next turn receives'
   assert.equal(hermes('pre_llm_call', { session_id: sid, user_message: 'ok' }), null, 'the nudge is delivered once');
 });
 
-test('plugin.yaml, plugin.json and package.json carry the same version', () => {
-  const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-  const yaml = readFileSync(join(root, 'plugin.yaml'), 'utf8').match(/^version:\s*"?([^"\n]+)"?/m)?.[1];
-  const claude = JSON.parse(readFileSync(join(root, '.claude-plugin', 'plugin.json'), 'utf8')).version;
-  const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
+const REPO = join(dirname(fileURLToPath(import.meta.url)), '..');
+const PLUGIN = join(REPO, 'plugin');
+
+test('plugin.yaml, plugin.json and both package.json files carry the same version', () => {
+  const yaml = readFileSync(join(PLUGIN, 'plugin.yaml'), 'utf8').match(/^version:\s*"?([^"\n]+)"?/m)?.[1];
+  const claude = JSON.parse(readFileSync(join(PLUGIN, '.claude-plugin', 'plugin.json'), 'utf8')).version;
   assert.equal(yaml, claude);
-  assert.equal(pkg, claude);
+  for (const dir of [REPO, PLUGIN]) assert.equal(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).version, claude, join(dir, 'package.json'));
 });
 
 test('the plugin root has no lockfile, so Claude Code installs nothing for users', () => {
-  // Claude Code installs the packages a lockfile next to the root package.json lists, on every install and
+  // Claude Code installs the packages a lockfile next to the plugin's package.json lists, on every install and
   // update. The plugin needs none at runtime; the dev tools and their lockfile live in dev/.
-  const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-  for (const lock of ['package-lock.json', 'npm-shrinkwrap.json', 'bun.lock', 'bun.lockb']) {
-    assert.equal(existsSync(join(root, lock)), false, `${lock} in the plugin root`);
+  for (const dir of [REPO, PLUGIN]) {
+    for (const lock of ['package-lock.json', 'npm-shrinkwrap.json', 'bun.lock', 'bun.lockb']) {
+      assert.equal(existsSync(join(dir, lock)), false, `${lock} in ${dir}`);
+    }
+    const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
+    assert.equal(pkg.dependencies, undefined, 'no runtime dependencies');
+    assert.equal(pkg.devDependencies, undefined, 'dev dependencies belong in dev/package.json');
   }
-  const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-  assert.equal(pkg.dependencies, undefined, 'no runtime dependencies');
-  assert.equal(pkg.devDependencies, undefined, 'dev dependencies belong in dev/package.json');
+});
+
+test('the marketplace ships plugin/ only, with no tests or dev files in it', () => {
+  // The directory scanner reads every shipped file; tests and dev tooling stay outside plugin/ so they are not
+  // part of the plugin users install.
+  const market = JSON.parse(readFileSync(join(REPO, '.claude-plugin', 'marketplace.json'), 'utf8'));
+  assert.deepEqual(
+    market.plugins.map((p: { source: string }) => p.source),
+    ['./plugin'],
+  );
+  const shipped = readdirSync(PLUGIN, { recursive: true, encoding: 'utf8' });
+  const stray = shipped.filter((f) => /(^|\/)(test|tests|fixtures|dev|node_modules)(\/|$)|\.test\.ts$|(^|\/)test_[^/]*\.py$/.test(f));
+  assert.deepEqual(stray, []);
 });

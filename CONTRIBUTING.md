@@ -26,19 +26,21 @@ Google Chrome and the Windows installer tests need PowerShell (`pwsh`); each is 
 
 - **TypeScript that Node runs directly.** No build step and no runtime dependencies. Keep it that way:
   the plugin must work from a plain checkout.
-- **Dev tools live in `dev/`.** Never add a lockfile next to the root `package.json`: Claude Code installs
-  whatever a lockfile in the plugin root lists, on every user's install and update.
-- **Tracker tools.** Input schemas live in `servers/tracker/src/tools.ts`. If you change a tool's
-  schema, update the snapshot in `servers/tracker/test/fixtures/tools-list.json` and
+- **Only shipped files go in `plugin/`.** That directory is what users install (the marketplace's
+  `source`). Tests live in `tests/`, docs in `docs/`, dev tools in `dev/`.
+- **Dev tools live in `dev/`.** Never add a lockfile next to the root or `plugin/` `package.json`: Claude
+  Code installs whatever a lockfile in the plugin root lists, on every user's install and update.
+- **Tracker tools.** Input schemas live in `plugin/servers/tracker/src/tools.ts`. If you change a tool's
+  schema, update the snapshot in `tests/tracker/fixtures/tools-list.json` and
   [`docs/tracker-api.md`](docs/tracker-api.md).
 - **Skills and commands** explain the reason for each rule ("Why: ..."). Keep that when you edit them;
   the reasons are what stop a later edit from undoing a lesson.
-- **Versions.** `plugin.yaml`, `.claude-plugin/plugin.json` and `package.json` carry the same version; a
-  test checks it.
+- **Versions.** `plugin/plugin.yaml`, `plugin/.claude-plugin/plugin.json`, `plugin/package.json` and the root
+  `package.json` carry the same version; a test checks it.
 - **Hermes.** Changes to hooks or skill wiring should keep both hosts working. See
   [`docs/hermes.md`](docs/hermes.md).
 
 ## Source adapters
 
 Job sites change often. When a source breaks, the most useful report is the source name, what you ran,
-and what the page or API returned. A fix usually belongs in `skills/source-roles/`.
+and what the page or API returned. A fix usually belongs in `plugin/skills/source-roles/`.

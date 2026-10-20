@@ -11,7 +11,7 @@ import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const SH = fileURLToPath(new URL('../scripts/install-node.sh', import.meta.url));
+const SH = fileURLToPath(new URL('../plugin/scripts/install-node.sh', import.meta.url));
 const noBash = process.platform === 'win32' && 'bash script (macOS)';
 
 const HEADER = 'version\tdate\tfiles\tnpm\tv8\tuv\tzlib\topenssl\tmodules\tlts\tsecurity';
@@ -217,7 +217,7 @@ test('sh: a notarized Node.js Foundation package is opened and kept', { skip: no
   assert.match(r.stdout, /The Node\.js installer is open\./);
 });
 
-const PS1 = fileURLToPath(new URL('../scripts/install-node.ps1', import.meta.url));
+const PS1 = fileURLToPath(new URL('../plugin/scripts/install-node.ps1', import.meta.url));
 const noPwsh = spawnSync('pwsh', ['-NoProfile', '-Command', 'exit 0']).status !== 0 && 'pwsh not installed';
 const ps = (args: string[], env: NodeJS.ProcessEnv = {}) =>
   spawnSync('pwsh', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', PS1, ...args], { encoding: 'utf8', env: { ...BASE_ENV, PROCESSOR_ARCHITECTURE: 'AMD64', ...env } });

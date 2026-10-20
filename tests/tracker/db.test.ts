@@ -7,9 +7,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { test } from 'node:test';
-import { openDb, SCHEMA_V1, SCHEMA_VERSION, tx } from '../src/db.ts';
-import { secureDir, secureFile } from '../src/fsperm.ts';
-import { Tracker } from '../src/tracker.ts';
+import { openDb, SCHEMA_V1, SCHEMA_VERSION, tx } from '../../plugin/servers/tracker/src/db.ts';
+import { secureDir, secureFile } from '../../plugin/servers/tracker/src/fsperm.ts';
+import { Tracker } from '../../plugin/servers/tracker/src/tracker.ts';
 
 const tempDb = () => join(mkdtempSync(join(tmpdir(), 'jh-db-')), 'tracker.db');
 const addRule = (db: ReturnType<typeof openDb>, text: string) =>
@@ -20,7 +20,7 @@ const ruleTexts = (db: ReturnType<typeof openDb>) =>
 test('a second writer waits for the lock instead of failing', { timeout: 10_000 }, async () => {
   const path = tempDb();
   openDb(path).close();
-  const dbUrl = new URL('../src/db.ts', import.meta.url).href;
+  const dbUrl = new URL('../../plugin/servers/tracker/src/db.ts', import.meta.url).href;
   // Another process (another Claude session) holds the write lock for 300 ms.
   const child = spawn(process.execPath, ['--no-warnings', '--input-type=module', '-e', `
     import { openDb } from ${JSON.stringify(dbUrl)};
@@ -121,7 +121,7 @@ test('concurrent opens of a pre-versioning database migrate it exactly once', { 
   const raw = new DatabaseSync(path);
   raw.exec(SCHEMA_V1);
   raw.close();
-  const dbUrl = new URL('../src/db.ts', import.meta.url).href;
+  const dbUrl = new URL('../../plugin/servers/tracker/src/db.ts', import.meta.url).href;
   const start = Date.now() + 500; // all children open together, after their startup cost
   const run = () => new Promise<{ code: number | null; stderr: string }>((resolve) => {
     const child = spawn(process.execPath, ['--no-warnings', '--input-type=module', '-e', `
