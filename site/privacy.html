@@ -6,7 +6,7 @@
     <title>Privacy policy · Job Tracker</title>
     <meta
       name="description"
-      content="How the Job Tracker plugin and its website handle your data. Your tracker stays on your computer; we collect nothing."
+      content="How Job Tracker stores your data, uses connected services, and handles website privacy."
     />
     <link rel="canonical" href="https://jobhuntmcp.com/privacy.html" />
     <meta name="theme-color" content="#f6f3eb" />
@@ -35,138 +35,43 @@
       <p class="eyebrow">Effective 20 October 2026</p>
       <h1>Privacy policy</h1>
       <p>
-        This policy covers the Job Tracker plugin for Claude Code, Claude
-        Desktop and Hermes Agent, and this website. The same text is in the
-        repository as
-        <a href="https://github.com/adamwardecki/job-hunt-mcp/blob/main/PRIVACY.md"
-          >PRIVACY.md</a
-        >.
-      </p>
-      <p>
-        Job Tracker is open-source software maintained by Adam Wardecki
-        (“we”). We do not run a server for it. We do not collect, receive,
-        store or sell any of your data, and the plugin contains no telemetry,
-        analytics or crash reporting.
+        This policy covers the Job Tracker plugin and this website. Job Tracker
+        is open-source software maintained by Adam Wardecki (“we”). We do not
+        collect or sell your data. The plugin has no telemetry, analytics or
+        crash reporting.
       </p>
 
-      <h2>What the plugin stores on your computer</h2>
+      <h2>Data on your computer</h2>
       <p>
-        The plugin keeps its data in a folder on your computer:
-        <code>~/.job-hunt</code>, or the folder set in
-        <code>JOB_HUNT_HOME</code>. It never stores data inside the plugin’s
-        own folder.
-      </p>
-      <ul>
-        <li>
-          <strong>The tracker database</strong> (<code>tracker.db</code>): your
-          profile and CV summary, hard filters and preferences (including your
-          pay floor), stories, reusable answers and writing rules; the
-          companies and roles you look at, with quotes from their postings and
-          the reason for each status change; drafts and cover notes;
-          application confirmations; interview details (time, stage,
-          interviewer names, links, notes); source health; and a log of each
-          run.
-        </li>
-        <li>
-          <strong>Session files</strong> (<code>sessions/</code>): small files
-          that record what you approved in each session (for example a
-          <code>/job-tracker:approve</code>) so the safety hooks can check it.
-          On Hermes Agent, a session file also keeps a copy of each tool call
-          and its result, because Hermes does not give hooks a transcript; that
-          copy can include email or page text the model read.
-        </li>
-        <li>
-          <strong>Files you ask for</strong>, such as a cover letter PDF, saved
-          where you or your Claude or Hermes app put them.
-        </li>
-      </ul>
-      <p>
-        The folder is created readable only by your user account
-        (<code>0700</code>), and the database and session files are
-        <code>0600</code>. On a filesystem that does not support these
-        permissions, the tracker logs a warning and still starts.
-      </p>
-      <p>
-        The tracker is a local server that talks to Claude or Hermes over
-        stdio. It has no network listener and no account.
+        Job Tracker stores your profile, job preferences, application history,
+        drafts and interview details on your computer. It also keeps session
+        records, which on Hermes Agent can include email and page content read
+        during a session. Files you create, such as cover letters, are saved
+        separately wherever you choose.
       </p>
 
-      <h2>What leaves your computer</h2>
+      <h2>Data shared with other services</h2>
       <p>
-        Local storage does not mean nothing leaves your computer. The plugin
-        uses the AI app and the connectors you choose, and each one handles
-        data under its own policy:
-      </p>
-      <ul>
-        <li>
-          <strong>Your AI provider.</strong> Anything the model reads or writes
-          in a session (your profile, job postings, emails it classifies,
-          drafts) is sent to the provider behind your app: Anthropic for Claude
-          Code and Claude Desktop, or whichever provider you configured in
-          Hermes Agent.
-        </li>
-        <li>
-          <strong>Gmail and Google Calendar</strong>, if you connect them: the
-          plugin reads recruiter mail and calendar events, and creates reply
-          drafts in your mailbox. It never sends email; a hook blocks every
-          send tool.
-        </li>
-        <li>
-          <strong>LinkedIn</strong>, if you connect a LinkedIn server:
-          read-only use (job search and inbox). Message and connection tools
-          are blocked.
-        </li>
-        <li>
-          <strong>Your browser</strong>, if you connect one: the plugin visits
-          job boards and employer pages and fills application forms. An
-          application is submitted only after you type
-          <code>/job-tracker:approve</code> for that role. What you submit goes
-          to the employer and its applicant tracking system, under their
-          privacy policy. The plugin never fills passport, nationality, age,
-          date of birth, gender, marital status or ID number fields, and leaves
-          consent boxes unticked unless you allow them.
-        </li>
-        <li>
-          <strong>Third-party job trackers</strong> you ask it to tidy (for
-          example JobCopilot), through your browser.
-        </li>
-      </ul>
-      <p>
-        The plugin’s own code makes one kind of network request: if Node.js is
-        missing, setup can install it. On macOS this downloads the installer
-        from nodejs.org; on Windows it uses winget, or nodejs.org when winget
-        is not available. These requests contain no personal data beyond what
-        any download sends (such as your IP address).
+        Information used in a session is shared with your AI provider. Optional
+        connections to email, calendars, job boards and other services handle
+        data under their own privacy policies. Applications you approve are
+        shared with the employer and its application platform.
       </p>
 
-      <h2>Your choices and deleting data</h2>
-      <ul>
-        <li>
-          Every connector is optional. Without a browser, the daily run still
-          works and queues browser work for later.
-        </li>
-        <li>
-          Your data stays until you delete it. The plugin does not delete old
-          records or session files on its own.
-        </li>
-        <li>
-          To delete everything the plugin stored, delete the
-          <code>~/.job-hunt</code> folder. Uninstalling the plugin does not
-          delete it.
-        </li>
-        <li>
-          Drafts in Gmail, events in your calendar, and conversation history in
-          your AI app are kept by those services. Delete them there.
-        </li>
-      </ul>
+      <h2>Deleting your data</h2>
+      <p>
+        Local records stay until you delete them. To remove them, delete
+        <code>~/.job-hunt</code>, or your custom data folder if you set one.
+        Uninstalling the plugin does not delete this data. Delete separately
+        saved files and any drafts, events or conversation history held by
+        connected services where they are stored.
+      </p>
 
       <h2>This website</h2>
       <p>
-        jobhuntmcp.com is a static site hosted on GitHub Pages. It sets no
-        cookies and uses no analytics, trackers or third-party scripts, and its
-        fonts are served from the same site. The copy buttons write to your
-        clipboard in your browser only. GitHub, as the host, may log visitors’
-        IP addresses for security; see the
+        This site uses no cookies, analytics or tracking scripts. It is hosted
+        on GitHub Pages, which may log visitors’ IP addresses for security; see
+        the
         <a
           href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement"
           >GitHub privacy statement</a
@@ -175,17 +80,11 @@
 
       <h2>Changes and contact</h2>
       <p>
-        If this policy changes, the new version is published here with a new
-        effective date, and the history is in the
-        <a
-          href="https://github.com/adamwardecki/job-hunt-mcp/commits/main/PRIVACY.md"
-          >repository</a
-        >.
-      </p>
-      <p>
-        Questions: open an
-        <a href="https://github.com/adamwardecki/job-hunt-mcp/issues">issue</a
-        >. Issues are public, so do not include personal data in them.
+        Updates will be published here with a new effective date. For questions,
+        open a
+        <a href="https://github.com/adamwardecki/job-hunt-mcp/issues"
+          >GitHub issue</a
+        >. Issues are public, so do not include personal data.
       </p>
     </main>
     <footer class="container site-footer">
