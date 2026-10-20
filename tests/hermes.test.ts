@@ -157,3 +157,13 @@ test('the plugin root has no lockfile, so Claude Code installs nothing for users
   assert.equal(pkg.dependencies, undefined, 'no runtime dependencies');
   assert.equal(pkg.devDependencies, undefined, 'dev dependencies belong in dev/package.json');
 });
+
+test('plugin.json points the directory listing at an icon that exists', () => {
+  // Anthropic's directory reads the icon only from this field. `claude plugin validate` does not check the
+  // path, so a typo would ship a listing with no icon.
+  const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+  const icon = JSON.parse(readFileSync(join(root, '.claude-plugin', 'plugin.json'), 'utf8')).icon;
+  assert.equal(typeof icon, 'string', 'plugin.json has an icon field');
+  assert.match(icon, /^\.\//, 'icon path is relative to the plugin root');
+  assert.ok(statSync(join(root, icon)).isFile(), `${icon} exists`);
+});
