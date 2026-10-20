@@ -2278,6 +2278,71 @@ mark {
   }
 }
 
+.connectors-section {
+  border-top: 1px solid var(--line);
+}
+.connector-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 48px;
+  list-style: none;
+  padding: 0;
+  margin: 44px 0 0;
+}
+.connector-icon {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  margin-bottom: 22px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fffdf8;
+  color: var(--accent);
+}
+.connector-icon svg {
+  width: 38px;
+  height: 38px;
+}
+.connector-list h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  font-weight: 550;
+  letter-spacing: -0.3px;
+}
+.connector-list p {
+  max-width: 310px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+@media (max-width: 760px) {
+  .connector-list {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    margin-top: 32px;
+  }
+  .connector-list li {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    column-gap: 18px;
+  }
+  .connector-icon {
+    grid-row: 1 / 3;
+    width: 56px;
+    height: 56px;
+    margin: 0;
+    border-radius: 12px;
+  }
+  .connector-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+  .connector-list p {
+    max-width: none;
+  }
+}
+
 .safety-section .control-heading {
   grid-template-columns: 1.6fr 1fr;
   gap: 60px;
