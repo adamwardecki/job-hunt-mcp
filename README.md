@@ -155,6 +155,9 @@ Local storage does not mean nothing leaves your machine. Like any Claude Code or
 the model reads (your profile, postings, emails it classifies) goes to your model provider, and each
 connector you add has its own data policy.
 
+The full [privacy policy](PRIVACY.md) lists what is stored, what leaves your machine and how to delete
+it.
+
 The daily sweep is a **local** scheduled task (Claude Desktop or Claude Code on your machine, or a
 Hermes cron job). It needs the browser for logged-in boards, employer pages and forms, and the browser is
 only reachable from a local session, so cloud scheduled tasks are not supported. The task runs only while
