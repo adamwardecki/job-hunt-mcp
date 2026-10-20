@@ -40,7 +40,7 @@ test('setup step 0 never loops on restarts and never reinstalls over a shadowed 
 test('every tracker command explains a missing runtime in one sentence', () => {
   const missing = /\*\*If the tracker tools are missing\*\* \(search for them first if tools are deferred\), or a hook error says `node` could not start:/;
   for (const name of ['apply', 'status', 'prep', 'cover-letter', 'triage', 'correct', 'import']) {
-    assert.match(read(`commands/${name}.md`), new RegExp(`${missing.source}.*offer to run \`\\/j-hunt:setup\``), name);
+    assert.match(read(`commands/${name}.md`), new RegExp(`${missing.source}.*offer to run \`\\/job-tracker:setup\``), name);
   }
   assert.match(read('commands/sweep.md'), new RegExp(`${missing.source}.*Record nothing\\.`));
 });

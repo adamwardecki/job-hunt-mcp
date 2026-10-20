@@ -68,10 +68,10 @@ test('post_tool_call steps are stored in Claude transcript shape with readable r
 });
 
 test('slash-skill messages unwrap to the typed command; only the user instruction counts', () => {
-  assert.deepEqual(unwrapSkillInvocation('/j-hunt:approve 12'), { text: '/j-hunt:approve 12', skill: null, args: null });
-  assert.deepEqual(unwrapSkillInvocation(FIXTURE), { text: '/j-hunt:approve 12', skill: 'j-hunt:approve', args: '12' });
+  assert.deepEqual(unwrapSkillInvocation('/job-tracker:approve 12'), { text: '/job-tracker:approve 12', skill: null, args: null });
+  assert.deepEqual(unwrapSkillInvocation(FIXTURE), { text: '/job-tracker:approve 12', skill: 'job-tracker:approve', args: '12' });
   assert.equal(userText([{ type: 'text', text: 'hello' }, { type: 'image_url', image_url: {} }]), 'hello');
-  assert.equal(userText(FIXTURE), '/j-hunt:approve 12');
+  assert.equal(userText(FIXTURE), '/job-tracker:approve 12');
 });
 
 // --- hooks/hermes.ts e2e ---
@@ -103,7 +103,7 @@ test('hermes.ts: connector send tools are blocked, unrelated tools pass silently
   assert.equal(hermes('pre_tool_call', { session_id: 'h1', tool_name: 'mcp__github__list_issues', args: {} }), null);
 });
 
-test('hermes.ts: a submit click needs the user approval typed as /j-hunt:approve', () => {
+test('hermes.ts: a submit click needs the user approval typed as /job-tracker:approve', () => {
   const role = verifiedRole();
   const sid = 'h2';
   hermes('pre_tool_call', { session_id: sid, tool_name: `${TRACKER}open_items`, args: {} }); // marks the session
@@ -120,14 +120,14 @@ test('hermes.ts: a submit click needs the user approval typed as /j-hunt:approve
 
 test('hermes.ts: a subagent turn cannot grant approval', () => {
   const role = verifiedRole();
-  const out = hermes('pre_llm_call', { session_id: 'child', parent_session_id: 'h3', user_message: `/j-hunt:approve ${role.id}` });
+  const out = hermes('pre_llm_call', { session_id: 'child', parent_session_id: 'h3', user_message: `/job-tracker:approve ${role.id}` });
   assert.equal(out, null);
   assert.match(hermes('pre_tool_call', { session_id: 'child', tool_name: 'browser_console', args: { expression: "document.querySelector('form').requestSubmit()" } }) ?.message ?? 'not-marked', /not-marked|approval/);
 });
 
 test('hermes.ts: an unfinished sweep queues a nudge that the next turn receives', () => {
   const sid = 'h4';
-  hermes('pre_llm_call', { session_id: sid, user_message: '/j-hunt:sweep' });
+  hermes('pre_llm_call', { session_id: sid, user_message: '/job-tracker:sweep' });
   hermes('post_tool_call', { session_id: sid, tool_call_id: 'u1', tool_name: `${TRACKER}upsert_role`, args: { company: 'A', title: 'B' }, result: JSON.stringify({ role: { id: 1, title: 'B' }, created: true }) });
   const stop = hermes('post_llm_call', { session_id: sid });
   assert.equal(stop.action, 'continue');

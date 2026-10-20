@@ -12,11 +12,11 @@ NODE="$(command -v node || true)"
   || { echo "node >= 22.18 required (node:sqlite, TypeScript type stripping)" >&2; exit 1; }
 
 mkdir -p "$HERMES_DIR/plugins"
-# The plugin was called job-hunt before 0.2.0; drop the old link so it does not load twice.
-[ -L "$HERMES_DIR/plugins/job-hunt" ] && rm "$HERMES_DIR/plugins/job-hunt"
-ln -sfn "$ROOT" "$HERMES_DIR/plugins/j-hunt"
-hermes plugins enable j-hunt
+# The plugin was called job-hunt before 0.2.0 and j-hunt before 0.3.0; drop the old links so it does not load twice.
+for old in job-hunt j-hunt; do if [ -L "$HERMES_DIR/plugins/$old" ]; then rm "$HERMES_DIR/plugins/$old"; fi; done
+ln -sfn "$ROOT" "$HERMES_DIR/plugins/job-tracker"
+hermes plugins enable job-tracker
 
 hermes mcp add job_hunt_tracker --command "$NODE" --args --no-warnings "$ROOT/servers/tracker/src/index.ts"
 
-echo "Done. Restart Hermes, then run /j-hunt:setup"
+echo "Done. Restart Hermes, then run /job-tracker:setup"

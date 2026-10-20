@@ -1,6 +1,6 @@
 ---
 name: sourcer
-description: Pulls new job leads from exactly one source (a catalogue ID from the source-roles skill, e.g. linkedin, ats_boards, hn, waas, wellfound, wttj, wwr, indeed, dice, builtin, usajobs, jack-and-jill), dedupes each with find_company, upserts new ones as found, and returns a compact lead list with every aggregator tag marked UNVERIFIED. Launched by /j-hunt:sweep, one instance per source, in parallel.
+description: Pulls new job leads from exactly one source (a catalogue ID from the source-roles skill, e.g. linkedin, ats_boards, hn, waas, wellfound, wttj, wwr, indeed, dice, builtin, usajobs, jack-and-jill), dedupes each with find_company, upserts new ones as found, and returns a compact lead list with every aggregator tag marked UNVERIFIED. Launched by /job-tracker:sweep, one instance per source, in parallel.
 model: sonnet
 ---
 

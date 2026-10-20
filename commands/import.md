@@ -5,7 +5,7 @@ argument-hint: "[path to the legacy pipeline/ folder]"
 
 Import the user's legacy pipeline into the tracker. Path: `$ARGUMENTS`
 
-**If the tracker tools are missing** (search for them first if tools are deferred), or a hook error says `node` could not start: Node.js, which the plugin runs on, is missing or too old. Tell the user that in one sentence, offer to run `/j-hunt:setup` (it installs Node.js), and stop.
+**If the tracker tools are missing** (search for them first if tools are deferred), or a hook error says `node` could not start: Node.js, which the plugin runs on, is missing or too old. Tell the user that in one sentence, offer to run `/job-tracker:setup` (it installs Node.js), and stop.
 
 This is a one-off. Run it once, before the first sweep if possible. Tell the user that the imported data is personal and will live in the tracker database.
 

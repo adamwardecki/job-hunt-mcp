@@ -1,4 +1,4 @@
-# JobHunt
+# Job Tracker
 
 A Claude Code (and Hermes Agent) plugin that runs a disciplined, low-volume job search for one person.
 Every weekday it finds roles that fit your hard filters, verifies each one on the employer's own posting,
@@ -17,7 +17,7 @@ Website: [jobhuntmcp.com](https://jobhuntmcp.com/)
 ## What it will never do
 
 - Send email or LinkedIn messages. It writes drafts only, and a hook blocks every send tool.
-- Submit an application without your `/j-hunt:approve <role_id>` in the same session.
+- Submit an application without your `/job-tracker:approve <role_id>` in the same session.
 - Create accounts, enter passwords, solve visible CAPTCHAs, tick consent boxes, or fill personal-data
   fields (passport, nationality, age, gender, marital status, ID numbers).
 - Auto-apply at volume.
@@ -25,7 +25,7 @@ Website: [jobhuntmcp.com](https://jobhuntmcp.com/)
 ## Requirements
 
 - **Claude Code 2.1.295 or newer** (the Desktop app or the CLI), or **Hermes Agent**.
-- **Node.js 22.18 or newer.** If it is missing, `/j-hunt:setup` offers to install it on macOS and
+- **Node.js 22.18 or newer.** If it is missing, `/job-tracker:setup` offers to install it on macOS and
   Windows: it downloads the official installer from nodejs.org and checks its checksum and signature (on
   Windows it uses winget when available). The tracker uses the built-in `node:sqlite`, and Node runs the
   plugin's TypeScript directly. There are no runtime npm dependencies.
@@ -37,7 +37,7 @@ Website: [jobhuntmcp.com](https://jobhuntmcp.com/)
 - **Optional:** a LinkedIn MCP server (read-only use: job search and inbox).
 
 **Usage.** A sweep runs several subagents (one per source, one per role it scores), so a daily run uses
-a noticeable share of your Claude plan or API budget. Start with `/j-hunt:sweep --limit 5` to see what
+a noticeable share of your Claude plan or API budget. Start with `/job-tracker:sweep --limit 5` to see what
 a run costs you.
 
 ## Install
@@ -46,16 +46,16 @@ Claude Code:
 
 ```
 /plugin marketplace add adamwardecki/job-hunt-mcp
-/plugin install j-hunt@job-hunt-mcp
-/j-hunt:setup
+/plugin install job-tracker@job-hunt-mcp
+/job-tracker:setup
 ```
 
 Setup walks through CV import, hard filters, preferences, writing rules, accounts (including which
 calendar your invites actually land on), connectors, browser check, sources, autonomy and the daily
 schedule, then runs a 5-result calibration sweep. Every "no, because..." becomes a rule. You can stop at
-any point and run `/j-hunt:setup` again to resume.
+any point and run `/job-tracker:setup` again to resume.
 
-Already tracking applications in a markdown table? `/j-hunt:import <folder>` brings in an
+Already tracking applications in a markdown table? `/job-tracker:import <folder>` brings in an
 `applied-log.md` (`| date | company | role | source | action | status |`), a preferences file, queue
 notes and your profile and stories. See [`commands/import.md`](commands/import.md) for the expected files.
 
@@ -69,7 +69,7 @@ cd job-hunt-mcp
 scripts/hermes-install.sh
 ```
 
-Restart Hermes and type `/j-hunt:setup`. Details and the differences from Claude Code are in
+Restart Hermes and type `/job-tracker:setup`. Details and the differences from Claude Code are in
 [`docs/hermes.md`](docs/hermes.md).
 
 ## What a day looks like
@@ -84,7 +84,7 @@ The scheduled sweep ends with a report like this one (the format is real, render
 
 ## Needs you
 
-1. **Halyard**, Senior Platform Engineer (role 1): Cover note saved. Apply with /j-hunt:apply?
+1. **Halyard**, Senior Platform Engineer (role 1): Cover note saved. Apply with /job-tracker:apply?
 2. **Pinecrest Health**, Staff Engineer (role 2): The posting asks for 2 days a month in Berlin. OK?
 
 ## Interviews
@@ -106,23 +106,23 @@ The scheduled sweep ends with a report like this one (the format is real, render
 - wellfound: now degraded (Login expired)
 ```
 
-You answer the "Needs you" items, run `/j-hunt:apply` for the roles you want, and approve each submit.
+You answer the "Needs you" items, run `/job-tracker:apply` for the roles you want, and approve each submit.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `/j-hunt:setup` | Guided setup; resumable. |
-| `/j-hunt:sweep [--limit N]` | The daily run (what the scheduled task runs). Inbox, sourcing, verify, score, prepare, report, audit. Never submits. |
-| `/j-hunt:apply [role-id\|company\|url]` | Interactive apply: verify, write, fill, read back, then wait for your approval. |
-| `/j-hunt:approve <role-id>` | **You** type this on the filled form to allow one submit attempt for that role and page (up to 2 hours). |
-| `/j-hunt:allow-consent <role-id>` | **You** type this on the form to allow ticking consent boxes for that role and page. |
-| `/j-hunt:triage <source>` | Reconcile and clean a tracker board (JobCopilot-style) with the delete guard. |
-| `/j-hunt:prep <company>` | Interview prep from your stories. |
-| `/j-hunt:status` | Pipeline summary and open items. |
-| `/j-hunt:cover-letter <role-id> [--pdf]` | Cover letter, optionally as a one-page PDF. |
-| `/j-hunt:correct` | Turn your override into a rule with a reason and example. |
-| `/j-hunt:import [path]` | One-off import of an existing markdown log. |
+| `/job-tracker:setup` | Guided setup; resumable. |
+| `/job-tracker:sweep [--limit N]` | The daily run (what the scheduled task runs). Inbox, sourcing, verify, score, prepare, report, audit. Never submits. |
+| `/job-tracker:apply [role-id\|company\|url]` | Interactive apply: verify, write, fill, read back, then wait for your approval. |
+| `/job-tracker:approve <role-id>` | **You** type this on the filled form to allow one submit attempt for that role and page (up to 2 hours). |
+| `/job-tracker:allow-consent <role-id>` | **You** type this on the form to allow ticking consent boxes for that role and page. |
+| `/job-tracker:triage <source>` | Reconcile and clean a tracker board (JobCopilot-style) with the delete guard. |
+| `/job-tracker:prep <company>` | Interview prep from your stories. |
+| `/job-tracker:status` | Pipeline summary and open items. |
+| `/job-tracker:cover-letter <role-id> [--pdf]` | Cover letter, optionally as a one-page PDF. |
+| `/job-tracker:correct` | Turn your override into a rule with a reason and example. |
+| `/job-tracker:import [path]` | One-off import of an existing markdown log. |
 
 ## How it fits together
 
@@ -166,11 +166,11 @@ the machine is awake and the app is open.
 |---|---|
 | Send | Any Gmail/email send, reply or forward, and any LinkedIn message or connection request, is denied in every session. Browser clicks on "Send" are denied in job-hunt sessions. |
 | Drafts | Gmail `create_draft`/`update_draft` bodies are linted; em/en dashes, "not X but Y", fake-candid openers and volunteered gaps are denied. |
-| Submit | A click on a submit/apply element (resolved from the page's accessibility tree) or a scripted submit needs your `/j-hunt:approve` on that role's current form and a passing `gate_check` (verified, not `no_cold_apply`, no live application at the company). Approval is consumed by one submit attempt. No identifiable page or reachable tracker means no submit. |
+| Submit | A click on a submit/apply element (resolved from the page's accessibility tree) or a scripted submit needs your `/job-tracker:approve` on that role's current form and a passing `gate_check` (verified, not `no_cold_apply`, no live application at the company). Approval is consumed by one submit attempt. No identifiable page or reachable tracker means no submit. |
 | Board delete | Needs a fresh `JOBHUNT_TRIAGE_GUARD` with `ok: true` and nothing but the delete control and its confirm button clicked since. |
 | Personal data and consent | `form_input` into passport, nationality, age, DOB, gender, marital, ID and similar fields is denied; consent boxes stay unticked unless you allow them. |
 | Read-back | `verify_artifact` is denied unless a real `get_draft`/`list_drafts` result in the session contains the draft id. |
-| Stop | A `/j-hunt:sweep` session cannot end until every role it touched has an event and the report was rendered. |
+| Stop | A `/job-tracker:sweep` session cannot end until every role it touched has an event and the report was rendered. |
 
 Browser gates apply only in sessions that used a job-hunt command or the tracker; send blocking applies
 everywhere.
@@ -187,13 +187,13 @@ for help.
 ## Use it responsibly
 
 - **You are the applicant.** Everything submitted goes out in your name. Read what it prepared before
-  you type `/j-hunt:approve`.
+  you type `/job-tracker:approve`.
 - **Site terms.** Some job boards (LinkedIn in particular) restrict automated access in their terms of
   service. The plugin keeps LinkedIn read-only and low-volume, but whether to connect a source is your
   call and your account.
 - **Employer AI policies.** If a form says not to use AI, the writing skill leaves those fields for you.
 - **Models make mistakes.** Verification quotes the employer's own page so you can check every drop and
-  every match, and `/j-hunt:correct` turns each mistake into a rule.
+  every match, and `/job-tracker:correct` turns each mistake into a rule.
 
 ## Development
 
