@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { TOOLS } from '../src/tools.ts';
+import { TOOLS } from '../../plugin/servers/tracker/src/tools.ts';
 
 const fixture = new URL('./fixtures/tools-list.json', import.meta.url);
 

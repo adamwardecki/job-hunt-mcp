@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
-const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
+const read = (p: string) => readFileSync(new URL(`../plugin/${p}`, import.meta.url), 'utf8');
 const step0 = () => {
   const skill = read('skills/setup/SKILL.md');
   return skill.slice(skill.indexOf('### 0. Runtime'), skill.indexOf('### 1. CV import'));
@@ -46,7 +46,7 @@ test('every tracker command explains a missing runtime in one sentence', () => {
 });
 
 test('setup field lists and settings.example.yaml match the config schema', async () => {
-  const { CONFIG_SCHEMA } = await import('../servers/tracker/src/config.ts');
+  const { CONFIG_SCHEMA } = await import('../plugin/servers/tracker/src/config.ts');
   const skill = read('skills/setup/SKILL.md');
   const yaml = read('templates/settings.example.yaml');
   for (const section of ['filters', 'prefs', 'writing', 'accounts', 'schedule', 'sources'] as const) {

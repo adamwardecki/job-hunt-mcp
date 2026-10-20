@@ -10,7 +10,7 @@
       "**",
       "!site",
       "!tests/fixtures",
-      "!servers/tracker/test/fixtures",
+      "!tests/tracker/fixtures",
       "!dev/package-lock.json"
     ]
   },

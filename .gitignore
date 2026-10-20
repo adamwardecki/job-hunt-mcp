@@ -10,3 +10,4 @@ docs/superpowers/
 
 # Dev tools install into dev/; a root lockfile would make Claude Code install packages for every user.
 /package-lock.json
+/plugin/package-lock.json

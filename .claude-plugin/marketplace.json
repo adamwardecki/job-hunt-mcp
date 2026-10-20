@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "job-tracker",
-      "source": "./",
+      "source": "./plugin",
       "description": "Low-volume, high-precision job search with a tracker, hard gates and a daily report."
     }
   ],

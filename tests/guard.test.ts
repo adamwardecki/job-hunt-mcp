@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const CHROME = [process.env.CHROME_PATH, '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'].find((p) => p && existsSync(p));
 const board = readFileSync(join(root, 'tests/fixtures/jobcopilot-board.html'), 'utf8');
-const guard = readFileSync(join(root, 'skills/triage-tracker/guard.js'), 'utf8');
+const guard = readFileSync(join(root, 'plugin/skills/triage-tracker/guard.js'), 'utf8');
 const dir = mkdtempSync(join(tmpdir(), 'guard-'));
 
 // The parts of the JOBHUNT_TRIAGE_GUARD output these tests read.

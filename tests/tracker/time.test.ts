@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { ToolError } from '../src/errors.ts';
-import { dayBounds, formatLocal, isValidTimeZone, localDate, toUtcIso } from '../src/time.ts';
+import { ToolError } from '../../plugin/servers/tracker/src/errors.ts';
+import { dayBounds, formatLocal, isValidTimeZone, localDate, toUtcIso } from '../../plugin/servers/tracker/src/time.ts';
 
 const isToolError = (e: unknown) => e instanceof ToolError;
 

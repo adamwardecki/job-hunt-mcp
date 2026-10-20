@@ -2,16 +2,16 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { openDb } from '../src/db.ts';
-import { importLegacy, mapStatus } from '../src/legacy.ts';
-import { lintProse } from '../src/lint.ts';
-import type { RpcResponse } from '../src/mcp.ts';
-import { makeHandler } from '../src/mcp.ts';
-import { renderReport, runAudit } from '../src/report.ts';
-import { formatLocal, localDate } from '../src/time.ts';
-import { Tracker } from '../src/tracker.ts';
+import { openDb } from '../../plugin/servers/tracker/src/db.ts';
+import { importLegacy, mapStatus } from '../../plugin/servers/tracker/src/legacy.ts';
+import { lintProse } from '../../plugin/servers/tracker/src/lint.ts';
+import type { RpcResponse } from '../../plugin/servers/tracker/src/mcp.ts';
+import { makeHandler } from '../../plugin/servers/tracker/src/mcp.ts';
+import { renderReport, runAudit } from '../../plugin/servers/tracker/src/report.ts';
+import { formatLocal, localDate } from '../../plugin/servers/tracker/src/time.ts';
+import { Tracker } from '../../plugin/servers/tracker/src/tracker.ts';
 
-const fixture = (name: string) => readFileSync(fileURLToPath(new URL(`../../../tests/fixtures/${name}`, import.meta.url)), 'utf8');
+const fixture = (name: string) => readFileSync(fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url)), 'utf8');
 // fresh() sets filters.timezone to Europe/Berlin; "today" is that local day.
 const today = () => localDate(Date.now(), 'Europe/Berlin');
 

@@ -5,12 +5,12 @@ import { chmodSync, mkdirSync, mkdtempSync, statSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { beforeEach, test } from 'node:test';
-import { preTool, prompt, setOutput, stop } from '../hooks/gates.ts';
-import { loadSession, saveSession } from '../hooks/lib/session.ts';
-import { sameTarget, targetMatchesRole } from '../hooks/lib/target.ts';
-import type { HookOutput } from '../hooks/lib/types.ts';
-import { openDb } from '../servers/tracker/src/db.ts';
-import { Tracker } from '../servers/tracker/src/tracker.ts';
+import { preTool, prompt, setOutput, stop } from '../plugin/hooks/gates.ts';
+import { loadSession, saveSession } from '../plugin/hooks/lib/session.ts';
+import { sameTarget, targetMatchesRole } from '../plugin/hooks/lib/target.ts';
+import type { HookOutput } from '../plugin/hooks/lib/types.ts';
+import { openDb } from '../plugin/servers/tracker/src/db.ts';
+import { Tracker } from '../plugin/servers/tracker/src/tracker.ts';
 
 // One tool call in a test transcript: [toolName, input, resultText].
 type Call = [name: string, input: Record<string, unknown>, result?: string];

@@ -4,9 +4,10 @@ Instructions for coding agents working on this repo. Humans: see [CONTRIBUTING.m
 [README.md](README.md).
 
 This repo is a Claude Code (and Hermes Agent) plugin for a low-volume job search: a hand-rolled MCP server
-over stdio backed by `node:sqlite` (`servers/tracker/`), safety hooks (`hooks/`), and markdown skills,
-commands and subagents. Node runs the TypeScript directly. There is no build step and no runtime npm
-dependency. The plugin's name, and the prefix of its commands, is `job-tracker` (`/job-tracker:sweep`).
+over stdio backed by `node:sqlite` (`plugin/servers/tracker/`), safety hooks (`plugin/hooks/`), and markdown
+skills, commands and subagents. Node runs the TypeScript directly. There is no build step and no runtime npm
+dependency. Everything the plugin ships lives in `plugin/` (the marketplace's `source`); tests, docs and dev
+tooling stay outside it so they are not part of what users install or what the directory review scans. The plugin's name, and the prefix of its commands, is `job-tracker` (`/job-tracker:sweep`).
 
 ## Commands
 
@@ -14,7 +15,7 @@ dependency. The plugin's name, and the prefix of its commands, is `job-tracker` 
 npm run setup          # install dev tools (typescript, @types/node, biome) into dev/
 npm test               # tsc typecheck + all Node tests + Python Hermes tests; run before every commit
 npm run test:node      # Node tests only (faster loop)
-node --no-warnings --test servers/tracker/test/tracker.test.ts   # one file
+node --no-warnings --test tests/tracker/tracker.test.ts   # one file
 npm run lint           # biome check (lint + import order); CI runs `biome ci`
 npm run lint:fix       # apply safe fixes
 npm run tracker -- --db /tmp/t.db   # run the MCP server on stdio against a scratch DB
@@ -22,8 +23,8 @@ npm run tracker -- --db /tmp/t.db   # run the MCP server on stdio against a scra
 
 Set up with `npm run setup`, never `npm install` or `npm ci` in the repo root. The root `package.json`
 has no dependencies; the dev tools and their lockfile live in `dev/`. `npm install` in the root would
-write a `package-lock.json` there, and Claude Code installs whatever a lockfile in the plugin root lists
-for every user, on every install and update (a test fails if one appears).
+write a `package-lock.json` there. The same goes for `plugin/`: Claude Code installs whatever a lockfile in
+the plugin root lists for every user, on every install and update (a test fails if one appears in either).
 
 Needs Node 22.18+ and Python 3. Chrome-based guard tests and `pwsh` installer tests skip themselves when
 the tool is missing; CI runs them on Ubuntu and macOS with Node 22.18 and 24.
@@ -32,6 +33,7 @@ the tool is missing; CI runs them on Ubuntu and macOS with Node 22.18 and 24.
 
 | Path | What |
 |---|---|
+| `plugin/` | the plugin root (`${CLAUDE_PLUGIN_ROOT}`); only shipped files go here. Paths below are inside it |
 | `servers/tracker/src/index.ts` | stdio entry: reads JSON-RPC lines, writes replies to stdout |
 | `servers/tracker/src/mcp.ts` | `initialize`, `ping`, `tools/list`, `tools/call` |
 | `servers/tracker/src/tools.ts` | every tool's input schema (`SCHEMAS`) and handler |
@@ -39,7 +41,10 @@ the tool is missing; CI runs them on Ubuntu and macOS with Node 22.18 and 24.
 | `servers/tracker/src/db.ts` | SQLite schema and append-only `MIGRATIONS` (`PRAGMA user_version`) |
 | `hooks/` | `PreToolUse` / `UserPromptSubmit` / `Stop` gates (`hooks.json`, `gates.ts`); `hermes.ts` for Hermes |
 | `skills/`, `commands/`, `agents/` | the prompts the plugin ships |
-| `tests/` | repo-level tests (hooks, Hermes, installers, docs); `servers/tracker/test/` for the server |
+| `plugin.yaml`, `__init__.py` | the Hermes plugin manifest and wiring |
+| | **Repo root (not shipped):** |
+| `.claude-plugin/marketplace.json` | the marketplace; its plugin `source` is `./plugin` |
+| `tests/` | repo-level tests (hooks, Hermes, installers, docs); `tests/tracker/` for the server |
 | `docs/tracker-api.md` | public reference for the tracker tools |
 | `site/` | static landing page, deployed by `pages.yml`; not linted |
 | `dev/` | dev tools only (`package.json`, lockfile, `node_modules`); never shipped as runtime dependencies |
@@ -67,7 +72,7 @@ In practice:
 - **Arguments are validated by `checkArgs`** against the tool's schema before the handler runs. Add new
   fields to `SCHEMAS` and do not read arguments the schema does not declare.
 - **`tools/list` is a contract.** Clients cache it. If you change a tool's name, description or schema,
-  update `servers/tracker/test/fixtures/tools-list.json` and `docs/tracker-api.md` in the same commit.
+  update `tests/tracker/fixtures/tools-list.json` and `docs/tracker-api.md` in the same commit.
   Prefer adding optional fields to changing or removing existing ones.
 - **Tool descriptions are prompts.** Keep them short and specific about when to call the tool and what
   the arguments mean. The model reads them on every run.
@@ -116,8 +121,9 @@ The hooks enforce the promises in [README: What it will never do](README.md#what
   it is not a noreply address, stop and ask. Do not pass `--author`, `-c user.email` or `GIT_AUTHOR_EMAIL`
   to change it. For the maintainer the address is `1017097+adamwardecki@users.noreply.github.com`.
 - `npm test` and `npm run lint` pass before every commit.
-- Bumping the version: `package.json`, `plugin.yaml` and `.claude-plugin/plugin.json` change together (a
-  test checks), and `SERVER_INFO.version` in `mcp.ts` and `servers/tracker/package.json` follow.
+- Bumping the version: `package.json`, `plugin/package.json`, `plugin/plugin.yaml` and
+  `plugin/.claude-plugin/plugin.json` change together (a test checks), and `SERVER_INFO.version` in `mcp.ts`
+  and `plugin/servers/tracker/package.json` follow.
 
 ## Boundaries
 
@@ -128,4 +134,4 @@ The hooks enforce the promises in [README: What it will never do](README.md#what
   checks on `main`); anything touching send, submit, consent or delete gates.
 - **Never:** write to stdout from the server or hooks outside the protocol; edit a shipped migration;
   commit personal data, `.db` files or secrets; commit with a non-noreply email; run `npm install` or
-  `npm ci` in the root, or commit a lockfile there.
+  `npm ci` in the root or `plugin/`, or commit a lockfile there; put tests or dev files in `plugin/`.

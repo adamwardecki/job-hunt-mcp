@@ -4,17 +4,17 @@
   "private": true,
   "license": "MIT",
   "type": "module",
-  "description": "Claude plugin for a disciplined, low-volume job search. Zero runtime dependencies; the development tools live in dev/.",
+  "description": "Claude plugin for a disciplined, low-volume job search. Development workspace; the plugin itself is plugin/, and the development tools live in dev/.",
   "engines": {
     "node": ">=22.18"
   },
   "scripts": {
     "setup": "npm ci --prefix dev",
     "test": "npm run typecheck && npm run test:node && python3 -m unittest discover -s tests -p 'test_*.py'",
-    "test:node": "node --no-warnings --test servers/tracker/test/*.test.ts tests/*.test.ts",
+    "test:node": "node --no-warnings --test tests/tracker/*.test.ts tests/*.test.ts",
     "typecheck": "npm --prefix dev exec --no -- tsc",
     "lint": "npm --prefix dev exec --no -- biome check .",
     "lint:fix": "npm --prefix dev exec --no -- biome check --write .",
-    "tracker": "node --no-warnings servers/tracker/src/index.ts"
+    "tracker": "node --no-warnings plugin/servers/tracker/src/index.ts"
   }
 }

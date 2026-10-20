@@ -3,10 +3,13 @@
 ## Install
 
 ```bash
-scripts/hermes-install.sh
+plugin/scripts/hermes-install.sh
 ```
 
 Restart Hermes, then run `/job-tracker:setup`.
+
+**Installed before the plugin moved into `plugin/`?** After `git pull`, run `plugin/scripts/hermes-install.sh`
+again. It repoints the Hermes plugin link and the tracker MCP server at `plugin/`.
 
 To enable the 32 tracker tools when the `hermes mcp add` prompt asks, type `Y`.
 
