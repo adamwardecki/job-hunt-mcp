@@ -1,7 +1,7 @@
 # Privacy policy
 
 Effective 20 October 2026. This policy is also available at
-[jobhuntmcp.com/privacy.html](https://jobhuntmcp.com/privacy.html).
+[jobtrackermcp.com/privacy.html](https://jobtrackermcp.com/privacy.html).
 
 This policy covers the Job Tracker plugin and this website. Job Tracker is open-source software
 maintained by Adam Wardecki ("we"). We do not collect or sell your data. The plugin has no telemetry,

@@ -8,7 +8,7 @@ writes one short daily report.
 
 The design follows one principle: **fewer, better applications.**
 
-Website: [jobhuntmcp.com](https://jobhuntmcp.com/)
+Website: [jobtrackermcp.com](https://jobtrackermcp.com/)
 
 > **Status: early (v0.1).** It grew out of one person's real job search and is used daily by that one
 > person. Expect rough edges, and expect the source adapters to break when job sites change. Issues and
