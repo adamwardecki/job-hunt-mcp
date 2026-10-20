@@ -26,9 +26,10 @@ Website: [jobhuntmcp.com](https://jobhuntmcp.com/)
 
 - **Claude Code 2.1.295 or newer** (the Desktop app or the CLI), or **Hermes Agent**.
 - **Node.js 22.18 or newer.** If it is missing, `/job-tracker:setup` offers to install it on macOS and
-  Windows: it downloads the official installer from nodejs.org and checks its checksum and signature (on
-  Windows it uses winget when available). The tracker uses the built-in `node:sqlite`, and Node runs the
-  plugin's TypeScript directly. There are no runtime npm dependencies.
+  Windows. On macOS it downloads the official installer from nodejs.org and checks its checksum and
+  signature; on Windows it installs the Node.js LTS with winget, the package manager built into Windows.
+  The tracker uses the built-in `node:sqlite`, and Node runs the plugin's TypeScript directly. There are
+  no runtime npm dependencies.
 - **Recommended connectors:** Gmail and Google Calendar, for recruiter replies, interview invites and
   reply drafts.
 - **Recommended browser:** Claude in Chrome or the host's built-in browser. You need one for logged-in

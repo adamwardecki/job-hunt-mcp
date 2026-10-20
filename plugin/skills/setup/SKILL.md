@@ -30,8 +30,8 @@ Scripts live in `${CLAUDE_PLUGIN_ROOT}/scripts/` (Hermes: `${HERMES_SKILL_DIR}/.
 1. If the tracker tools are listed (use tool search if tools are deferred) and `setup_status` answers, this step is green. Go on to `setup_status`.
 2. Otherwise run the check with the shell tool. Its exit code says which step comes next (0, 1 or 3):
    - macOS: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/install-node.sh" --check`
-   - Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/install-node.ps1" -Check`
-   - Linux: the macOS command. The scripts do not install on Linux, so if it exits 1, skip the question in step 5 and give the "I'll install it myself" instructions (step 7).
+   - Windows: there is no script. Run `node -p "process.versions.node + ' ' + process.execPath"`. If it prints a version that is 22.18 or newer (23.4 or newer on 23.x), treat it as exit 0 with the printed path. If `node` is not found, or the version is older, run the same command with `"C:\Program Files\nodejs\node.exe"` in place of `node` (PowerShell needs `& ` before a quoted path): a new enough version there is exit 0 with that path when `node` was not found, and exit 3 when an older `node` was found first. Anything else is exit 1. Why: a PowerShell installer script in the plugin held the directory submission for policy review; winget, built into Windows, installs and verifies Node.js instead.
+   - Linux: the macOS command. The script does not install on Linux, so if it exits 1, skip the question in step 5 and give the "I'll install it myself" instructions (step 7).
 3. **Exit 3** (an older copy of Node.js is in the way): show the script's message. Explain in plain words that there is an older copy of Node.js on this computer that the plugin would use instead of the new one, and that it has to be removed or updated, by them or by someone technical; after that, quit and reopen the app and type `/job-tracker:setup`. Stop. Do not offer the installer: installing again would not fix this.
 4. **Check passes (exit 0)**: Node.js is there but the tracker is not running. Ask (multiple choice): "Have you quit and reopened the app since Node.js was installed?"
    - **No**: ask them to quit the app completely (not just close the window), reopen it, and type `/job-tracker:setup`. Stop.
@@ -40,14 +40,14 @@ Scripts live in `${CLAUDE_PLUGIN_ROOT}/scripts/` (Hermes: `${HERMES_SKILL_DIR}/.
      - Windows (PowerShell): `$null | & "<path>" --no-warnings "${CLAUDE_PLUGIN_ROOT}/servers/tracker/src/index.ts"` (from Git Bash, use the macOS form with the same path)
      If it prints `stdio ready`, tell the user that Node.js works but the app cannot see it, name the path, and say this needs a quick look from someone technical or a report to the plugin author (https://github.com/adamwardecki/job-hunt-mcp). Stop, and do not suggest another restart. If it prints an error, show the error to the user and stop.
 5. **Check fails (exit 1)**: tell the user, in one or two sentences, that the plugin needs a free program called Node.js to keep their job-hunt data on this computer, that it comes from nodejs.org (the official site), and that nothing about them is sent anywhere. Then ask (multiple choice):
-   - Install it now (open the official installer)
+   - Install it now (macOS: open the official installer; Windows: install it with winget, the package manager built into Windows)
    - I'll install it myself
    - Not now
-6. **Install it now**: run the script for the platform without flags, with a 10-minute timeout on the shell tool (its default is shorter, and the download can take a few minutes):
+6. **Install it now**: run the command for the platform, with a 10-minute timeout on the shell tool (its default is shorter, and the download can take a few minutes):
    - macOS: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/install-node.sh"`, then wait for the user to say the installer finished.
-   - Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/install-node.ps1"`. If it opened the installer instead of finishing with winget, wait for the user to say it finished.
-   Relay the script's last line. If it exits non-zero, show its message and offer the "install it myself" route. Never work around a checksum or signature failure.
-7. **I'll install it myself**, or no shell tool is available: give https://nodejs.org/en/download and say: choose the LTS installer for your computer, run it, then quit and reopen this app and type `/job-tracker:setup`.
+   - Windows: `winget install --id OpenJS.NodeJS.LTS --exact --source winget --accept-package-agreements --accept-source-agreements`. Tell the user first that Windows will ask them to allow it. winget checks the package against its manifest hash. If `winget` is not found, say nothing was installed and give the "install it myself" route. Otherwise go to step 9 whatever the exit code: a non-zero code can also mean "already installed" or "restart needed", and the check tells.
+   For the macOS script, relay its last line; if it exits non-zero, show its message and offer the "install it myself" route. Never work around a checksum or signature failure.
+7. **I'll install it myself**, or no shell tool is available: on Windows, say: open Terminal or PowerShell and run `winget install OpenJS.NodeJS.LTS`, or download the LTS installer from https://nodejs.org/en/download. Elsewhere, give https://nodejs.org/en/download and say: choose the LTS installer for your computer, run it. Then: quit and reopen this app and type `/job-tracker:setup`.
 8. **Not now**: say that nothing else in the plugin works until Node.js is installed, and stop setup.
 9. After an install, run the check again. When it passes (exit 0), say: "Node.js is installed. Quit Claude completely and reopen it, then type /job-tracker:setup to carry on." Stop here: the tracker only starts when the app starts. If it still fails, show its message and stop; do not offer the installer again in this setup run.
 
