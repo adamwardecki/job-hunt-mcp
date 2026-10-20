@@ -1,8 +1,8 @@
 # Privacy policy
 
 Effective 20 October 2026. This policy covers the Job Tracker plugin for Claude Code, Claude Desktop and
-Hermes Agent, and its website, [jobhuntmcp.com](https://jobhuntmcp.com/). The website shows the same
-text at [jobhuntmcp.com/privacy.html](https://jobhuntmcp.com/privacy.html).
+Hermes Agent, and its website, [jobtrackermcp.com](https://jobtrackermcp.com/). The website shows the same
+text at [jobtrackermcp.com/privacy.html](https://jobtrackermcp.com/privacy.html).
 
 Job Tracker is open-source software maintained by Adam Wardecki ("we"). We do not run a server for it.
 We do not collect, receive, store or sell any of your data, and the plugin contains no telemetry,
@@ -68,7 +68,7 @@ as your IP address).
 
 ## The website
 
-[jobhuntmcp.com](https://jobhuntmcp.com/) is a static site hosted on GitHub Pages. It sets no cookies
+[jobtrackermcp.com](https://jobtrackermcp.com/) is a static site hosted on GitHub Pages. It sets no cookies
 and uses no analytics, trackers or third-party scripts, and its fonts are served from the same site. The
 copy buttons write to your clipboard in your browser only. GitHub, as the host, may log visitors' IP
 addresses for security; see the
