@@ -34,7 +34,7 @@ Look at `git diff --stat origin/main...` (plus uncommitted work) and run whateve
 - **Wording in skills, commands or agents**: `tests/runtime-docs.test.ts` asserts exact sentences; `npm test` covers it, but read the failure before rewording the test.
 - **Node APIs**: CI runs Node 22.18, the floor. If your local Node is newer (`node --version`) and the change uses a Node API, check it exists in 22.18.
 
-**Suites that skip locally.** The triage guard tests need Google Chrome and the installer tests need `pwsh`; each skips without it, but CI runs them. If the change touches `plugin/skills/triage-tracker/` or `plugin/scripts/install-node.*` and the tool is missing here, say so in the PR description and watch those jobs closely.
+**Suites that skip locally.** The triage guard tests need Google Chrome and skip without it, but CI runs them. If the change touches `plugin/skills/triage-tracker/` and Chrome is missing here, say so in the PR description and watch those jobs closely.
 
 **Gates.** If the diff touches send, submit, consent, personal-data or delete gates, or a matcher in `plugin/hooks/hooks.json`, stop and confirm with the user before opening the PR (AGENTS.md: ask first).
 

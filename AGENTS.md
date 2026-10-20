@@ -26,8 +26,8 @@ has no dependencies; the dev tools and their lockfile live in `dev/`. `npm insta
 write a `package-lock.json` there. The same goes for `plugin/`: Claude Code installs whatever a lockfile in
 the plugin root lists for every user, on every install and update (a test fails if one appears in either).
 
-Needs Node 22.18+ and Python 3. Chrome-based guard tests and `pwsh` installer tests skip themselves when
-the tool is missing; CI runs them on Ubuntu and macOS with Node 22.18 and 24.
+Needs Node 22.18+ and Python 3. Chrome-based guard tests skip themselves when Chrome is missing; CI runs
+them on Ubuntu and macOS with Node 22.18 and 24.
 
 ## Layout
 

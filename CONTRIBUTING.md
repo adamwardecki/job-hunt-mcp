@@ -20,7 +20,7 @@ npm test
 ```
 
 `npm test` type-checks with `tsc`, then runs the Node and Python tests. The triage guard tests need
-Google Chrome and the Windows installer tests need PowerShell (`pwsh`); each is skipped without it.
+Google Chrome and are skipped without it.
 
 ## Conventions
 
