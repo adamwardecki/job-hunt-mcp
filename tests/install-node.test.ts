@@ -48,7 +48,10 @@ function fakeNode(version: string | null) {
   return file;
 }
 
-const sh = (args: string[], env: NodeJS.ProcessEnv = {}) => spawnSync('bash', [SH, ...args], { encoding: 'utf8', env: { ...process.env, ...env } });
+// Only what bash and pwsh need to start. The scripts get no other variables from the test runner's environment.
+const BASE_ENV: NodeJS.ProcessEnv = Object.fromEntries(['PATH', 'HOME', 'TMPDIR'].flatMap((k) => (process.env[k] === undefined ? [] : [[k, process.env[k]]])));
+
+const sh = (args: string[], env: NodeJS.ProcessEnv = {}) => spawnSync('bash', [SH, ...args], { encoding: 'utf8', env: { ...BASE_ENV, ...env } });
 
 const NO_NODE = { JOB_HUNT_NODE: '/nonexistent/node' };
 
@@ -154,7 +157,7 @@ function shLinux(args: string[], env: NodeJS.ProcessEnv) {
   writeFileSync(join(bin, 'curl'), `#!/bin/sh\ntouch "${marker}"\nexit 1\n`);
   chmodSync(join(bin, 'uname'), 0o755);
   chmodSync(join(bin, 'curl'), 0o755);
-  const full: NodeJS.ProcessEnv = { ...process.env, ...env, PATH: `${bin}:${process.env.PATH}` };
+  const full: NodeJS.ProcessEnv = { ...BASE_ENV, ...env, PATH: `${bin}:${process.env.PATH}` };
   delete full.JOB_HUNT_NODE_DIST;
   const r = spawnSync('bash', [SH, ...args], { encoding: 'utf8', env: full });
   return { r, curled: existsSync(marker) };
@@ -217,7 +220,7 @@ test('sh: a notarized Node.js Foundation package is opened and kept', { skip: no
 const PS1 = fileURLToPath(new URL('../scripts/install-node.ps1', import.meta.url));
 const noPwsh = spawnSync('pwsh', ['-NoProfile', '-Command', 'exit 0']).status !== 0 && 'pwsh not installed';
 const ps = (args: string[], env: NodeJS.ProcessEnv = {}) =>
-  spawnSync('pwsh', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', PS1, ...args], { encoding: 'utf8', env: { ...process.env, PROCESSOR_ARCHITECTURE: 'AMD64', ...env } });
+  spawnSync('pwsh', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', PS1, ...args], { encoding: 'utf8', env: { ...BASE_ENV, PROCESSOR_ARCHITECTURE: 'AMD64', ...env } });
 
 test('ps1: dry run with an old Node picks the newest LTS msi and verifies the checksum', { skip: noPwsh }, () => {
   const r = ps(['-DryRun'], { JOB_HUNT_NODE: fakeNode('v22.12.0'), JOB_HUNT_NODE_DIST: fixtureDist() });
@@ -313,7 +316,7 @@ function psWinget(script: string, env: NodeJS.ProcessEnv) {
   const bin = mkdtempSync(join(tmpdir(), 'jh-bin-'));
   writeFileSync(join(bin, 'winget'), `#!/bin/sh\n${script}\n`);
   chmodSync(join(bin, 'winget'), 0o755);
-  const full: NodeJS.ProcessEnv = { ...process.env, PROCESSOR_ARCHITECTURE: 'AMD64', ...env, PATH: `${bin}:${process.env.PATH}` };
+  const full: NodeJS.ProcessEnv = { ...BASE_ENV, PROCESSOR_ARCHITECTURE: 'AMD64', ...env, PATH: `${bin}:${process.env.PATH}` };
   delete full.JOB_HUNT_NODE_DIST;
   return spawnSync('pwsh', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', PS1], { encoding: 'utf8', env: full });
 }
