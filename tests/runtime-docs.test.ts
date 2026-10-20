@@ -15,7 +15,10 @@ test('setup runs the runtime step before setup_status', () => {
   const step0 = skill.indexOf('### 0. Runtime');
   assert.ok(step0 > -1 && step0 < skill.indexOf('### 1. CV import'), 'step 0 comes before CV import');
   assert.match(skill, /scripts\/install-node\.sh" --check/);
-  assert.match(skill, /scripts\/install-node\.ps1" -Check/);
+  // Windows uses winget instead of a shipped PowerShell script, which held the directory submission.
+  assert.doesNotMatch(skill, /\.ps1/);
+  assert.match(skill, /`winget install --id OpenJS\.NodeJS\.LTS --exact --source winget/);
+  assert.match(skill, /Windows, say: open Terminal or PowerShell and run `winget install OpenJS\.NodeJS\.LTS`/);
   assert.match(skill, /never work around a checksum or signature failure/i);
   assert.match(read('commands/setup.md'), /1\. Run step 0 \(Runtime\) of the skill first\. If step 0 stops, stop here too\./);
 });

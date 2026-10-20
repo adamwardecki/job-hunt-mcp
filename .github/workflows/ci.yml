@@ -42,5 +42,5 @@ jobs:
           cache: npm
           cache-dependency-path: dev/package-lock.json
       - run: npm run setup
-      # Typecheck, Node tests (Chrome and pwsh suites run where the runner has them), Python Hermes tests.
+      # Typecheck, Node tests (the Chrome suite runs where the runner has it), Python Hermes tests.
       - run: npm test
