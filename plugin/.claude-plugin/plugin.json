@@ -6,10 +6,10 @@
   "author": { "name": "Adam Wardecki" },
   "homepage": "https://jobtrackermcp.com/",
   "privacyPolicyUrl": "https://jobtrackermcp.com/privacy.html",
-  "documentationUrl": "https://github.com/adamwardecki/job-hunt-mcp/blob/main/README.md",
-  "supportUrl": "https://github.com/adamwardecki/job-hunt-mcp/issues",
+  "documentationUrl": "https://github.com/adamwardecki/job-tracker-mcp/blob/main/README.md",
+  "supportUrl": "https://github.com/adamwardecki/job-tracker-mcp/issues",
   "icon": "./.claude-plugin/icon.png",
-  "repository": "https://github.com/adamwardecki/job-hunt-mcp",
+  "repository": "https://github.com/adamwardecki/job-tracker-mcp",
   "license": "MIT",
   "keywords": ["jobs", "job-search", "applications", "tracker", "career"]
 }
