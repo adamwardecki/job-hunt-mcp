@@ -38,7 +38,7 @@ Scripts live in `${CLAUDE_PLUGIN_ROOT}/scripts/` (Hermes: `${HERMES_SKILL_DIR}/.
    - **Yes**: run the tracker once, with empty input, using the exact Node path the check printed:
      - macOS: `"<path>" --no-warnings "${CLAUDE_PLUGIN_ROOT}/servers/tracker/src/index.ts" < /dev/null`
      - Windows (PowerShell): `$null | & "<path>" --no-warnings "${CLAUDE_PLUGIN_ROOT}/servers/tracker/src/index.ts"` (from Git Bash, use the macOS form with the same path)
-     If it prints `stdio ready`, tell the user that Node.js works but the app cannot see it, name the path, and say this needs a quick look from someone technical or a report to the plugin author (https://github.com/adamwardecki/job-hunt-mcp). Stop, and do not suggest another restart. If it prints an error, show the error to the user and stop.
+     If it prints `stdio ready`, tell the user that Node.js works but the app cannot see it, name the path, and say this needs a quick look from someone technical or a report to the plugin author (https://github.com/adamwardecki/job-tracker-mcp). Stop, and do not suggest another restart. If it prints an error, show the error to the user and stop.
 5. **Check fails (exit 1)**: tell the user, in one or two sentences, that the plugin needs a free program called Node.js to keep their job-hunt data on this computer, that it comes from nodejs.org (the official site), and that nothing about them is sent anywhere. Then ask (multiple choice):
    - Install it now (macOS: open the official installer; Windows: install it with winget, the package manager built into Windows)
    - I'll install it myself

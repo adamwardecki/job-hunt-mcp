@@ -157,7 +157,7 @@ test('the MCP Registry entry and its MCPB manifest carry the plugin version', ()
   assert.equal(manifest.version, version);
   assert.equal(server.packages.length, 1);
   assert.equal(server.packages[0].version, version);
-  assert.equal(server.packages[0].identifier, `https://github.com/adamwardecki/job-hunt-mcp/releases/download/v${version}/job-tracker-${version}.mcpb`);
+  assert.equal(server.packages[0].identifier, `https://github.com/adamwardecki/job-tracker-mcp/releases/download/v${version}/job-tracker-${version}.mcpb`);
   assert.ok(server.description.length <= 100, 'the registry caps descriptions at 100 characters');
 });
 

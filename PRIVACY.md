@@ -34,5 +34,5 @@ visitors’ IP addresses for security; see the
 ## Changes and contact
 
 Updates will be published here with a new effective date. For questions, open a
-[GitHub issue](https://github.com/adamwardecki/job-hunt-mcp/issues). Issues are public, so do not include
+[GitHub issue](https://github.com/adamwardecki/job-tracker-mcp/issues). Issues are public, so do not include
 personal data.

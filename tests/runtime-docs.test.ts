@@ -30,7 +30,7 @@ test('setup step 0 never loops on restarts and never reinstalls over a shadowed 
   assert.match(s, /Have you quit and reopened the app since Node\.js was installed\?/);
   assert.match(s, /"<path>" --no-warnings "\$\{CLAUDE_PLUGIN_ROOT\}\/servers\/tracker\/src\/index\.ts" < \/dev\/null/);
   assert.match(s, /\$null \| & "<path>" --no-warnings "\$\{CLAUDE_PLUGIN_ROOT\}\/servers\/tracker\/src\/index\.ts"/);
-  assert.match(s, /`stdio ready`[^\n]*https:\/\/github\.com\/adamwardecki\/job-hunt[^\n]*do not suggest another restart/i);
+  assert.match(s, /`stdio ready`[^\n]*https:\/\/github\.com\/adamwardecki\/job-tracker-mcp[^\n]*do not suggest another restart/i);
   // Exit 1 is the only route to the installer; exit 3 stops without it.
   assert.match(s, /\*\*Check fails \(exit 1\)\*\*/);
   assert.match(s, /\*\*Exit 3\*\*[^\n]*older copy of Node\.js[^\n]*Do not offer the installer/);

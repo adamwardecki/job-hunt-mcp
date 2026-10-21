@@ -46,10 +46,13 @@ a run costs you.
 Claude Code:
 
 ```
-/plugin marketplace add adamwardecki/job-hunt-mcp
-/plugin install job-tracker@job-hunt-mcp
+/plugin marketplace add adamwardecki/job-tracker-mcp
+/plugin install job-tracker@job-tracker-mcp
 /job-tracker:setup
 ```
+
+Added the marketplace back when it was called `job-hunt-mcp`? Run `/plugin marketplace remove job-hunt-mcp`,
+then the first two commands above, so updates keep coming. Your tracker data in `~/.job-tracker` stays.
 
 Setup walks through CV import, hard filters, preferences, writing rules, accounts (including which
 calendar your invites actually land on), connectors, browser check, sources, autonomy and the daily
@@ -65,8 +68,8 @@ notes and your profile and stories. See [`commands/import.md`](plugin/commands/i
 The same checkout is also a native Hermes plugin (in `plugin/`):
 
 ```bash
-git clone https://github.com/adamwardecki/job-hunt-mcp.git
-cd job-hunt-mcp
+git clone https://github.com/adamwardecki/job-tracker-mcp.git
+cd job-tracker-mcp
 plugin/scripts/hermes-install.sh
 ```
 
@@ -77,7 +80,7 @@ Restart Hermes and type `/job-tracker:setup`. Details and the differences from C
 
 The tracker is also listed in the [MCP Registry](https://registry.modelcontextprotocol.io/) as
 `io.github.adamwardecki/job-tracker`, packaged as an MCPB bundle attached to each
-[GitHub release](https://github.com/adamwardecki/job-hunt-mcp/releases). That gives any MCP client the
+[GitHub release](https://github.com/adamwardecki/job-tracker-mcp/releases). That gives any MCP client the
 database and its tools ([`docs/tracker-api.md`](docs/tracker-api.md)) without the skills or the safety
 hooks, so use the plugin when you want the daily sweep. It needs Node 22.18 or newer on your PATH.
 
