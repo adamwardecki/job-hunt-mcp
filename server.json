@@ -1,0 +1,31 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.adamwardecki/job-tracker",
+  "title": "Job Tracker",
+  "description": "Local job-search tracker: roles, a status machine with evidence, rules, interviews, daily reports.",
+  "version": "0.3.0",
+  "websiteUrl": "https://jobtrackermcp.com/",
+  "repository": {
+    "url": "https://github.com/adamwardecki/job-hunt-mcp",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/adamwardecki/job-hunt-mcp/releases/download/v0.3.0/job-tracker-0.3.0.mcpb",
+      "version": "0.3.0",
+      "fileSha256": "56c33273765408099bb9e9b186946fd5de84679bcc5064254bc732de62737efe",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "JOB_HUNT_HOME",
+          "description": "Folder for the tracker database (default ~/.job-hunt, shared with the Job Tracker plugin).",
+          "format": "filepath",
+          "isRequired": false
+        }
+      ]
+    }
+  ]
+}

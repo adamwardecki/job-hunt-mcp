@@ -73,6 +73,14 @@ plugin/scripts/hermes-install.sh
 Restart Hermes and type `/job-tracker:setup`. Details and the differences from Claude Code are in
 [`docs/hermes.md`](docs/hermes.md).
 
+### Just the tracker MCP server
+
+The tracker is also listed in the [MCP Registry](https://registry.modelcontextprotocol.io/) as
+`io.github.adamwardecki/job-tracker`, packaged as an MCPB bundle attached to each
+[GitHub release](https://github.com/adamwardecki/job-hunt-mcp/releases). That gives any MCP client the
+database and its tools ([`docs/tracker-api.md`](docs/tracker-api.md)) without the skills or the safety
+hooks, so use the plugin when you want the daily sweep. It needs Node 22.18 or newer on your PATH.
+
 ## What a day looks like
 
 The scheduled sweep ends with a report like this one (the format is real, rendered by the tracker's

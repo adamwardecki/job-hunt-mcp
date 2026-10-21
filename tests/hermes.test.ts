@@ -147,6 +147,20 @@ test('plugin.yaml, plugin.json and both package.json files carry the same versio
   for (const dir of [REPO, PLUGIN]) assert.equal(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).version, claude, join(dir, 'package.json'));
 });
 
+test('the MCP Registry entry and its MCPB manifest carry the plugin version', () => {
+  // The registry entry points at the release asset by URL, so a version bump that misses it would list a
+  // bundle that does not exist yet (or an old one).
+  const version = JSON.parse(readFileSync(join(PLUGIN, '.claude-plugin', 'plugin.json'), 'utf8')).version;
+  const server = JSON.parse(readFileSync(join(REPO, 'server.json'), 'utf8'));
+  const manifest = JSON.parse(readFileSync(join(REPO, 'registry', 'manifest.json'), 'utf8'));
+  assert.equal(server.version, version);
+  assert.equal(manifest.version, version);
+  assert.equal(server.packages.length, 1);
+  assert.equal(server.packages[0].version, version);
+  assert.equal(server.packages[0].identifier, `https://github.com/adamwardecki/job-hunt-mcp/releases/download/v${version}/job-tracker-${version}.mcpb`);
+  assert.ok(server.description.length <= 100, 'the registry caps descriptions at 100 characters');
+});
+
 test('the plugin root has no lockfile, so Claude Code installs nothing for users', () => {
   // Claude Code installs the packages a lockfile next to the plugin's package.json lists, on every install and
   // update. The plugin needs none at runtime; the dev tools and their lockfile live in dev/.
