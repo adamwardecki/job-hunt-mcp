@@ -161,6 +161,15 @@ test('the MCP Registry entry and its MCPB manifest carry the plugin version', ()
   assert.ok(server.description.length <= 100, 'the registry caps descriptions at 100 characters');
 });
 
+test('the MCPB launch config takes no user_config placeholders', () => {
+  // MCPB hosts (Claude Desktop 3.1623, @anthropic-ai/mcpb 2.x) substitute in one pass: a user_config default of
+  // ${HOME}/.job-hunt arrives literally, and an unset key with no default leaves ${user_config.x} itself. Either
+  // way JOB_HUNT_HOME becomes a relative path and the database lands wherever the host starts the server.
+  const manifest = JSON.parse(readFileSync(join(REPO, 'registry', 'manifest.json'), 'utf8'));
+  assert.doesNotMatch(JSON.stringify(manifest.server.mcp_config), /\$\{user_config\./);
+  assert.equal(manifest.user_config, undefined);
+});
+
 test('the plugin root has no lockfile, so Claude Code installs nothing for users', () => {
   // Claude Code installs the packages a lockfile next to the plugin's package.json lists, on every install and
   // update. The plugin needs none at runtime; the dev tools and their lockfile live in dev/.
