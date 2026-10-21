@@ -44,7 +44,7 @@ them on Ubuntu and macOS with Node 22.18 and 24.
 | `plugin.yaml`, `__init__.py` | the Hermes plugin manifest and wiring |
 | | **Repo root (not shipped):** |
 | `.claude-plugin/marketplace.json` | the marketplace; its plugin `source` is `./plugin` |
-| `server.json`, `registry/` | the MCP Registry entry, and the MCPB bundle manifest and packer (`node registry/pack.ts`) |
+| `server.json`, `registry/` | the MCP Registry entry, and the MCPB bundle manifest and packer (`node registry/pack.ts`); `release.yml` publishes both when the version changes on `main` |
 | `tests/` | repo-level tests (hooks, Hermes, installers, docs); `tests/tracker/` for the server |
 | `docs/tracker-api.md` | public reference for the tracker tools |
 | `site/` | static landing page, deployed by `pages.yml`; not linted |
