@@ -14,14 +14,14 @@
 # Node is looked for first on PATH, then in /usr/local/bin and /opt/homebrew/bin.
 #
 # Env (for tests):
-#   JOB_HUNT_NODE_DIST     download base (default https://nodejs.org/dist); when set, the macOS-only check is
+#   JOB_TRACKER_NODE_DIST     download base (default https://nodejs.org/dist); when set, the macOS-only check is
 #                          skipped too (test fixture mode)
-#   JOB_HUNT_NODE          use this binary instead of the PATH lookup; when set without JOB_HUNT_NODE_DEFAULT,
+#   JOB_TRACKER_NODE          use this binary instead of the PATH lookup; when set without JOB_TRACKER_NODE_DEFAULT,
 #                          no default locations are checked at all
-#   JOB_HUNT_NODE_DEFAULT  use this binary instead of the default install locations
+#   JOB_TRACKER_NODE_DEFAULT  use this binary instead of the default install locations
 set -euo pipefail
 
-DIST="${JOB_HUNT_NODE_DIST:-https://nodejs.org/dist}"
+DIST="${JOB_TRACKER_NODE_DIST:-https://nodejs.org/dist}"
 SIGNER="Developer ID Installer: Node.js Foundation (HX7739G8FX)"
 MODE="${1:-}"
 
@@ -39,15 +39,15 @@ new_enough() {
 # or too old (installing the LTS fixes that), 3 if a new enough Node is shadowed by an older one on PATH.
 check() {
   local first first_v="" c v older
-  if [ -n "${JOB_HUNT_NODE:-}" ]; then first="$JOB_HUNT_NODE"; else first="$(command -v node || true)"; fi
+  if [ -n "${JOB_TRACKER_NODE:-}" ]; then first="$JOB_TRACKER_NODE"; else first="$(command -v node || true)"; fi
   if [ -n "$first" ] && [ -x "$first" ]; then
     first_v="$("$first" --version 2>/dev/null || true)"
     if new_enough "$first_v"; then echo "Node.js $first_v is installed at $first."; return 0; fi
   else
     first=""
   fi
-  if [ -n "${JOB_HUNT_NODE_DEFAULT:-}" ]; then set -- "$JOB_HUNT_NODE_DEFAULT"
-  elif [ -n "${JOB_HUNT_NODE:-}" ]; then set --
+  if [ -n "${JOB_TRACKER_NODE_DEFAULT:-}" ]; then set -- "$JOB_TRACKER_NODE_DEFAULT"
+  elif [ -n "${JOB_TRACKER_NODE:-}" ]; then set --
   else set -- /usr/local/bin/node /opt/homebrew/bin/node
   fi
   for c in "$@"; do
@@ -83,8 +83,8 @@ case "$status" in
   1) echo "$installed" ;;
   *) fail "$installed" ;;
 esac
-# The .pkg is macOS only. JOB_HUNT_NODE_DIST (test fixture mode) skips this so the tests run on any OS.
-[ -n "${JOB_HUNT_NODE_DIST:-}" ] || [ "$(uname)" = Darwin ] \
+# The .pkg is macOS only. JOB_TRACKER_NODE_DIST (test fixture mode) skips this so the tests run on any OS.
+[ -n "${JOB_TRACKER_NODE_DIST:-}" ] || [ "$(uname)" = Darwin ] \
   || fail "This installer is for macOS. On Linux, install Node.js 22.18 or newer with your package manager or from https://nodejs.org/en/download."
 echo "Installing the current LTS."
 

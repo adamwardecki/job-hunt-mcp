@@ -10,7 +10,7 @@ import type { Approval, SessionState } from './types.ts';
 export const APPROVAL_TTL_MS = 2 * 60 * 60 * 1000;
 
 export function home(): string {
-  return process.env.JOB_HUNT_HOME || join(homedir(), '.job-hunt');
+  return process.env.JOB_TRACKER_HOME || join(homedir(), '.job-tracker');
 }
 
 function file(sessionId: string | undefined): string {

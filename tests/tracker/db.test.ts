@@ -172,13 +172,13 @@ test('the newer-version error names the database file', () => {
 
 const mode = (p: string) => statSync(p).mode & 0o777;
 const withHome = (home: string, fn: () => void) => {
-  const before = { home: process.env.JOB_HUNT_HOME, db: process.env.JOB_HUNT_DB };
-  process.env.JOB_HUNT_HOME = home;
-  delete process.env.JOB_HUNT_DB;
+  const before = { home: process.env.JOB_TRACKER_HOME, db: process.env.JOB_TRACKER_DB };
+  process.env.JOB_TRACKER_HOME = home;
+  delete process.env.JOB_TRACKER_DB;
   try {
     fn();
   } finally {
-    for (const [key, value] of [['JOB_HUNT_HOME', before.home], ['JOB_HUNT_DB', before.db]] as const) {
+    for (const [key, value] of [['JOB_TRACKER_HOME', before.home], ['JOB_TRACKER_DB', before.db]] as const) {
       if (value === undefined) delete process.env[key];
       else process.env[key] = value;
     }

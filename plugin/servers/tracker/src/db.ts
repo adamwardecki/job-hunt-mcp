@@ -5,12 +5,12 @@ import { DatabaseSync } from 'node:sqlite';
 import { secureDir, secureFile } from './fsperm.ts';
 import { isValidTimeZone, toUtcIso } from './time.ts';
 
-export function jobHuntHome(): string {
-  return process.env.JOB_HUNT_HOME || join(homedir(), '.job-hunt');
+export function jobTrackerHome(): string {
+  return process.env.JOB_TRACKER_HOME || join(homedir(), '.job-tracker');
 }
 
 export function defaultDbPath(): string {
-  return process.env.JOB_HUNT_DB || join(jobHuntHome(), 'tracker.db');
+  return process.env.JOB_TRACKER_DB || join(jobTrackerHome(), 'tracker.db');
 }
 
 export const SCHEMA_V1 = `
@@ -262,7 +262,7 @@ export function openDb(path: string = defaultDbPath(), { readOnly = false }: { r
   const onDisk = path !== ':memory:';
   if (onDisk && !readOnly) {
     const dir = dirname(resolve(path));
-    if (dir === resolve(jobHuntHome())) secureDir(dir);
+    if (dir === resolve(jobTrackerHome())) secureDir(dir);
     else mkdirSync(dir, { recursive: true });
   }
   const db = new DatabaseSync(path, readOnly ? { readOnly: true } : {});

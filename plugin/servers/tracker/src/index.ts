@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Entry point: MCP over stdio, backed by the local SQLite tracker. No network listener.
 //
-// Env: JOB_HUNT_HOME (default ~/.job-hunt), JOB_HUNT_DB (default $JOB_HUNT_HOME/tracker.db). Flag: --db <path>.
+// Env: JOB_TRACKER_HOME (default ~/.job-tracker), JOB_TRACKER_DB (default $JOB_TRACKER_HOME/tracker.db). Flag: --db <path>.
 
 import { createInterface } from 'node:readline';
 import { defaultDbPath, openDb } from './db.ts';

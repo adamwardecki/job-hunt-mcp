@@ -141,7 +141,7 @@ commands, scheduled task
      triage-tracker, inbox-and-calendar, interview-prep) and agents (sourcer, scorer, auditor)
        └─ hooks: hard gates on every MCP call, user prompt and stop
             └─ MCP: tracker (this repo), Gmail, Calendar, LinkedIn, browser
-                 └─ storage: tracker DB in ~/.job-hunt (never inside the plugin directory)
+                 └─ storage: tracker DB in ~/.job-tracker (never inside the plugin directory)
 ```
 
 - **Tracker** (`plugin/servers/tracker/`): the only writer to the database. Narrow tools, no raw SQL. An
@@ -155,7 +155,7 @@ commands, scheduled task
 
 ## Your data
 
-The tracker runs locally, always. `.mcp.json` starts a stdio server on `~/.job-hunt/tracker.db`. There is
+The tracker runs locally, always. `.mcp.json` starts a stdio server on `~/.job-tracker/tracker.db`. There is
 no network listener and no token. The directory is created owner-only (`0700`) and the database and
 session files are `0600`, because they hold your CV summary, pay floor and application history.
 Tightening is best effort: on a filesystem that cannot chmod, the tracker logs a warning and still starts.
@@ -266,7 +266,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a pull request.
 
 ## Design choices
 
-1. **Local only.** The tracker is SQLite behind a stdio server in `~/.job-hunt`. A remote mode was built
+1. **Local only.** The tracker is SQLite behind a stdio server in `~/.job-tracker`. A remote mode was built
    and removed: the daily run needs a local browser anyway.
 2. **The daily run is a local scheduled task.** Every run still detects capabilities and queues browser
    work with `blocked_by: browser` when no browser is connected.

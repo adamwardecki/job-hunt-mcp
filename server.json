@@ -20,8 +20,8 @@
       },
       "environmentVariables": [
         {
-          "name": "JOB_HUNT_HOME",
-          "description": "Folder for the tracker database (default ~/.job-hunt, shared with the Job Tracker plugin).",
+          "name": "JOB_TRACKER_HOME",
+          "description": "Folder for the tracker database (default ~/.job-tracker, shared with the Job Tracker plugin).",
           "format": "filepath",
           "isRequired": false
         }

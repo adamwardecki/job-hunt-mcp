@@ -21,7 +21,7 @@ are shared with the employer and its application platform.
 
 ## Deleting your data
 
-Local records stay until you delete them. To remove them, delete `~/.job-hunt`, or your custom data folder
+Local records stay until you delete them. To remove them, delete `~/.job-tracker`, or your custom data folder
 if you set one. Uninstalling the plugin does not delete this data. Delete separately saved files and any
 drafts, events or conversation history held by connected services where they are stored.
 

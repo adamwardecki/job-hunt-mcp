@@ -23,8 +23,8 @@ setOutput((o) => outputs.push(o));
 beforeEach(() => {
   outputs = [];
   home = mkdtempSync(join(tmpdir(), 'jh-hooks-'));
-  process.env.JOB_HUNT_HOME = home;
-  delete process.env.JOB_HUNT_DB;
+  process.env.JOB_TRACKER_HOME = home;
+  delete process.env.JOB_TRACKER_DB;
 });
 
 const session = () => `s${++n}`;
@@ -304,7 +304,7 @@ test('session files are owner-only', { skip: process.platform === 'win32' }, () 
 test('a deny is still emitted when the session cannot be saved', async () => {
   const notDir = join(home, 'a-file');
   writeFileSync(notDir, '');
-  process.env.JOB_HUNT_HOME = notDir; // sessions/ cannot be created under a regular file
+  process.env.JOB_TRACKER_HOME = notDir; // sessions/ cannot be created under a regular file
   await preTool({ session_id: session(), tool_name: 'mcp__claude_ai_Gmail__send_message', tool_input: { to: 'x@example.com', body: 'hi' } });
   assert.match(reason(), /Sending is blocked/);
 });

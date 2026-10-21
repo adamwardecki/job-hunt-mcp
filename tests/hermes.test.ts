@@ -14,8 +14,8 @@ import type { ToolStep } from '../plugin/hooks/lib/types.ts';
 let home: string;
 beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), 'jh-hermes-'));
-  process.env.JOB_HUNT_HOME = home;
-  delete process.env.JOB_HUNT_DB;
+  process.env.JOB_TRACKER_HOME = home;
+  delete process.env.JOB_TRACKER_DB;
 });
 
 test('Hermes tool names map onto the mcp__server__tool shape the gates classify', () => {
@@ -83,7 +83,7 @@ const HOOK = join(dirname(fileURLToPath(import.meta.url)), '..', 'plugin', 'hook
 const TRACKER = 'mcp__job_hunt_tracker__';
 
 function hermes(event: string, payload: Record<string, unknown>) {
-  const r = spawnSync(process.execPath, ['--no-warnings', HOOK, event], { input: JSON.stringify(payload), env: { ...process.env, JOB_HUNT_HOME: home }, encoding: 'utf8' });
+  const r = spawnSync(process.execPath, ['--no-warnings', HOOK, event], { input: JSON.stringify(payload), env: { ...process.env, JOB_TRACKER_HOME: home }, encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
   return r.stdout.trim() ? JSON.parse(r.stdout) : null;
 }
@@ -163,8 +163,8 @@ test('the MCP Registry entry and its MCPB manifest carry the plugin version', ()
 
 test('the MCPB launch config takes no user_config placeholders', () => {
   // MCPB hosts (Claude Desktop 3.1623, @anthropic-ai/mcpb 2.x) substitute in one pass: a user_config default of
-  // ${HOME}/.job-hunt arrives literally, and an unset key with no default leaves ${user_config.x} itself. Either
-  // way JOB_HUNT_HOME becomes a relative path and the database lands wherever the host starts the server.
+  // ${HOME}/.job-tracker arrives literally, and an unset key with no default leaves ${user_config.x} itself. Either
+  // way JOB_TRACKER_HOME becomes a relative path and the database lands wherever the host starts the server.
   const manifest = JSON.parse(readFileSync(join(REPO, 'registry', 'manifest.json'), 'utf8'));
   assert.doesNotMatch(JSON.stringify(manifest.server.mcp_config), /\$\{user_config\./);
   assert.equal(manifest.user_config, undefined);
