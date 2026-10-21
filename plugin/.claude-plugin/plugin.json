@@ -6,6 +6,8 @@
   "author": { "name": "Adam Wardecki" },
   "homepage": "https://jobtrackermcp.com/",
   "privacyPolicyUrl": "https://jobtrackermcp.com/privacy.html",
+  "documentationUrl": "https://github.com/adamwardecki/job-hunt-mcp/blob/main/README.md",
+  "supportUrl": "https://github.com/adamwardecki/job-hunt-mcp/issues",
   "icon": "./.claude-plugin/icon.png",
   "repository": "https://github.com/adamwardecki/job-hunt-mcp",
   "license": "MIT",
