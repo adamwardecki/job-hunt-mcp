@@ -1,0 +1,40 @@
+{
+  "manifest_version": "0.3",
+  "name": "job-tracker",
+  "display_name": "Job Tracker",
+  "version": "0.3.0",
+  "description": "Local tracker for a low-volume job search: companies, roles, a status machine with evidence, rules, interviews and a daily report.",
+  "long_description": "The tracker MCP server from the Job Tracker plugin, on its own. It keeps one SQLite database on your machine and is the single source of truth for companies, roles, events, rules and config. Roles move only through a status machine (found, verified, scored, queued, applied, interviewing, offer; dropped; closed), and every move needs a reason; drops need a verbatim employer quote or a rule. It dedupes leads against everything you have touched, checks pay floors, lints outbound prose and renders a short daily report. It has no network listener and sends nothing. The full plugin (sourcing, scoring and apply skills, plus the safety hooks) is at https://github.com/adamwardecki/job-hunt-mcp.",
+  "author": { "name": "Adam Wardecki", "url": "https://github.com/adamwardecki" },
+  "repository": { "type": "git", "url": "https://github.com/adamwardecki/job-hunt-mcp" },
+  "homepage": "https://jobtrackermcp.com/",
+  "documentation": "https://github.com/adamwardecki/job-hunt-mcp/blob/main/docs/tracker-api.md",
+  "support": "https://github.com/adamwardecki/job-hunt-mcp/issues",
+  "icon": "icon.png",
+  "license": "MIT",
+  "keywords": ["jobs", "job-search", "applications", "tracker", "career"],
+  "privacy_policies": ["https://jobtrackermcp.com/privacy.html"],
+  "server": {
+    "type": "node",
+    "entry_point": "server/src/index.ts",
+    "mcp_config": {
+      "command": "node",
+      "args": ["--no-warnings", "${__dirname}/server/src/index.ts"],
+      "env": { "JOB_HUNT_HOME": "${user_config.data_dir}" }
+    }
+  },
+  "user_config": {
+    "data_dir": {
+      "type": "directory",
+      "title": "Data folder",
+      "description": "Where the tracker keeps its database. Share it with the Job Tracker plugin by leaving the default.",
+      "default": "${HOME}/.job-hunt",
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": { "node": ">=22.18" }
+  },
+  "tools": []
+}

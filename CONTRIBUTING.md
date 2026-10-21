@@ -37,6 +37,10 @@ Google Chrome and are skipped without it.
   the reasons are what stop a later edit from undoing a lesson.
 - **Versions.** `plugin/plugin.yaml`, `plugin/.claude-plugin/plugin.json`, `plugin/package.json` and the root
   `package.json` carry the same version; a test checks it.
+- **MCP Registry.** `server.json` (the registry entry) and `registry/manifest.json` (the MCPB bundle) carry
+  the same version too. To release: tag `v<version>` on `main`, run `node registry/pack.ts` (it builds
+  `dist/job-tracker-<version>.mcpb` and writes its SHA-256 into `server.json`), attach the bundle to the
+  GitHub release, then `mcp-publisher login github` and `mcp-publisher publish`. Commit the updated hash.
 - **Hermes.** Changes to hooks or skill wiring should keep both hosts working. See
   [`docs/hermes.md`](docs/hermes.md).
 

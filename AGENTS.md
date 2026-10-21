@@ -44,6 +44,7 @@ them on Ubuntu and macOS with Node 22.18 and 24.
 | `plugin.yaml`, `__init__.py` | the Hermes plugin manifest and wiring |
 | | **Repo root (not shipped):** |
 | `.claude-plugin/marketplace.json` | the marketplace; its plugin `source` is `./plugin` |
+| `server.json`, `registry/` | the MCP Registry entry, and the MCPB bundle manifest and packer (`node registry/pack.ts`) |
 | `tests/` | repo-level tests (hooks, Hermes, installers, docs); `tests/tracker/` for the server |
 | `docs/tracker-api.md` | public reference for the tracker tools |
 | `site/` | static landing page, deployed by `pages.yml`; not linted |
@@ -123,7 +124,8 @@ The hooks enforce the promises in [README: What it will never do](README.md#what
 - `npm test` and `npm run lint` pass before every commit.
 - Bumping the version: `package.json`, `plugin/package.json`, `plugin/plugin.yaml` and
   `plugin/.claude-plugin/plugin.json` change together (a test checks), and `SERVER_INFO.version` in `mcp.ts`
-  and `plugin/servers/tracker/package.json` follow.
+  and `plugin/servers/tracker/package.json` follow, as do `server.json` and `registry/manifest.json` (a test
+  checks those too).
 
 ## Boundaries
 
