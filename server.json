@@ -3,7 +3,7 @@
   "name": "io.github.adamwardecki/job-tracker",
   "title": "Job Tracker",
   "description": "Local job-search tracker: roles, a status machine with evidence, rules, interviews, daily reports.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "websiteUrl": "https://jobtrackermcp.com/",
   "repository": {
     "url": "https://github.com/adamwardecki/job-hunt-mcp",
@@ -12,9 +12,9 @@
   "packages": [
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/adamwardecki/job-hunt-mcp/releases/download/v0.3.1/job-tracker-0.3.1.mcpb",
-      "version": "0.3.1",
-      "fileSha256": "af5402577b671efe6409c4238d3650e57830f9fc17ab8d3b8cb18cb27b687802",
+      "identifier": "https://github.com/adamwardecki/job-hunt-mcp/releases/download/v0.3.2/job-tracker-0.3.2.mcpb",
+      "version": "0.3.2",
+      "fileSha256": "28730c903f7a33c03899349d3fcd3fc1e307123997125bae534e48d0fc6f11a0",
       "transport": {
         "type": "stdio"
       },

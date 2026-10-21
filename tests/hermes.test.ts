@@ -170,6 +170,15 @@ test('the MCPB launch config takes no user_config placeholders', () => {
   assert.equal(manifest.user_config, undefined);
 });
 
+test('the MCPB launch config passes the entry point as the only argument', () => {
+  // Claude Desktop's built-in Node does not run `node <args>`: its nodeHost.js imports the first argument as the
+  // server and hands it the rest. A Node flag first (--no-warnings) became the module to import, and 0.3.1 exited
+  // before answering initialize.
+  const manifest = JSON.parse(readFileSync(join(REPO, 'registry', 'manifest.json'), 'utf8'));
+  assert.equal(manifest.server.mcp_config.command, 'node');
+  assert.deepEqual(manifest.server.mcp_config.args, [`\${__dirname}/${manifest.server.entry_point}`]);
+});
+
 test('the plugin root has no lockfile, so Claude Code installs nothing for users', () => {
   // Claude Code installs the packages a lockfile next to the plugin's package.json lists, on every install and
   // update. The plugin needs none at runtime; the dev tools and their lockfile live in dev/.
