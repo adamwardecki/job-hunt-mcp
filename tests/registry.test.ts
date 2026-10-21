@@ -87,7 +87,7 @@ await import(pathToFileURL(entry).href);
   assert.equal(replies[0].result.serverInfo.version, manifest.version);
   assert.ok(replies[1].result.tools.length > 0);
   assert.equal(replies[2].result.isError, false);
-  assert.ok(existsSync(join(home, '.job-hunt', 'tracker.db')), 'the database lands in ~/.job-hunt');
+  assert.ok(existsSync(join(home, '.job-tracker', 'tracker.db')), 'the database lands in ~/.job-tracker');
 });
 
 test('the bundle is a zip that unzip reads back intact', (t) => {

@@ -20,7 +20,7 @@ To enable the 32 tracker tools when the `hermes mcp add` prompt asks, type `Y`.
 | Claude Code | Hermes |
 |---|---|
 | `PreToolUse` `mcp__.*` | `pre_tool_call`, filtered in Python to names starting `mcp__`, `connectors__` or `browser_` |
-| (transcript file) | `post_tool_call` appends to `~/.job-hunt/sessions/<sid>.steps.jsonl` |
+| (transcript file) | `post_tool_call` appends to `~/.job-tracker/sessions/<sid>.steps.jsonl` |
 | `UserPromptSubmit` | `pre_llm_call`, which unwraps the slash-skill message first and skips subagents (`parent_session_id`) |
 | `Stop` (blocks finishing) | `post_llm_call` stores a `pending_nudge`. Hermes tries `inject_message`, and the next `pre_llm_call` injects the nudge as context. Best effort: see Risks. |
 | `deny` output | `{"action":"block","message"}` |

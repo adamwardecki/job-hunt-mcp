@@ -40,7 +40,7 @@ def _description(md: Path) -> str:
 
 
 def _node() -> Optional[str]:
-    env = os.environ.get("JOB_HUNT_NODE")
+    env = os.environ.get("JOB_TRACKER_NODE")
     if env:
         return env
     found = shutil.which("node")
@@ -55,7 +55,7 @@ def _node() -> Optional[str]:
 def _run(event: str, payload: dict) -> Optional[dict]:
     node = _node()
     if not node:
-        raise RuntimeError("node not found; set JOB_HUNT_NODE to a Node >= 22.18 binary")
+        raise RuntimeError("node not found; set JOB_TRACKER_NODE to a Node >= 22.18 binary")
     proc = subprocess.run(
         [node, "--no-warnings", str(HOOK), event],
         input=json.dumps(payload, default=str), capture_output=True, text=True, timeout=TIMEOUT_S,

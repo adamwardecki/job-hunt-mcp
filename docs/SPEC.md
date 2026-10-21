@@ -45,7 +45,7 @@ Consequences:
 |---|---|
 | Daily run | **Local** scheduled task on the user's machine (Claude Desktop / Claude Code, or a Hermes cron job), weekdays, morning. Runs while the machine is awake and the app is open. |
 | Browser | Detected at run start. Needed for logged-in sources, some employer pages and every form. When it is not connected, browser work is queued with `blocked_by: browser`. |
-| State (tracker) | **Local** SQLite behind a stdio MCP server in `~/.job-hunt` (owner-only permissions). No remote mode. |
+| State (tracker) | **Local** SQLite behind a stdio MCP server in `~/.job-tracker` (owner-only permissions). No remote mode. |
 | Applying, logged-in boards, tracker triage | Interactive sessions (`/job-tracker:apply`, `/job-tracker:triage`) when the user is present and the desktop app is open. |
 | User files (profile, rules, stories) | Stored in the tracker DB. |
 

@@ -8,7 +8,7 @@ Claude Code and as `mcp__job_hunt_tracker__<tool>` in Hermes. Skills refer to th
 
 Runtime: Node 22.18+ (`node:sqlite`, TypeScript run directly), zero runtime npm dependencies. Local only:
 `.mcp.json` starts `node servers/tracker/src/index.ts` over stdio. There is no network listener and no
-token. Access is the OS user's permissions on `$JOB_HUNT_HOME` (default `~/.job-hunt/`, created `0700`;
+token. Access is the OS user's permissions on `$JOB_TRACKER_HOME` (default `~/.job-tracker/`, created `0700`;
 the database and session files are `0600`). Tightening is best effort: on a filesystem that cannot
 chmod, a warning is logged and the tracker still starts. Data never lives in the plugin directory.
 
@@ -77,7 +77,7 @@ closed (from queued | applied | interviewing | offer), with outcome: rejected | 
 Approvals come only from a standalone command in the user's own prompt, never from a command mention
 or tool call. The `UserPromptSubmit` hook recognises `/job-tracker:approve <role_id>` (or `/approve
 <role_id>`) and stores a one-use approval for that role, browser page and tab in the session state at
-`$JOB_HUNT_HOME/sessions/<session_id>.json`. The submit-click hook requires an exact target match and
+`$JOB_TRACKER_HOME/sessions/<session_id>.json`. The submit-click hook requires an exact target match and
 consumes the approval before allowing the attempt. Similarly `/job-tracker:allow-consent <role_id>` lets
 consent boxes be ticked only on that role's current page and tab.
 
