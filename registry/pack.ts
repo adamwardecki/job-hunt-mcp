@@ -1,18 +1,21 @@
 // Builds the tracker MCP server as an MCPB bundle for a GitHub release, and writes its SHA-256 into
-// server.json for the MCP Registry. Maintainer tool; not shipped.
+// server.json for the MCP Registry. Maintainer tool; not shipped. Needs the dev tools (npm run setup).
 //
-//   node registry/pack.ts           build dist/job-tracker-<version>.mcpb and record its hash in server.json
-//   node registry/pack.ts --check   build it and fail unless the hash matches server.json (release.yml)
+//   npm run build:mcpb               build dist/job-tracker-<version>.mcpb and record its hash in server.json
+//   npm run build:mcpb -- --check    build it and fail unless the hash matches server.json (release.yml)
 //
-// The bundle carries the TypeScript sources as they are: Node strips types itself (not under node_modules,
-// which is why this is not an npm package).
+// The plugin runs its TypeScript directly, but the bundle ships JavaScript compiled by tsc
+// (registry/tsconfig.build.json): hosts start it with whatever Node they have, and Claude Desktop with its
+// built-in one, so the bundle should not depend on that Node's type stripping.
 //
 // The archive is reproducible: entries sorted, a fixed timestamp and mode, and stored rather than deflated, so
-// the bytes depend only on the files and not on the machine, zip version or zlib build. That is what lets CI
-// rebuild the bundle and check it against the hash committed in server.json.
+// the bytes depend only on the files (and the pinned tsc) and not on the machine, zip version or zlib build.
+// That is what lets CI rebuild the bundle and check it against the hash committed in server.json.
 
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { crc32 } from 'node:zlib';
@@ -20,23 +23,38 @@ import { TOOLS } from '../plugin/servers/tracker/src/tools.ts';
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PLUGIN = join(REPO, 'plugin');
+const TSC = join(REPO, 'dev', 'node_modules', 'typescript', 'bin', 'tsc');
 const readJson = (path: string) => JSON.parse(readFileSync(path, 'utf8'));
 
-type Entry = { name: string; data: Buffer };
+export type Entry = { name: string; data: Buffer };
+
+// The server's sources compiled to JavaScript, as server/<file>.js entries.
+export function compileServer(): Entry[] {
+  if (!existsSync(TSC)) throw new Error(`${TSC} is missing; run npm run setup first.`);
+  const out = mkdtempSync(join(tmpdir(), 'job-tracker-mcpb-'));
+  try {
+    const tsc = spawnSync(process.execPath, [TSC, '-p', join(REPO, 'registry', 'tsconfig.build.json'), '--outDir', out], { encoding: 'utf8' });
+    if (tsc.status !== 0) throw new Error(`tsc failed:\n${tsc.stdout}${tsc.stderr}`);
+    return readdirSync(out)
+      .filter((f) => f.endsWith('.js'))
+      .map((f) => ({ name: `server/${f}`, data: readFileSync(join(out, f)) }));
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+}
 
 export function bundleEntries(): Entry[] {
   const manifest = readJson(join(REPO, 'registry', 'manifest.json'));
   // tools/list is the source of truth; the manifest copy is what hosts show before install.
   manifest.tools = TOOLS.map(({ name, description }) => ({ name, description }));
-  const src = join(PLUGIN, 'servers', 'tracker', 'src');
+  // ESM for the compiled files; nothing else (the tracker's own package.json points bin at the .ts sources).
+  const pkg = { name: 'job-tracker-mcp-server', version: manifest.version, private: true, license: 'MIT', type: 'module' };
   return [
     { name: 'manifest.json', data: Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`) },
     { name: 'icon.png', data: readFileSync(join(PLUGIN, '.claude-plugin', 'icon.png')) },
     { name: 'LICENSE', data: readFileSync(join(PLUGIN, 'LICENSE')) },
-    { name: 'server/package.json', data: readFileSync(join(PLUGIN, 'servers', 'tracker', 'package.json')) },
-    ...readdirSync(src)
-      .filter((f) => f.endsWith('.ts'))
-      .map((f) => ({ name: `server/src/${f}`, data: readFileSync(join(src, f)) })),
+    { name: 'server/package.json', data: Buffer.from(`${JSON.stringify(pkg, null, 2)}\n`) },
+    ...compileServer(),
   ].sort((a, b) => (a.name < b.name ? -1 : 1));
 }
 

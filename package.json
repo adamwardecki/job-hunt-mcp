@@ -1,6 +1,6 @@
 {
   "name": "job-hunt-plugin",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -15,6 +15,7 @@
     "typecheck": "npm --prefix dev exec --no -- tsc",
     "lint": "npm --prefix dev exec --no -- biome check .",
     "lint:fix": "npm --prefix dev exec --no -- biome check --write .",
-    "tracker": "node --no-warnings plugin/servers/tracker/src/index.ts"
+    "tracker": "node --no-warnings plugin/servers/tracker/src/index.ts",
+    "build:mcpb": "node --no-warnings registry/pack.ts"
   }
 }

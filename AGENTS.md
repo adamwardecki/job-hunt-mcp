@@ -19,6 +19,7 @@ node --no-warnings --test tests/tracker/tracker.test.ts   # one file
 npm run lint           # biome check (lint + import order); CI runs `biome ci`
 npm run lint:fix       # apply safe fixes
 npm run tracker -- --db /tmp/t.db   # run the MCP server on stdio against a scratch DB
+npm run build:mcpb     # build the MCPB bundle into dist/ and record its hash in server.json
 ```
 
 Set up with `npm run setup`, never `npm install` or `npm ci` in the repo root. The root `package.json`
@@ -44,7 +45,7 @@ them on Ubuntu and macOS with Node 22.18 and 24.
 | `plugin.yaml`, `__init__.py` | the Hermes plugin manifest and wiring |
 | | **Repo root (not shipped):** |
 | `.claude-plugin/marketplace.json` | the marketplace; its plugin `source` is `./plugin` |
-| `server.json`, `registry/` | the MCP Registry entry, and the MCPB bundle manifest and packer (`node registry/pack.ts`); `release.yml` publishes both when the version changes on `main` |
+| `server.json`, `registry/` | the MCP Registry entry, and the MCPB bundle manifest and packer (`npm run build:mcpb`, which compiles the tracker to JS for the bundle only); `release.yml` publishes both when the version changes on `main` |
 | `tests/` | repo-level tests (hooks, Hermes, installers, docs); `tests/tracker/` for the server |
 | `docs/tracker-api.md` | public reference for the tracker tools |
 | `site/` | static landing page, deployed by `pages.yml`; not linted |

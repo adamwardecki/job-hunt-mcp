@@ -2,24 +2,48 @@ name: Release
 
 # A version bump on main (it always changes server.json) releases the tracker MCP server: a GitHub release with
 # the MCPB bundle, then the MCP Registry entry. Each step is skipped when already done, so a failed run can be
-# re-run from the Actions tab (or with workflow_dispatch) without duplicating anything.
+# re-run from the Actions tab (or with workflow_dispatch) without duplicating anything. On a pull request that
+# bumps the version, the check job rebuilds the bundle here and compares it with the committed hash first.
 
 on:
   push:
     branches: [main]
     paths: [server.json]
+  pull_request:
+    paths: [server.json, registry/**, plugin/servers/tracker/**, .github/workflows/release.yml]
   workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: release
-  cancel-in-progress: false
-
 jobs:
-  release:
+  check:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: dev/package-lock.json
+      - run: npm run setup
+      # Only a version that is not released yet has to match: later server changes alter the bundle, and the
+      # next bump records the new hash.
+      - name: Rebuild the bundle and compare it with server.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./server.json').version")
+          if gh release view "v$version" > /dev/null 2>&1; then echo "v$version is already released; nothing to check."; exit 0; fi
+          npm run build:mcpb -- --check
+
+  release:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release
+      cancel-in-progress: false
     permissions:
       contents: write # create the tag and the release
       id-token: write # mcp-publisher login github-oidc
@@ -59,7 +83,7 @@ jobs:
       # The bundle is reproducible, so this rebuilds the exact bytes whose hash is committed in server.json.
       - name: Build the bundle
         if: steps.state.outputs.released == 'false'
-        run: node --no-warnings registry/pack.ts --check
+        run: npm run build:mcpb -- --check
 
       - name: Create the GitHub release
         if: steps.state.outputs.released == 'false'
@@ -72,8 +96,6 @@ jobs:
 
       - name: Check the release asset
         if: steps.state.outputs.listed == 'false'
-        env:
-          VERSION: ${{ steps.state.outputs.version }}
         run: |
           url=$(node -p "require('./server.json').packages[0].identifier")
           want=$(node -p "require('./server.json').packages[0].fileSha256")
