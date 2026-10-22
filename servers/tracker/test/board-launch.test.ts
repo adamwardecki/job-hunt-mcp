@@ -9,6 +9,10 @@ import { test } from 'node:test';
 import type { LaunchDeps } from '../src/board-launch.ts';
 import { DEFAULT_DEPS, healthy, openBoard, spawnBoard } from '../src/board-launch.ts';
 import { boardStatePath, readBoardState, writeBoardState } from '../src/board-state.ts';
+import { openDb } from '../src/db.ts';
+import type { RpcResponse } from '../src/mcp.ts';
+import { makeHandler } from '../src/mcp.ts';
+import { Tracker } from '../src/tracker.ts';
 
 const TOKEN = 'b'.repeat(64);
 
@@ -229,4 +233,15 @@ test('open_board starts a real board process and reuses it on the next call', { 
       }
     }
   }
+});
+
+test('open_board is listed, takes only open, and refuses an in-memory tracker', async () => {
+  const handle = makeHandler(new Tracker(openDb(':memory:')));
+  const list = (await handle({ jsonrpc: '2.0', id: 1, method: 'tools/list' })) as RpcResponse;
+  const tool = (list.result as { tools: { name: string; inputSchema: { properties: Record<string, unknown> } }[] }).tools.find((x) => x.name === 'open_board');
+  assert.deepEqual(Object.keys(tool?.inputSchema.properties ?? {}), ['open']);
+  const res = (await handle({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'open_board', arguments: {} } })) as RpcResponse;
+  const r = res.result as { isError: boolean; content: [{ text: string }] };
+  assert.equal(r.isError, true);
+  assert.match(r.content[0].text, /in memory/);
 });

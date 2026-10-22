@@ -1,5 +1,6 @@
 // Tool catalogue: JSON Schemas for tools/list and handlers for tools/call.
 
+import { openBoard } from './board-launch.ts';
 import type { CapabilitiesConfig } from './config.ts';
 import type { LegacyQueueFile } from './legacy.ts';
 import { importLegacy } from './legacy.ts';
@@ -97,6 +98,7 @@ export const SCHEMAS = {
   lint_prose: obj({ text: str('Text to lint'), max_words: int('Word limit') }, ['text']),
   open_items: obj({ stale_after_days: int('Queue items untouched this long are listed as stale (default 14)') }),
   pipeline_summary: obj({ stale_after_days: int('Default 14') }),
+  open_board: obj({ open: bool('true also opens it in the default browser. Only when the user asked to see the board now; never in a scheduled run.') }),
   add_rule: obj({ text: str('The rule, imperative'), reason: str('Why (the incident or the user words)'), example: str('Concrete example'), added_by: str('user | pipeline') }, ['text', 'reason']),
   list_rules: obj({ include_inactive: bool('Include deactivated rules') }),
   deactivate_rule: obj({ id: int('Rule id') }, ['id']),
@@ -166,6 +168,7 @@ export const TOOLS: Tool[] = [
   defineTool('lint_prose', 'Lint outbound prose: em/en dashes, "not X but Y", fake-candid openers, volunteered gaps, length.', (_t, a) => lintProse(a.text, { max_words: a.max_words })),
   defineTool('open_items', 'Queue (fresh and stale), unverified drafts, interviews to book, upcoming interviews.', (t, a) => t.openItems(a)),
   defineTool('pipeline_summary', 'Counts by status, live processes, rejections, queue (fresh and stale).', (t, a) => t.pipelineSummary(a)),
+  defineTool('open_board', 'Start the local kanban board (or reuse the running one) and return its link. The user drags cards to move roles; moves follow transition\'s rules and are recorded as the user\'s. The board stops after 30 idle minutes.', (t, a) => openBoard({ dbPath: t.dbPath, open: a.open ?? false })),
   defineTool('add_rule', 'Add a user preference or correction as a rule, with reason and example.', (t, a) => t.addRule(a)),
   defineTool('list_rules', 'Active rules with provenance.', (t, a) => t.listRules(a)),
   defineTool('deactivate_rule', 'Deactivate a rule.', (t, a) => t.deactivateRule(a)),

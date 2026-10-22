@@ -7,10 +7,12 @@ Server name in `.mcp.json`: `tracker`. The tools appear as `mcp__plugin_j-hunt_t
 Claude Code and as `mcp__job_hunt_tracker__<tool>` in Hermes. Skills refer to them by the short tool name.
 
 Runtime: Node 22.18+ (`node:sqlite`, TypeScript run directly), zero runtime npm dependencies. Local only:
-`.mcp.json` starts `node servers/tracker/src/index.ts` over stdio. There is no network listener and no
-token. Access is the OS user's permissions on `$JOB_HUNT_HOME` (default `~/.job-hunt/`, created `0700`;
-the database and session files are `0600`). Tightening is best effort: on a filesystem that cannot
-chmod, a warning is logged and the tracker still starts. Data never lives in the plugin directory.
+`.mcp.json` starts `node servers/tracker/src/index.ts` over stdio. The MCP server has no network listener
+and no token; the optional board (see [Board](#board)) listens on `127.0.0.1` with a per-start token and
+stops after 30 idle minutes. Access is the OS user's permissions on `$JOB_HUNT_HOME` (default
+`~/.job-hunt/`, created `0700`; the database and session files are `0600`). Tightening is best effort: on
+a filesystem that cannot chmod, a warning is logged and the tracker still starts. Data never lives in the
+plugin directory.
 
 The schema is versioned with `PRAGMA user_version` and migrated on open, under the write lock. A database
 written by a newer plugin is refused rather than downgraded, including on read-only opens. Writers wait
@@ -70,7 +72,29 @@ closed (from queued | applied | interviewing | offer), with outcome: rejected | 
 | `render_report` | `date` (YYYY-MM-DD, local day), `run_id?` (preferred: that run only), `headline?` | Markdown daily report (spec §9). Only verified drafts and confirmed submissions are claimed. Missing capabilities and what was queued because of them are listed. Interview times are shown in local time. |
 | `audit` | `run_id?` or `date?` (one is required) | Post-run rule check: excluded industries touched, drops without evidence, applied without confirmation, prose lint failures in artifacts, unverified drafts. `{ok, failures[]}` |
 | `pipeline_summary` | `stale_after_days?` (14) | Counts by status, live processes (interviewing, offer), awaiting reply, rejections, fresh and stale queue |
+| `open_board` | `open?` (bool, default false: also open the default browser) | `{url, reused, opened}`; the text result is `Board: <url>`. Starts the local board for this database, or reuses the running one. See [Board](#board). |
 | `import_legacy` | `applied_log?` (markdown), `preferences?` (markdown), `queue?` (`[{filename, content}]`), `documents?` (`{profile, stories, reusable-answers}`), `path?` (local only: a `pipeline/` folder) | Import counts and unparsed rows |
+
+## Board
+
+`open_board` starts `node servers/tracker/src/board.ts --db <same database>` as a detached process. It
+reuses the board named in `board.json` next to the database while that process is alive and answers
+`GET /api/health` with the board's token. It refuses an in-memory tracker. The board:
+
+- listens on `127.0.0.1` only, on a port the OS picks, with a new 256-bit token per start. The token is
+  in the link's fragment (`#t=`), so it is never sent in a request line, and every API call sends it as
+  `Authorization: Bearer <token>`.
+- rejects any `Host` other than `127.0.0.1:<port>` or `localhost:<port>` (DNS rebinding), sends no CORS
+  headers, and accepts only `application/json` posts up to 64 KB.
+- stops after 30 minutes without an authenticated API call and removes `board.json`.
+- moves roles with `transition`, recorded with `actor: user`. Moves to `verified` and `scored` are
+  refused: they need the verify-employer and score-role skills.
+
+| Endpoint | Body | Returns |
+|---|---|---|
+| `GET /api/health` | none | `{ok: true}` |
+| `GET /api/board` | none | `{statuses, roles, moves, rules}`: roles with company, score, location type, URL, last event time and blocking question; allowed drag targets per status; active rules for drops |
+| `POST /api/move` | `{role_id, to, reason, evidence?, outcome?}` | `{role, from, to}`, or 400 with the status machine's message |
 
 ## Session approvals (hooks, not tools)
 
