@@ -68,7 +68,7 @@ export interface Scope {
 type RoleSummary = Pick<RoleRow, 'id' | 'title' | 'url' | 'status' | 'updated_at'>;
 
 // Allowed moves (spec §5.4). Self-transitions are allowed so a step can be re-run with new evidence.
-const MACHINE: Record<Status, readonly Status[]> = {
+export const MACHINE: Record<Status, readonly Status[]> = {
   found: ['verified', 'dropped'],
   verified: ['scored', 'dropped'],
   scored: ['queued', 'dropped'],
@@ -421,7 +421,9 @@ export class Tracker {
     }
   }
 
-  transition(a: ArgsFor<'transition'>) {
+  // The board (board-api.ts) passes actor 'user'. The MCP tool's schema has no actor and checkArgs rejects
+  // unknown arguments, so calls from the model are always the pipeline.
+  transition(a: ArgsFor<'transition'>, { actor = 'pipeline' }: { actor?: 'pipeline' | 'user' } = {}) {
     req(a.to, 'to is required');
     return tx(this.db, () => {
       const role = this.roleRow(a.role_id);
@@ -435,8 +437,7 @@ export class Tracker {
         req(oneOf(['remote', 'hybrid', 'onsite', 'unknown'], a.location_type), 'location_type: remote | hybrid | onsite | unknown');
       }
       if (a.to === 'queued' && a.blocked_by) req(oneOf(['browser', 'user', 'login', 'captcha', 'other'], a.blocked_by), 'blocked_by: browser | user | login | captcha | other');
-      // transition's schema has no actor, and checkArgs rejects unknown arguments, so it is always the pipeline.
-      const ev: EventInput = { ...a, status: a.to, actor: 'pipeline' };
+      const ev: EventInput = { ...a, status: a.to, actor };
       this.validateEvent(ev);
       if (a.to === 'verified') {
         this.run('UPDATE roles SET verified_at = ?, location_line = ?, location_type = ? WHERE id = ?', now(), a.location_line ?? null, a.location_type ?? null, a.role_id);
