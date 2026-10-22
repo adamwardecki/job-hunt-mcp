@@ -40,8 +40,8 @@ class PluginTest(unittest.TestCase):
 
     def test_registers_skills_commands_and_agents(self):
         names = set(self.ctx.skills)
-        self.assertEqual(len(names), 9 + 11 + 3)
-        for n in ("score-role", "verify-employer", "setup-guide", "sweep", "apply", "approve", "setup", "agent-scorer", "agent-sourcer", "agent-auditor"):
+        self.assertEqual(len(names), 9 + 12 + 3)
+        for n in ("score-role", "verify-employer", "setup-guide", "sweep", "apply", "approve", "board", "setup", "agent-scorer", "agent-sourcer", "agent-auditor"):
             self.assertIn(n, names)
         self.assertEqual(self.ctx.skills["setup"][0], ROOT / "commands" / "setup.md")
         self.assertEqual(self.ctx.skills["setup-guide"][0], ROOT / "skills" / "setup" / "SKILL.md")

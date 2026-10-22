@@ -120,6 +120,7 @@ You answer the "Needs you" items, run `/j-hunt:apply` for the roles you want, an
 | `/j-hunt:triage <source>` | Reconcile and clean a tracker board (JobCopilot-style) with the delete guard. |
 | `/j-hunt:prep <company>` | Interview prep from your stories. |
 | `/j-hunt:status` | Pipeline summary and open items. |
+| `/j-hunt:board` | Kanban board in your browser. Drag a card to move a role; the same evidence rules apply. |
 | `/j-hunt:cover-letter <role-id> [--pdf]` | Cover letter, optionally as a one-page PDF. |
 | `/j-hunt:correct` | Turn your override into a rule with a reason and example. |
 | `/j-hunt:import [path]` | One-off import of an existing markdown log. |
