@@ -11,23 +11,42 @@ import { boardStatePath, removeBoardState, writeBoardState } from './board-state
 import { defaultDbPath, openDb } from './db.ts';
 import { Tracker } from './tracker.ts';
 
+// A closed pipe (the launcher is gone) must not crash a board that is meant to outlive it.
+process.stderr.on('error', () => {});
+
 const argv = process.argv.slice(2);
+const log = (msg: string) => process.stderr.write(`[board] ${msg}\n`);
+const fail = (msg: string): never => {
+  log(msg);
+  process.exit(2);
+};
 const opt = (name: string, fallback: string): string => {
   const i = argv.indexOf(name);
-  return (i >= 0 && argv[i + 1]) || fallback;
+  if (i < 0) return fallback;
+  const v = argv[i + 1];
+  // Why: silently falling back would open the real default database when the caller meant another one.
+  if (!v || v.startsWith('--')) return fail(`${name} needs a value`);
+  return v;
 };
-const log = (msg: string) => process.stderr.write(`[board] ${msg}\n`);
 
 const dbPath = resolve(opt('--db', defaultDbPath()));
 const idleMs = Number(opt('--idle-ms', String(30 * 60_000)));
+// Why: setTimeout treats NaN, 0 and anything above 2^31-1 as 1 ms, so the board would vanish at once.
+if (!Number.isInteger(idleMs) || idleMs < 1 || idleMs > 2147483647) fail('--idle-ms must be an integer from 1 to 2147483647');
 const token = randomBytes(32).toString('hex');
 const file = boardStatePath(dbPath);
 const server = createBoardServer({ tracker: new Tracker(openDb(dbPath), { dbPath }), token, idleMs, onIdle: stop, log });
 
+// Every exit path, including an uncaught exception, removes our state file (only if it names this pid).
+process.on('exit', () => removeBoardState(file, process.pid));
+
+let stopping = false;
 function stop(): void {
-  removeBoardState(file, process.pid);
+  if (stopping) return;
+  stopping = true;
   server.closeAllConnections();
   server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 2000).unref();
 }
 
 server.listen(0, '127.0.0.1', () => {
