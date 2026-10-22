@@ -61,8 +61,13 @@ export function wordCount(text: string | null | undefined): number {
 export function lintProse(text: string | null | undefined, { max_words }: { max_words?: number | null } = {}): LintResult {
   const s = String(text || '').replace(/[\u2018\u2019]/g, "'");
   const issues: LintIssue[] = [];
+  // Several gap patterns can match the same words; report each stretch of text once per kind.
+  const seen: { kind: string; from: number; to: number }[] = [];
   for (const { kind, re, hint } of ERROR_PATTERNS) {
     for (const m of s.matchAll(re)) {
+      const to = m.index + m[0].length;
+      if (seen.some((x) => x.kind === kind && m.index < x.to && to > x.from)) continue;
+      seen.push({ kind, from: m.index, to });
       const start = Math.max(0, m.index - 30);
       issues.push({ severity: 'error', kind, match: s.slice(start, m.index + m[0].length + 30).replace(/\s+/g, ' ').trim(), hint });
     }

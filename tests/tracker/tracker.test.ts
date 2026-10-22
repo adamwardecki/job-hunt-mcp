@@ -182,6 +182,29 @@ test('AC10: a cover note with an em dash or a volunteered gap fails lint and the
   assert.ok(audit.failures.some((f) => f.check === 'prose_lint'));
 });
 
+test('lint reports a gap once when several gap patterns match the same words', () => {
+  const gaps = lintProse("While I haven't worked with Kafka, I learn fast.").issues.filter((i) => i.kind === 'volunteered_gap');
+  assert.equal(gaps.length, 1);
+  const two = lintProse("I'm new to Rust. Later on, my experience with Go is limited.").issues.filter((i) => i.kind === 'volunteered_gap');
+  assert.equal(two.length, 2, 'separate gaps are still reported separately');
+});
+
+test('stale queue keys off the last event, not edits to the role row', () => {
+  const t = fresh();
+  const { role } = t.upsertRole({ company: 'Acme', title: 'Eng', source: 'x', url: 'https://jobs.ashbyhq.com/acme/1' });
+  verify(t, role.id);
+  t.transition({ role_id: role.id, to: 'scored', reason: 'ok' });
+  t.transition({ role_id: role.id, to: 'queued', reason: 'ok' });
+  const old = new Date(Date.now() - 30 * 864e5).toISOString();
+  t.run('UPDATE events SET ts = ? WHERE role_id = ?', old, role.id);
+  // A field edit bumps updated_at but is not activity on the application.
+  t.upsertRole({ id: role.id, title: 'Eng', stack: 'TypeScript' });
+  const s = t.pipelineSummary();
+  assert.equal(s.queue.length, 0);
+  assert.deepEqual(s.stale_queue.map((r) => r.last_activity), [old]);
+  assert.deepEqual(t.openItems().stale_queue.map((r) => r.last_event), [old]);
+});
+
 test('audit flags excluded industries that got past scoring', () => {
   const t = fresh();
   const { role } = t.upsertRole({ company: 'Chain Co', title: 'Eng', source: 'x', industry: 'crypto exchange' });
