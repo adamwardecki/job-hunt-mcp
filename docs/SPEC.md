@@ -69,6 +69,7 @@ job-hunt/
 │   ├── triage.md                 # /j-hunt:triage <source>
 │   ├── prep.md                   # /j-hunt:prep <company>
 │   ├── status.md                 # /j-hunt:status
+│   ├── board.md                  # /j-hunt:board  (local kanban board)
 │   ├── cover-letter.md           # /j-hunt:cover-letter <role-id> [--pdf]
 │   └── correct.md                # /j-hunt:correct  (turn a user override into a rule)
 ├── skills/
@@ -108,7 +109,7 @@ The manual log (`applied-log.md`) grew past 200 KB and a `grep` over it timed ou
 - Runtime: Python stdlib `sqlite3` or Node built-in `node:sqlite` (22.5+). **No native modules** (e.g. `better-sqlite3`).
 - DB file lives outside the plugin directory, so plugin updates never touch user data.
 - Deployment: local only. `.mcp.json` starts the server over stdio.
-- Access: no network listener and no token. The DB holds personal data, so it is created owner-only (0700 directory, 0600 files) and setup says where it lives.
+- Access: the MCP server has no network listener and no token. The optional board (`open_board`, `servers/tracker/src/board.ts`) listens on 127.0.0.1 with a per-start token and stops after 30 idle minutes. The DB holds personal data, so it is created owner-only (0700 directory, 0600 files) and setup says where it lives.
 
 ### 5.3 Schema
 

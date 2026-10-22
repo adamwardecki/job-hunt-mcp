@@ -147,8 +147,10 @@ commands, scheduled task
 
 ## Your data
 
-The tracker runs locally, always. `.mcp.json` starts a stdio server on `~/.job-hunt/tracker.db`. There is
-no network listener and no token. The directory is created owner-only (`0700`) and the database and
+The tracker runs locally, always. `.mcp.json` starts a stdio server on `~/.job-hunt/tracker.db`. The
+tracker server has no network listener and no token. The board (`/j-hunt:board`) is the one exception,
+and only when you start it: it listens on `127.0.0.1` only, with a new token in each link, and stops
+after 30 idle minutes. The directory is created owner-only (`0700`) and the database and
 session files are `0600`, because they hold your CV summary, pay floor and application history.
 Tightening is best effort: on a filesystem that cannot chmod, the tracker logs a warning and still starts.
 
