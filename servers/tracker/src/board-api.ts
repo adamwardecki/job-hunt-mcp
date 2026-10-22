@@ -7,7 +7,7 @@ import { isRecord, oneOf } from './util.ts';
 
 // These steps need research with evidence (the verify-employer and score-role skills), so a drag can't do them.
 const CLAUDE_ONLY: readonly Status[] = ['verified', 'scored'];
-const MOVE_KEYS = ['role_id', 'to', 'reason', 'evidence', 'outcome'];
+const MOVE_KEYS: readonly string[] = ['role_id', 'to', 'reason', 'evidence', 'outcome'];
 
 export interface BoardRole {
   id: number;
@@ -28,8 +28,7 @@ export function boardView(t: Tracker) {
     FROM roles r JOIN companies c ON c.id = r.company_id ORDER BY r.score DESC NULLS LAST, r.updated_at DESC`);
   // Object.fromEntries loses key types; the keys come from STATUSES, so the cast cannot lie.
   const moves = Object.fromEntries(STATUSES.map((s) => [s, MACHINE[s].filter((to) => !CLAUDE_ONLY.includes(to))])) as Record<Status, Status[]>;
-  // node:sqlite rows have a null prototype; plain objects keep the view comparable and serialisable like any other.
-  const rules = t.q<{ id: number; text: string }>('SELECT id, text FROM rules WHERE active = 1 ORDER BY id').map(({ id, text }) => ({ id, text }));
+  const rules = t.q<{ id: number; text: string }>('SELECT id, text FROM rules WHERE active = 1 ORDER BY id');
   return { statuses: STATUSES, roles, moves, rules };
 }
 
@@ -42,13 +41,15 @@ const optionalString = (key: string, v: unknown): string | undefined => {
 export function boardMove(t: Tracker, body: unknown) {
   if (!isRecord(body)) throw new ToolError('Send a JSON object: {role_id, to, reason, evidence?, outcome?}.');
   const extra = Object.keys(body).filter((k) => !MOVE_KEYS.includes(k));
-  if (extra.length) throw new ToolError(`Unknown field: ${extra.join(', ')}`);
+  if (extra.length) throw new ToolError(`Unknown field: ${extra.join(', ')}. Allowed: ${MOVE_KEYS.join(', ')}.`);
   const { role_id, to } = body;
   if (typeof role_id !== 'number' || !Number.isInteger(role_id)) throw new ToolError('role_id must be an integer.');
   if (!oneOf(STATUSES, to)) throw new ToolError(`to must be one of: ${STATUSES.join(', ')}`);
   if (CLAUDE_ONLY.includes(to)) throw new ToolError(`Moving to ${to} needs Claude: run a sweep, or ask Claude to verify and score role ${role_id}.`);
   // A same-status transition is legal (re-running a step with new evidence) but would only add a no-op event here.
-  if (t.roleRow(role_id)?.status === to) throw new ToolError(`Role ${role_id} is already ${to}.`);
+  const current = t.roleRow(role_id);
+  if (current && (current.status || 'found') === to) throw new ToolError(`Role ${role_id} is already ${to}.`);
+  // transition rejects an empty reason with its own message, so a missing one is passed through as ''.
   const args = { role_id, to, reason: optionalString('reason', body.reason) ?? '', evidence: optionalString('evidence', body.evidence), outcome: optionalString('outcome', body.outcome) };
   return t.transition(args, { actor: 'user' });
 }

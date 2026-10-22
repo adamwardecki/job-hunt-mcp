@@ -23,7 +23,7 @@ test('the board view lists roles with company and blocking question, drag target
   assert.deepEqual(v.moves.scored, ['queued', 'dropped']);
   assert.deepEqual(v.moves.queued, ['applied', 'dropped', 'closed']);
   assert.deepEqual(v.moves.closed, []);
-  assert.deepEqual(v.rules, [{ id: s.rule, text: 'Skip staffing agencies' }]);
+  assert.deepEqual(v.rules.map((r) => ({ ...r })), [{ id: s.rule, text: 'Skip staffing agencies' }]);
 });
 
 test('a legal move is recorded as the user', () => {
@@ -35,9 +35,14 @@ test('a legal move is recorded as the user', () => {
 
 test('the status machine and evidence rules still apply', () => {
   const s = seeded();
+  const eventsBefore = s.t.roleDetail({ role_id: s.found }).events.length;
   assert.throws(() => boardMove(s.t, { role_id: s.found, to: 'applied', reason: 'r', evidence: 'e' }), /Illegal transition found → applied/);
   assert.throws(() => boardMove(s.t, { role_id: s.found, to: 'dropped', reason: 'not for me' }), /A drop needs evidence/);
   assert.throws(() => boardMove(s.t, { role_id: s.queued, to: 'closed', reason: 'r' }), /closed needs outcome/);
+  // A refused move writes nothing.
+  assert.equal(s.t.roleRow(s.found)?.status, 'found');
+  assert.equal(s.t.roleDetail({ role_id: s.found }).events.length, eventsBefore);
+  assert.throws(() => boardMove(s.t, { role_id: 9999, to: 'dropped', reason: 'r', evidence: 'e' }), /No role 9999/);
   boardMove(s.t, { role_id: s.found, to: 'dropped', reason: 'agency', evidence: `rule:${s.rule}` });
   assert.equal(s.t.roleRow(s.found)?.status, 'dropped');
 });
