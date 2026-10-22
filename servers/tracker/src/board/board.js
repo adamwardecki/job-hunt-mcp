@@ -46,6 +46,8 @@ async function api(path, body) {
 }
 
 async function refresh() {
+  // A hidden tab doesn't poll, so a forgotten tab can't keep the board listening; focus revives it.
+  if (document.hidden) return;
   const seq = ++requests;
   try {
     if (isBusy()) {
@@ -304,4 +306,5 @@ if (!token) {
   refresh();
   setInterval(refresh, 30_000);
   window.addEventListener('focus', refresh);
+  document.addEventListener('visibilitychange', refresh);
 }

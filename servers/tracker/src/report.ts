@@ -47,6 +47,7 @@ export function renderReport(t: Tracker, { date, run_id, headline }: ArgsFor<'re
   const audit = runAudit(t, { date, run_id });
   const out = [`# Daily report · ${date}`, ''];
 
+  // Only what the plugin submitted; an application the user recorded (e.g. on the board, actor 'user') is theirs.
   const applied = eventsIn(t, scope, "e.status = 'applied' AND e.actor = 'pipeline'");
   const replies = eventsIn(t, scope, "e.actor = 'employer'");
   const dropped = eventsIn(t, scope, "e.status = 'dropped' AND e.actor != 'import'");
