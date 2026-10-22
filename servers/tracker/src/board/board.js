@@ -5,6 +5,7 @@ const LABELS = { found: 'Found', verified: 'Verified', scored: 'Scored', queued:
 const FOLDED = new Set(['dropped', 'closed']);
 const OUTCOMES = ['rejected', 'withdrawn', 'role_closed'];
 const STOPPED = 'The board has stopped. Run /j-hunt:board in Claude to start it again.';
+const STALE = 'This link is out of date. Run /j-hunt:board in Claude for a fresh one.';
 
 const token = new URLSearchParams(location.hash.slice(1)).get('t') || '';
 const boardEl = document.getElementById('board');
@@ -12,8 +13,11 @@ const statusEl = document.getElementById('status');
 const expanded = new Set();
 let view = null;
 let lastKey = '';
+let requests = 0;
 // While a card is dragged or a move form is open, polling must not redraw the board under the user.
-let busy = false;
+// Derived from the page rather than kept as a flag, so it cannot get stuck.
+let dragging = false;
+const isBusy = () => dragging || document.querySelector('form.move') !== null;
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -29,29 +33,44 @@ function say(message) {
 async function api(path, body) {
   const headers = { Authorization: `Bearer ${token}` };
   if (body) headers['Content-Type'] = 'application/json';
-  const res = await fetch(path, { method: body ? 'POST' : 'GET', headers, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' });
+  let res;
+  try {
+    res = await fetch(path, { method: body ? 'POST' : 'GET', headers, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' });
+  } catch {
+    throw new Error(STOPPED); // fetch rejects only when the server is unreachable
+  }
+  if (res.status === 401) throw new Error(STALE);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || `The board answered ${res.status}.`);
   return data;
 }
 
 async function refresh() {
+  const seq = ++requests;
   try {
-    if (busy) {
+    if (isBusy()) {
       await api('/api/health'); // keeps the idle timer from stopping the board while a form is open
       return;
     }
     const next = await api('/api/board');
+    // A newer refresh supersedes this one, and a form or drag may have started while it was in flight.
+    if (seq !== requests || isBusy()) return;
     // Redrawing identical data would drop keyboard focus every 30 s, so only draw what changed.
     const key = JSON.stringify(next);
     if (!view || key !== lastKey) {
+      const previous = view;
       view = next;
+      try {
+        render();
+      } catch (err) {
+        view = previous;
+        throw err;
+      }
       lastKey = key;
-      render();
     }
     say('');
   } catch (err) {
-    say(err instanceof TypeError ? STOPPED : err.message);
+    say(err.message);
   }
 }
 
@@ -81,7 +100,7 @@ function column(status) {
     const toggle = el('button', 'fold', `${LABELS[status]} (${roles.length})`);
     toggle.type = 'button';
     toggle.setAttribute('aria-expanded', String(expanded.has(status)));
-    // Flip in place rather than render(): a redraw would throw away an open move form and leave busy set.
+    // Flip in place rather than render(): a redraw would throw away an open move form.
     toggle.addEventListener('click', () => {
       const open = !expanded.has(status);
       if (open) expanded.add(status);
@@ -91,6 +110,8 @@ function column(status) {
     });
     head.append(toggle);
   } else {
+    // Without a label the heading reads as "Found3".
+    head.setAttribute('aria-label', `${LABELS[status]}, ${roles.length} ${roles.length === 1 ? 'role' : 'roles'}`);
     head.append(el('span', '', LABELS[status]), el('span', '', String(roles.length)));
   }
   const list = el('div', 'cards');
@@ -116,7 +137,8 @@ function card(role) {
   if (targets(role).length) {
     const move = el('button', '', 'Move to…');
     move.type = 'button';
-    move.addEventListener('click', () => openForm(node, role, null));
+    move.setAttribute('aria-label', `Move ${role.company}, ${role.title}`);
+    move.addEventListener('click', () => openForm(node, role, null, move));
     actions.append(move);
     node.classList.add('draggable');
     node.addEventListener('pointerdown', (e) => startDrag(e, node, role));
@@ -127,7 +149,7 @@ function card(role) {
 
 // Pointer events cover mouse and touch. The card follows the pointer as a fixed "ghost"; only legal columns light up.
 function startDrag(e, node, role) {
-  if (busy || e.button !== 0 || e.target.closest('a, button, input, textarea, select, form')) return;
+  if (!e.isPrimary || isBusy() || e.button !== 0 || e.target.closest('a, button, input, textarea, select, form')) return;
   const allowed = new Set(targets(role));
   const rect = node.getBoundingClientRect();
   const dx = e.clientX - rect.left;
@@ -139,7 +161,7 @@ function startDrag(e, node, role) {
   const onMove = (ev) => {
     if (!ghost) {
       if (Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) < 5) return;
-      busy = true;
+      dragging = true;
       ghost = node.cloneNode(true);
       ghost.classList.add('ghost');
       ghost.style.width = `${rect.width}px`;
@@ -153,24 +175,33 @@ function startDrag(e, node, role) {
     }
     ghost.style.left = `${ev.clientX - dx}px`;
     ghost.style.top = `${ev.clientY - dy}px`;
+    // Nudge the board sideways near its edges so far columns can be reached.
+    const edge = boardEl.getBoundingClientRect();
+    if (ev.clientX < edge.left + 40) boardEl.scrollLeft -= 16;
+    else if (ev.clientX > edge.right - 40) boardEl.scrollLeft += 16;
   };
   const end = (ev, drop) => {
     node.removeEventListener('pointermove', onMove);
     node.removeEventListener('pointerup', onUp);
     node.removeEventListener('pointercancel', onCancel);
+    document.removeEventListener('keydown', onKey);
     if (!ghost) return;
+    dragging = false;
     ghost.remove();
     node.classList.remove('dragging');
     for (const col of columns()) col.classList.remove('target', 'dim');
     const to = drop ? document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.col')?.dataset.status : null;
-    if (to && allowed.has(to)) openForm(node, role, to);
-    else busy = false;
+    if (to && allowed.has(to)) openForm(node, role, to, node.querySelector('.actions button'));
   };
   const onUp = (ev) => end(ev, true);
   const onCancel = (ev) => end(ev, false);
+  const onKey = (ev) => {
+    if (ev.key === 'Escape') end(ev, false);
+  };
   node.addEventListener('pointermove', onMove);
   node.addEventListener('pointerup', onUp);
   node.addEventListener('pointercancel', onCancel);
+  document.addEventListener('keydown', onKey);
 }
 
 function labelled(text, control) {
@@ -222,9 +253,8 @@ function valuesFor(to, extra) {
 }
 
 // The card moves only after the server accepts; a refused move leaves it in place with the server's message.
-function openForm(node, role, to) {
-  busy = true;
-  node.querySelector('form')?.remove();
+function openForm(node, role, to, opener) {
+  document.querySelector('form.move')?.remove();
   const form = el('form', 'move');
   const pick = el('select');
   pick.name = 'to';
@@ -248,7 +278,7 @@ function openForm(node, role, to) {
   draw();
   cancel.addEventListener('click', () => {
     form.remove();
-    busy = false;
+    if (opener?.isConnected) opener.focus();
   });
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault();
@@ -256,10 +286,10 @@ function openForm(node, role, to) {
     error.textContent = '';
     try {
       await api('/api/move', { role_id: role.id, to: pick.value, reason: reason.value.trim(), ...valuesFor(pick.value, extra) });
-      busy = false;
+      form.remove();
       await refresh();
     } catch (err) {
-      error.textContent = err instanceof TypeError ? STOPPED : err.message;
+      error.textContent = err.message;
       save.disabled = false;
     }
   });
