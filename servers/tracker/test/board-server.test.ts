@@ -3,6 +3,7 @@ import type { IncomingHttpHeaders } from 'node:http';
 import { request } from 'node:http';
 import { test } from 'node:test';
 import { createBoardServer } from '../src/board-server.ts';
+import type { Tracker } from '../src/tracker.ts';
 import { seeded } from './board-seed.ts';
 
 const TOKEN = 'a'.repeat(64);
@@ -13,9 +14,9 @@ interface Reply {
   body: string;
 }
 
-async function board({ idleMs = 60_000, onIdle = () => {} }: { idleMs?: number; onIdle?: () => void } = {}) {
+async function board({ idleMs = 60_000, onIdle = () => {}, tracker }: { idleMs?: number; onIdle?: () => void; tracker?: Tracker } = {}) {
   const s = seeded();
-  const server = createBoardServer({ tracker: s.t, token: TOKEN, idleMs, onIdle });
+  const server = createBoardServer({ tracker: tracker ?? s.t, token: TOKEN, idleMs, onIdle });
   await new Promise<void>((done) => server.listen(0, '127.0.0.1', () => done()));
   const addr = server.address();
   assert.ok(addr && typeof addr === 'object');
@@ -124,6 +125,92 @@ test('the idle timer fires after idleMs without an authenticated API call', asyn
   const b = await board({ idleMs: 100, onIdle: () => fired() });
   try {
     await idle;
+  } finally {
+    await b.close();
+  }
+});
+
+const sleep = (ms: number) => new Promise<void>((done) => setTimeout(done, ms));
+
+test('odd request targets are refused after the Host check, never a 500', async () => {
+  const b = await board();
+  try {
+    assert.equal((await b.send('GET', '//')).status, 400);
+    assert.equal((await b.send('GET', '//x/api/board', { headers: b.auth })).status, 400);
+    assert.equal((await b.send('GET', '//', { headers: { host: `evil.example:${b.port}` } })).status, 421);
+    assert.equal((await b.send('GET', '/api/health?x=1', { headers: b.auth })).status, 200);
+  } finally {
+    await b.close();
+  }
+});
+
+test('the content type must be exactly application/json', async () => {
+  const b = await board();
+  try {
+    const body = JSON.stringify({ role_id: b.scored, to: 'queued', reason: 'r' });
+    assert.equal((await b.send('POST', '/api/move', { headers: { ...b.auth, 'content-type': 'application/jsonp' }, body })).status, 415);
+    assert.equal((await b.send('POST', '/api/move', { headers: { ...b.auth, 'content-type': 'application/json; charset=utf-8' }, body })).status, 200);
+  } finally {
+    await b.close();
+  }
+});
+
+test('no CORS headers, even on a preflight', async () => {
+  const b = await board();
+  try {
+    const r = await b.send('OPTIONS', '/api/move', { headers: { ...b.auth, origin: 'https://evil.example' } });
+    assert.equal(r.headers['access-control-allow-origin'], undefined);
+    assert.equal(r.headers['access-control-allow-methods'], undefined);
+  } finally {
+    await b.close();
+  }
+});
+
+test('an internal failure answers a generic 500', async () => {
+  const s = seeded();
+  const broken = Object.create(s.t, {
+    q: {
+      value: () => {
+        throw new Error('Northwind secret');
+      },
+    },
+  }) as Tracker;
+  const b = await board({ tracker: broken });
+  try {
+    const r = await b.send('GET', '/api/board', { headers: b.auth });
+    assert.equal(r.status, 500);
+    assert.equal(r.body, '{"error":"Internal error."}');
+  } finally {
+    await b.close();
+  }
+});
+
+test('onIdle runs once, and only authenticated calls defer it', async () => {
+  let calls = 0;
+  const b = await board({ idleMs: 150, onIdle: () => calls++ });
+  try {
+    await sleep(100);
+    await b.send('GET', '/api/health', { headers: b.auth });
+    await sleep(100); // 200 ms since start: would have fired without the call
+    assert.equal(calls, 0);
+    await sleep(100);
+    assert.equal(calls, 1);
+    await b.send('GET', '/api/health', { headers: b.auth });
+    await sleep(250);
+    assert.equal(calls, 1);
+  } finally {
+    await b.close();
+  }
+});
+
+test('unauthenticated probes do not defer onIdle', async () => {
+  let calls = 0;
+  const b = await board({ idleMs: 150, onIdle: () => calls++ });
+  try {
+    await sleep(100);
+    assert.equal((await b.send('GET', '/api/health')).status, 401);
+    await sleep(100);
+    assert.equal(calls, 1);
   } finally {
     await b.close();
   }

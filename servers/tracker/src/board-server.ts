@@ -43,11 +43,19 @@ export interface BoardServerOptions {
 
 export function createBoardServer({ tracker, token, idleMs, onIdle, log = () => {} }: BoardServerOptions): Server {
   const expected = Buffer.from(`Bearer ${token}`);
-  let idle = setTimeout(onIdle, idleMs);
+  // onIdle stops the process; once it has run, a late call must not schedule it again.
+  let fired = false;
+  const arm = () =>
+    setTimeout(() => {
+      fired = true;
+      onIdle();
+    }, idleMs);
+  let idle = arm();
   // Only authenticated calls keep the board alive, so a stray probe can't.
   const touch = () => {
+    if (fired) return;
     clearTimeout(idle);
-    idle = setTimeout(onIdle, idleMs);
+    idle = arm();
   };
   const authorized = (header: string | undefined): boolean => {
     const got = Buffer.from(header ?? '');
@@ -60,15 +68,21 @@ export function createBoardServer({ tracker, token, idleMs, onIdle, log = () => 
       if (!res.headersSent) send(res, 500, { error: 'Internal error.' });
     });
   });
+  // Bodies are capped at 64 KB and only loopback can connect, so slow senders get little time.
+  server.headersTimeout = 5_000;
+  server.requestTimeout = 10_000;
   server.on('close', () => clearTimeout(idle));
 
   async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const addr = server.address();
     const port = addr && typeof addr === 'object' ? addr.port : 0;
     const host = req.headers.host;
-    const path = new URL(req.url ?? '/', 'http://127.0.0.1').pathname;
+    const target = req.url ?? '';
+    // Not `new URL`: it throws on `//` and reads `//x/api/board` as /api/board. The Host gate runs first.
+    const path = target.split('?')[0] ?? '';
     const file = STATIC[path];
     if (host !== `127.0.0.1:${port}` && host !== `localhost:${port}`) send(res, 421, { error: 'Wrong host.' });
+    else if (!target.startsWith('/') || target.startsWith('//')) send(res, 400, { error: 'Bad request.' });
     else if (file && req.method === 'GET') {
       res.writeHead(200, { ...HEADERS, 'Content-Type': file.type });
       res.end(file.body);
@@ -104,7 +118,7 @@ function send(res: ServerResponse, status: number, body: unknown): void {
 
 // A cross-site form can't send application/json without a CORS preflight, which this server never answers.
 async function readJson(req: IncomingMessage): Promise<unknown> {
-  if (!/^application\/json\b/i.test(req.headers['content-type'] ?? '')) throw new HttpError(415, 'Send Content-Type: application/json.');
+  if (!/^application\/json\s*(;|$)/i.test(req.headers['content-type'] ?? '')) throw new HttpError(415, 'Send Content-Type: application/json.');
   if (Number(req.headers['content-length'] ?? 0) > MAX_BODY) throw new HttpError(413, 'Request body too large.');
   const chunks: Buffer[] = [];
   let size = 0;
