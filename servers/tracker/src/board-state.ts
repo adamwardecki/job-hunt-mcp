@@ -1,6 +1,7 @@
 // The running board's address and token, written by board.ts and read by open_board.
 // It sits next to the database, so a scratch --db never touches the real board's file.
 
+import { randomBytes } from 'node:crypto';
 import { readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { secureFile } from './fsperm.ts';
@@ -24,16 +25,24 @@ export function readBoardState(file: string): BoardState | null {
   }
   if (!isRecord(v)) return null;
   const { port, token, pid, db } = v;
-  if (typeof port !== 'number' || typeof token !== 'string' || typeof pid !== 'number' || typeof db !== 'string') return null;
+  if (typeof port !== 'number' || !Number.isInteger(port) || port < 1 || port > 65535) return null;
+  if (typeof pid !== 'number' || !Number.isInteger(pid) || pid < 1) return null;
+  if (typeof token !== 'string' || token === '' || typeof db !== 'string' || db === '') return null;
   return { port, token, pid, db };
 }
 
 // Written to a temp file and renamed, so a reader never sees half a file. The token makes it owner-only.
 export function writeBoardState(file: string, state: BoardState): void {
-  const tmp = `${file}.${process.pid}.tmp`;
-  writeFileSync(tmp, JSON.stringify(state), { mode: 0o600 });
-  secureFile(tmp);
-  renameSync(tmp, file);
+  // Random name, created exclusively: a planted symlink or leftover file in a shared dir like /tmp must not receive the token.
+  const tmp = `${file}.${randomBytes(6).toString('hex')}.tmp`;
+  writeFileSync(tmp, JSON.stringify(state), { mode: 0o600, flag: 'wx' });
+  try {
+    secureFile(tmp);
+    renameSync(tmp, file);
+  } catch (err) {
+    rmSync(tmp, { force: true });
+    throw err;
+  }
 }
 
 // A newer board may have replaced the file; only the one it names removes it.
