@@ -1,0 +1,38 @@
+/* Host-neutral: system colours and font, transparent surfaces, 1px borders. No brand colours, no shadows. */
+:root {
+  color-scheme: light dark;
+  --line: color-mix(in srgb, CanvasText 15%, transparent);
+  --muted: color-mix(in srgb, CanvasText 60%, transparent);
+  --hover: color-mix(in srgb, CanvasText 6%, transparent);
+  font: 14px/1.4 system-ui, sans-serif;
+}
+body { margin: 0; padding: 16px; background: Canvas; color: CanvasText; }
+header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+h1 { font-size: 16px; font-weight: 600; margin: 0; }
+#status { margin: 0; color: var(--muted); }
+#board { display: flex; gap: 12px; align-items: flex-start; overflow-x: auto; padding-bottom: 8px; }
+.col { flex: 0 0 240px; border: 1px solid var(--line); border-radius: 8px; padding: 8px; min-height: 120px; background: transparent; }
+.col.folded { flex-basis: 140px; min-height: 0; }
+.col.target { background: var(--hover); border-color: CanvasText; }
+.col.dim { opacity: 0.4; }
+.col h2 { display: flex; justify-content: space-between; margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.cards { display: flex; flex-direction: column; gap: 8px; }
+.col.folded .cards { display: none; }
+.card { border: 1px solid var(--line); border-radius: 6px; padding: 8px; background: transparent; }
+.card.draggable { cursor: grab; touch-action: none; user-select: none; }
+.card.dragging { opacity: 0.4; }
+.ghost { box-sizing: border-box; position: fixed; z-index: 10; pointer-events: none; background: Canvas; cursor: grabbing; }
+.company { font-weight: 600; }
+.meta { color: var(--muted); font-size: 12px; }
+.needs { margin-top: 6px; padding-left: 6px; border-left: 2px solid CanvasText; font-size: 12px; }
+.actions { display: flex; gap: 8px; align-items: center; margin-top: 6px; font-size: 12px; }
+form.move { user-select: text; display: flex; flex-direction: column; gap: 6px; margin-top: 8px; font-size: 12px; }
+form.move label { display: flex; flex-direction: column; gap: 2px; color: var(--muted); }
+.buttons { display: flex; gap: 6px; }
+.error { margin: 0; padding-left: 6px; border-left: 2px solid CanvasText; }
+.error:empty { display: none; }
+input, textarea, select, button { font: inherit; color: CanvasText; background: transparent; border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; }
+button { cursor: pointer; }
+button:hover { background: var(--hover); }
+button.fold { border: 0; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; }
+a { color: LinkText; }
