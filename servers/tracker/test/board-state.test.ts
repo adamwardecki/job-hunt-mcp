@@ -39,6 +39,12 @@ test('a missing, broken or wrongly shaped file reads as no board', () => {
     '{"port":4317,"token":"","pid":1,"db":"/x"}',
     '{"port":4317,"token":"x","pid":1,"db":""}',
     '{"port":4317,"token":"x","pid":1}',
+    // the token ends up in a URL and in markdown, so only what the board generates (64 lowercase hex) is accepted
+    `{"port":4317,"token":"${'g'.repeat(64)}","pid":1,"db":"/x"}`,
+    `{"port":4317,"token":"${'A'.repeat(64)}","pid":1,"db":"/x"}`,
+    `{"port":4317,"token":"${'c'.repeat(63)}","pid":1,"db":"/x"}`,
+    `{"port":4317,"token":"${'c'.repeat(65)}","pid":1,"db":"/x"}`,
+    `{"port":4317,"token":"${'c'.repeat(60)})[x](","pid":1,"db":"/x"}`,
   ];
   for (const text of bad) {
     writeFileSync(file, text);

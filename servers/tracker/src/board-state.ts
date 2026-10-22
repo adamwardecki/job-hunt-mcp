@@ -14,6 +14,9 @@ export interface BoardState {
   db: string;
 }
 
+// board.ts generates 32 random bytes as hex. The token goes into a URL and markdown, so a crafted file must not smuggle other text in.
+const TOKEN_SHAPE = /^[0-9a-f]{64}$/;
+
 export const boardStatePath = (dbPath: string): string => join(dirname(resolve(dbPath)), 'board.json');
 
 export function readBoardState(file: string): BoardState | null {
@@ -27,7 +30,7 @@ export function readBoardState(file: string): BoardState | null {
   const { port, token, pid, db } = v;
   if (typeof port !== 'number' || !Number.isInteger(port) || port < 1 || port > 65535) return null;
   if (typeof pid !== 'number' || !Number.isInteger(pid) || pid < 1) return null;
-  if (typeof token !== 'string' || token === '' || typeof db !== 'string' || db === '') return null;
+  if (typeof token !== 'string' || !TOKEN_SHAPE.test(token) || typeof db !== 'string' || db === '') return null;
   return { port, token, pid, db };
 }
 
