@@ -638,7 +638,7 @@ export class Tracker {
         JOIN events e ON e.id = (SELECT id FROM events WHERE role_id = r.id AND status = 'closed' ORDER BY ts DESC, id DESC LIMIT 1)
         WHERE r.status = 'closed' AND e.outcome = 'rejected' ORDER BY e.ts DESC`),
       queue: queue.filter((r) => !stale(r)),
-      stale_queue: queue.filter(stale).map(({ id, company, title, updated_at }) => ({ id, company, title, last_activity: updated_at })),
+      stale_queue: queue.filter(stale).map(({ id, company, title, updated_at, last_event }) => ({ id, company, title, last_activity: last_event || updated_at })),
     };
   }
 }
