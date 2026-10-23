@@ -159,6 +159,21 @@ function startDrag(e, node, role) {
   let ghost = null;
   node.setPointerCapture(e.pointerId);
   const columns = () => [...boardEl.querySelectorAll('.col')];
+  // The legal column under the pointer gets a slot the card's size, so the drop target is unambiguous.
+  const slot = el('div', 'slot');
+  let over = null;
+  const hover = (x, y) => {
+    const col = document.elementFromPoint(x, y)?.closest('.col');
+    const next = col && allowed.has(col.dataset.status) ? col : null;
+    if (next === over) return;
+    over?.classList.remove('over');
+    slot.remove();
+    over = next;
+    if (!over) return;
+    over.classList.add('over');
+    slot.style.height = `${rect.height}px`;
+    over.querySelector('.cards')?.append(slot);
+  };
 
   const onMove = (ev) => {
     if (!ghost) {
@@ -177,12 +192,13 @@ function startDrag(e, node, role) {
     }
     ghost.style.left = `${ev.clientX - dx}px`;
     ghost.style.top = `${ev.clientY - dy}px`;
+    hover(ev.clientX, ev.clientY);
     // Nudge the board sideways near its edges so far columns can be reached.
     const edge = boardEl.getBoundingClientRect();
     if (ev.clientX < edge.left + 40) boardEl.scrollLeft -= 16;
     else if (ev.clientX > edge.right - 40) boardEl.scrollLeft += 16;
   };
-  const end = (ev, drop) => {
+  const end = (drop) => {
     node.removeEventListener('pointermove', onMove);
     node.removeEventListener('pointerup', onUp);
     node.removeEventListener('pointercancel', onCancel);
@@ -191,14 +207,15 @@ function startDrag(e, node, role) {
     dragging = false;
     ghost.remove();
     node.classList.remove('dragging');
-    for (const col of columns()) col.classList.remove('target', 'dim');
-    const to = drop ? document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.col')?.dataset.status : null;
+    const to = drop ? over?.dataset.status : null;
+    slot.remove();
+    for (const col of columns()) col.classList.remove('target', 'dim', 'over');
     if (to && allowed.has(to)) openForm(node, role, to, node.querySelector('.actions button'));
   };
-  const onUp = (ev) => end(ev, true);
-  const onCancel = (ev) => end(ev, false);
+  const onUp = () => end(true);
+  const onCancel = () => end(false);
   const onKey = (ev) => {
-    if (ev.key === 'Escape') end(ev, false);
+    if (ev.key === 'Escape') end(false);
   };
   node.addEventListener('pointermove', onMove);
   node.addEventListener('pointerup', onUp);
@@ -269,7 +286,7 @@ function openForm(node, role, to, opener) {
   const extra = el('div');
   const error = el('p', 'error');
   error.setAttribute('role', 'alert');
-  const save = el('button', '', 'Move');
+  const save = el('button', 'primary', 'Move');
   save.type = 'submit';
   const cancel = el('button', '', 'Cancel');
   cancel.type = 'button';
