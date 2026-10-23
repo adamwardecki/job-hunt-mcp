@@ -95,7 +95,7 @@ async function boardGate(payload: HookPayload, session: SessionState, short: str
     const page = currentPage(toolSteps(readTranscript(payload.transcript_path)), tabIdOf(input));
     onBoard = page !== null && isBoardUrl(page.url, port);
   }
-  if (onBoard) deny(payload, session, "The JobHunt board is the user's: a move made there is recorded as the user's own, without the evidence the tracker tools require. Do not open or operate it in the browser. Change status with transition or record, or ask the user to move the card.");
+  if (onBoard) deny(payload, session, "The Job Tracker board is the user's: a move made there is recorded as the user's own, without the evidence and status rules the tracker tools require. Do not open or operate it in the browser. Change status with transition or record, or ask the user to move the card.");
   return onBoard;
 }
 

@@ -132,7 +132,7 @@ You answer the "Needs you" items, run `/job-tracker:apply` for the roles you wan
 | `/job-tracker:triage <source>` | Reconcile and clean a tracker board (JobCopilot-style) with the delete guard. |
 | `/job-tracker:prep <company>` | Interview prep from your stories. |
 | `/job-tracker:status` | Pipeline summary and open items. |
-| `/job-tracker:board` | Kanban board in your browser. Drag a card to move a role; the same evidence rules apply. |
+| `/job-tracker:board` | Kanban board in your browser. Drag a card to any lane to move a role, back or forward; your word is the evidence. |
 | `/job-tracker:cover-letter <role-id> [--pdf]` | Cover letter, optionally as a one-page PDF. |
 | `/job-tracker:correct` | Turn your override into a rule with a reason and example. |
 | `/job-tracker:import [path]` | One-off import of an existing markdown log. |
@@ -151,7 +151,7 @@ commands, scheduled task
 - **Tracker** (`plugin/servers/tracker/`): the only writer to the database. Narrow tools, no raw SQL. An
   append-only event log with a state machine (`found → verified → scored → queued → applied →
   interviewing → offer`, plus `dropped` and `closed`). Drops need an employer quote, `verified` needs
-  the ATS URL and location line, `applied` needs the confirmation text (unless you mark it yourself on the board). Tool reference:
+  the ATS URL and location line, `applied` needs the confirmation text (unless you mark it yourself on the board, where drops need no quote either). Tool reference:
   [`docs/tracker-api.md`](docs/tracker-api.md).
 - **Hooks** (`plugin/hooks/`): see below.
 - **Skills, commands, agents, templates**: the operating rules, including the incidents that shaped them.

@@ -45,7 +45,7 @@ html, body { height: 100%; }
 body { display: flex; flex-direction: column; margin: 0; padding: 20px 24px 16px; background: var(--paper); color: var(--ink); -webkit-font-smoothing: antialiased; }
 header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
 h1 { display: inline-flex; align-items: center; gap: 9px; margin: 0; font-size: 20px; font-weight: 650; letter-spacing: -0.04em; }
-/* The site's "jh" mark, scaled down. */
+/* The site's "jt" mark, scaled down. */
 .brand-mark { display: inline-flex; width: 27px; height: 29px; padding-left: 5px; overflow: hidden; background: var(--mark); color: var(--mark-ink); font: italic 25px/1 var(--serif); letter-spacing: -5px; }
 .brand-mark span { transform: translateY(4px); }
 #pipeline, #status { margin: 0; color: var(--muted); font-size: 13px; }
@@ -68,20 +68,21 @@ h1 { display: inline-flex; align-items: center; gap: 9px; margin: 0; font-size: 
 .card.draggable { cursor: grab; touch-action: none; user-select: none; }
 .card.draggable:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
 .card.dragging { opacity: 0.35; }
-/* Dropped here, waiting for the evidence the move needs. */
+/* Dropped on closed, waiting for the outcome. */
 .card.pending { border-color: var(--accent); border-style: dashed; }
 /* Where the card will land in the column under the pointer. */
 .slot { border: 1px dashed var(--accent); border-radius: var(--radius); background: color-mix(in srgb, var(--accent) 8%, transparent); }
 /* The dragged copy is lifted (opaque, tilted, shadowed) so it never reads as one card stacked on another. */
 .ghost { position: fixed; z-index: 10; pointer-events: none; cursor: grabbing; border-color: var(--accent); box-shadow: var(--lift); transform: rotate(-2deg); }
-.head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.head { display: flex; align-items: center; gap: 6px; }
 .company { font-weight: 600; letter-spacing: -0.01em; }
-.posting { flex: none; font-size: 12px; }
+.posting { flex: none; display: inline-flex; color: var(--muted); }
+.posting:hover { color: var(--accent); }
+.posting svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .title { margin-top: 1px; }
+.pay { margin-top: 3px; font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .meta { margin-top: 2px; color: var(--muted); font-size: 12px; }
 .needs { margin-top: 8px; padding: 5px 8px; border-left: 2px solid var(--warm); background: color-mix(in srgb, var(--warm) 25%, transparent); border-radius: 0 3px 3px 0; font-size: 12px; }
-.actions { display: flex; gap: 10px; align-items: center; margin-top: 9px; font-size: 12px; }
-.card.pending .actions { display: none; }
 
 form.move, form.note { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12px; user-select: text; }
 .form-title { font-weight: 600; color: var(--ink); }
@@ -100,6 +101,5 @@ button:disabled { cursor: wait; opacity: 0.6; }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button.fold { border: 0; padding: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; }
 button.fold:hover { color: var(--accent); }
-a, button.link { color: var(--accent); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); text-underline-offset: 2px; }
-a:hover, button.link:hover { text-decoration-color: var(--accent); }
-button.link { border: 0; padding: 0; background: none; font-size: 12px; }
+a { color: var(--accent); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); text-underline-offset: 2px; }
+a:hover { text-decoration-color: var(--accent); }

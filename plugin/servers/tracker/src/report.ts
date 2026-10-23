@@ -117,7 +117,8 @@ export function renderReport(t: Tracker, { date, run_id, headline }: ArgsFor<'re
     out.push('## Dropped', '');
     const groups = new Map<string, string[]>();
     for (const e of dropped) {
-      const key = e.category || 'other';
+      // Only the board can drop without evidence (validateEvent), and only as the user.
+      const key = e.actor === 'user' && !e.evidence?.trim() ? 'by you on the board' : e.category || 'other';
       let group = groups.get(key);
       if (!group) {
         group = [];
@@ -160,7 +161,7 @@ export function runAudit(t: Tracker, { date, run_id }: ArgsFor<'audit'>) {
     const touched = eventsIn(t, scope, "e.status IN ('scored', 'queued', 'applied')").filter((e) => e.industry && excluded.some((x) => e.industry?.toLowerCase().includes(x)));
     for (const e of touched) failures.push({ check: 'excluded_industry', role_id: e.role_id, detail: `${e.company} (${e.industry}) reached ${e.status} despite the excluded-industries filter.` });
   }
-  for (const e of eventsIn(t, scope, "e.status = 'dropped' AND (e.evidence IS NULL OR trim(e.evidence) = '')"))
+  for (const e of eventsIn(t, scope, "e.status = 'dropped' AND (e.evidence IS NULL OR trim(e.evidence) = '') AND e.actor != 'user'"))
     failures.push({ check: 'drop_without_evidence', role_id: e.role_id, detail: `Drop of ${e.company} has no evidence.` });
   // The board's self-reported applications are the user's word, listed in the report instead.
   for (const e of eventsIn(t, scope, "e.status = 'applied' AND (e.evidence IS NULL OR trim(e.evidence) = '') AND e.actor != 'user'"))

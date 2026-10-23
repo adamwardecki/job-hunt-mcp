@@ -314,8 +314,8 @@ test('the board is off limits to browser tools in every session: moves there cou
 test('on an open board page, browser tools may look but not act', async () => {
   const board = `http://127.0.0.1:54408/#t=${TOKEN}`;
   // The user's own tab, seen in a tab listing rather than opened by the model.
-  const tabs = JSON.stringify({ availableTabs: [{ tabId: 7, title: 'Docs', url: 'https://example.com/' }, { tabId: 9, title: 'JobHunt board', url: board }] });
-  const tp = transcript([[`${CHROME}tabs_context_mcp`, {}, tabs], [`${CHROME}read_page`, { tabId: 9 }, 'button "Move to…" [ref_4]']]);
+  const tabs = JSON.stringify({ availableTabs: [{ tabId: 7, title: 'Docs', url: 'https://example.com/' }, { tabId: 9, title: 'Job Tracker board', url: board }] });
+  const tp = transcript([[`${CHROME}tabs_context_mcp`, {}, tabs], [`${CHROME}read_page`, { tabId: 9 }, 'button "Skip" [ref_4]']]);
   const call = async (short: string, input: Record<string, unknown>, path = tp) => {
     outputs = [];
     await preTool({ session_id: session(), transcript_path: path, tool_name: `${CHROME}${short}`, tool_input: input });

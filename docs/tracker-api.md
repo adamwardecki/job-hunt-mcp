@@ -34,7 +34,8 @@ closed (from queued | applied | interviewing | offer), with outcome: rejected | 
 ```
 
 - Every event needs a `reason`.
-- `dropped` needs `evidence`: a verbatim employer quote, a URL plus quote, or `rule:<id>`.
+- `dropped` needs `evidence`: a verbatim employer quote, a URL plus quote, or `rule:<id>`. The one
+  exception is a move the user makes on the board (below).
 - `verified` needs `evidence` (the employer ATS URL and the verbatim location line) and
   `location_line` + `location_type`. It is the only way `roles.verified_at` gets set.
 - `applied` needs `evidence` containing the captured confirmation text. The one exception is a move the
@@ -88,23 +89,26 @@ reuses the board named in `board.json` next to the database while that process i
 - rejects any `Host` other than `127.0.0.1:<port>` or `localhost:<port>` (DNS rebinding), sends no CORS
   headers, and accepts only `application/json` posts up to 64 KB.
 - stops after 30 minutes without an authenticated API call and removes `board.json`.
-- moves roles with `transition`, recorded with `actor: user`. Moves to `verified` and `scored` are
-  refused: they need the verify-employer and score-role skills.
+- moves roles with `transition`, recorded with `actor: user`. Between its lanes (`scored` to `closed`)
+  the user moves freely, backwards and out of `dropped` or `closed` too; the model's `transition` stays
+  forward-only. Roles still `found` or `verified` can't be moved, nothing can be moved to them, and only a
+  role that was verified and scored can be moved to `scored` or `queued`.
 - accepts changes (`POST`) only from its own page: the browser's `Origin` must be the board's and
   `Sec-Fetch-Site`, when sent, `same-origin`. A script holding the token gets 403. With `open: true`,
   `open_board` gives the link to the browser and not to the model, and the `PreToolUse` hook stops
   browser tools from opening the board or acting on its page in any session.
-- records `applied` without confirmation text: the user is the authority on their own application.
-  `render_report` lists these as "Marked applied by you on the board" so one the user didn't make stands
-  out, and `audit` does not count them as `applied_without_confirmation`.
+- records `applied` without confirmation text and `dropped` without evidence: the user is the authority
+  on their own search. `render_report` lists these as "Marked applied by you on the board" and "Dropped:
+  by you on the board" so one the user didn't make stands out, and `audit` does not count them as
+  `applied_without_confirmation` or `drop_without_evidence`.
 - shows the columns from `scored` on, with `dropped` and `closed` folded; `found` and `verified` roles
-  are counted in the header. A drop on `queued`, `applied`, `interviewing` or `offer` moves at
-  once; `dropped` and `closed` ask for their evidence or outcome first.
+  are counted in the header. A drop moves at once and the card opens with an optional reason, saved
+  as a note; `closed` asks for its outcome first. Cards show the pay band when the posting had one.
 
 | Endpoint | Body | Returns |
 |---|---|---|
 | `GET /api/health` | none | `{ok: true}` |
-| `GET /api/board` | none | `{statuses, roles, moves, rules}`: roles with company, score, location type, URL, last event time and blocking question; allowed drag targets per status; active rules for drops |
+| `GET /api/board` | none | `{statuses, roles, rules}`: roles with company, score, location type, URL, pay band, last event time, blocking question and `moves` (the lanes the role may be dragged to); active rules |
 | `POST /api/move` | `{role_id, to, reason?, evidence?, outcome?}` | `{role, from, to}`, or 400 with the status machine's message. Without a reason the event says "Moved on the board" |
 | `POST /api/note` | `{role_id, reason}` | `{role}`: the user's own reason for a move, recorded as a note (no status change) |
 

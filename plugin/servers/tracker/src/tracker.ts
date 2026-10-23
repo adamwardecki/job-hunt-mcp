@@ -80,6 +80,20 @@ export const MACHINE: Record<Status, readonly Status[]> = {
   closed: [],
 };
 
+// The statuses the board shows as lanes. Between them the user moves freely, back and out of dropped or closed:
+// the user is the authority on their own search. found and verified are the sweep's own steps.
+export const BOARD_LANES = ['scored', 'queued', 'applied', 'interviewing', 'offer', 'dropped', 'closed'] as const;
+// Lanes that rest on Claude's research: a role gets there from the board only if it was verified and scored.
+const RESEARCHED: readonly Status[] = ['scored', 'queued'];
+
+// Where the user may move a role on the board, and why not when nowhere.
+export function userMoves(role: Pick<RoleRow, 'status' | 'verified_at' | 'score'>): { moves: Status[]; why?: string } {
+  const from = role.status || 'found';
+  if (!oneOf(BOARD_LANES, from)) return { moves: [], why: `is still in the sweep (${from}): Claude verifies and scores it first` };
+  const researched = role.verified_at != null && role.score != null;
+  return { moves: BOARD_LANES.filter((s) => s !== from && (researched || !RESEARCHED.includes(s))) };
+}
+
 function req(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new ToolError(msg);
 }
@@ -408,12 +422,13 @@ export class Tracker {
     if (status) this.run('UPDATE roles SET status = ?, updated_at = ? WHERE id = ?', status, now(), role_id);
   }
 
-  // selfReported: the user marked the role applied on the board themselves, so there is no confirmation to capture.
+  // selfReported: the user moved the role on the board themselves. Their own word is the evidence for an
+  // application or a drop, so there is no confirmation or employer quote to capture.
   validateEvent(a: EventInput, { selfReported = false }: { selfReported?: boolean } = {}): void {
     req(this.roleRow(a.role_id), `No role ${a.role_id}`);
     req(a.reason && String(a.reason).trim(), 'reason is required on every event');
     if (a.status != null) req(oneOf(STATUSES, a.status), `Unknown status "${a.status}". Known: ${STATUSES.join(', ')}`);
-    if (a.status === 'dropped') req(a.evidence && String(a.evidence).trim(), 'A drop needs evidence: a verbatim quote from the employer page (with URL) or rule:<id>.');
+    if (a.status === 'dropped' && !selfReported) req(a.evidence && String(a.evidence).trim(), 'A drop needs evidence: a verbatim quote from the employer page (with URL) or rule:<id>.');
     if (a.status === 'applied' && !selfReported) req(a.evidence && String(a.evidence).trim(), 'applied needs evidence: the captured confirmation text.');
     if (a.status === 'closed') req(oneOf(OUTCOMES, a.outcome), `closed needs outcome: ${OUTCOMES.join(' | ')}`);
     if (a.evidence && /^rule:(\d+)$/.test(a.evidence)) {
@@ -422,9 +437,10 @@ export class Tracker {
     }
   }
 
-  // The board (board-api.ts) passes actor 'user' and selfReported. The MCP tool's schema has neither and
-  // checkArgs rejects unknown arguments, so calls from the model are always the pipeline and always need
-  // confirmation text for applied. (record takes an actor, but never selfReported.)
+  // The board (board-api.ts) passes actor 'user' and selfReported: the move follows userMoves instead of
+  // MACHINE. The MCP tool's schema has neither and checkArgs rejects unknown arguments, so calls from the
+  // model are always the pipeline, forward-only, and always need evidence for applied and dropped. (record
+  // takes an actor, but never selfReported.)
   transition(a: ArgsFor<'transition'>, { actor = 'pipeline', selfReported = false }: { actor?: 'pipeline' | 'user'; selfReported?: boolean } = {}) {
     req(a.to, 'to is required');
     req(!selfReported || actor === 'user', 'Only the user can make a self-reported move.');
@@ -432,8 +448,14 @@ export class Tracker {
       const role = this.roleRow(a.role_id);
       req(role, `No role ${a.role_id}`);
       const from = role.status || 'found';
-      const allowed = oneOf(STATUSES, from) ? MACHINE[from] : [];
-      req(from === a.to || oneOf(allowed, a.to), `Illegal transition ${from} → ${a.to}. Allowed from ${from}: ${allowed.join(', ') || 'none (terminal)'}.`);
+      if (selfReported) {
+        const { moves, why } = userMoves(role);
+        req(!why, `Role ${a.role_id} ${why}.`);
+        req(oneOf(moves, a.to), `Role ${a.role_id} needs Claude to verify and score it before it can be ${a.to}.`);
+      } else {
+        const allowed = oneOf(STATUSES, from) ? MACHINE[from] : [];
+        req(from === a.to || oneOf(allowed, a.to), `Illegal transition ${from} → ${a.to}. Allowed from ${from}: ${allowed.join(', ') || 'none (terminal)'}.`);
+      }
       if (a.to === 'verified') {
         req(a.evidence && /https?:\/\//.test(a.evidence), 'verified needs evidence with the employer posting URL and the verbatim location line.');
         req(a.location_line && a.location_type, 'verified needs location_line (verbatim from the employer ATS) and location_type.');

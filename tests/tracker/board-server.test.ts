@@ -93,13 +93,14 @@ test('the board data and moves go through the tracker rules', async () => {
     const ok = await b.send('POST', '/api/move', { headers: b.json, body: JSON.stringify({ role_id: b.scored, to: 'queued', reason: 'Moved on the board' }) });
     assert.equal(ok.status, 200);
     assert.equal(b.t.roleDetail({ role_id: b.scored }).events.at(-1)?.actor, 'user');
-    const illegal = await b.send('POST', '/api/move', { headers: b.json, body: JSON.stringify({ role_id: b.found, to: 'applied', reason: 'r', evidence: 'e' }) });
-    assert.equal(illegal.status, 400);
-    assert.match(JSON.parse(illegal.body).error, /Illegal transition found → applied/);
-    const noEvidence = await b.send('POST', '/api/move', { headers: b.json, body: JSON.stringify({ role_id: b.found, to: 'dropped', reason: 'meh' }) });
-    assert.equal(noEvidence.status, 400);
-    const viaRule = await b.send('POST', '/api/move', { headers: b.json, body: JSON.stringify({ role_id: b.found, to: 'dropped', reason: 'agency', evidence: `rule:${b.rule}` }) });
-    assert.equal(viaRule.status, 200);
+    const sweep = await b.send('POST', '/api/move', { headers: b.json, body: JSON.stringify({ role_id: b.found, to: 'applied', reason: 'r', evidence: 'e' }) });
+    assert.equal(sweep.status, 400);
+    assert.match(JSON.parse(sweep.body).error, /still in the sweep \(found\)/);
+    const back = await b.send('POST', '/api/move', { headers: b.json, body: JSON.stringify({ role_id: b.scored, to: 'scored' }) });
+    assert.equal(back.status, 200);
+    const noEvidence = await b.send('POST', '/api/move', { headers: b.json, body: JSON.stringify({ role_id: b.scored, to: 'dropped' }) });
+    assert.equal(noEvidence.status, 200);
+    assert.equal(b.t.roleRow(b.scored)?.status, 'dropped');
     const verified = await b.send('POST', '/api/move', { headers: b.json, body: JSON.stringify({ role_id: b.queued, to: 'verified', reason: 'r' }) });
     assert.equal(verified.status, 400);
   } finally {
