@@ -93,7 +93,8 @@ reuses the board named in `board.json` next to the database while that process i
   refused: they need the verify-employer and score-role skills.
 - accepts changes (`POST`) only from its own page: the browser's `Origin` must be the board's and
   `Sec-Fetch-Site`, when sent, `same-origin`. A script holding the token gets 403. With `open: true`,
-  `open_board` gives the link to the browser and not to the model.
+  `open_board` gives the link to the browser and not to the model, and the `PreToolUse` hook stops
+  browser tools from opening the board or acting on its page in any session.
 - records `applied` without confirmation text: the user is the authority on their own application.
   `render_report` lists these as "Marked applied by you on the board" so one the user didn't make stands
   out, and `audit` does not count them as `applied_without_confirmation`.

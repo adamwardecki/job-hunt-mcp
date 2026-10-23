@@ -34,6 +34,16 @@ export function readBoardState(file: string): BoardState | null {
   return { port, token, pid, db };
 }
 
+// A reused pid may belong to someone else, so this only says whether the board can still be running. It never signals the pid.
+export function alive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return (err as NodeJS.ErrnoException).code === 'EPERM';
+  }
+}
+
 // Written to a temp file and renamed, so a reader never sees half a file. The token makes it owner-only.
 export function writeBoardState(file: string, state: BoardState): void {
   // Random name, created exclusively: a planted symlink or leftover file in a shared dir like /tmp must not receive the token.

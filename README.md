@@ -171,16 +171,18 @@ the machine is awake and the app is open.
 | Drafts | Gmail `create_draft`/`update_draft` bodies are linted; em/en dashes, "not X but Y", fake-candid openers and volunteered gaps are denied. |
 | Submit | A click on a submit/apply element (resolved from the page's accessibility tree) or a scripted submit needs your `/j-hunt:approve` on that role's current form and a passing `gate_check` (verified, not `no_cold_apply`, no live application at the company). Approval is consumed by one submit attempt. No identifiable page or reachable tracker means no submit. |
 | Board delete | Needs a fresh `JOBHUNT_TRIAGE_GUARD` with `ok: true` and nothing but the delete control and its confirm button clicked since. |
+| Your board | Browser tools may not open the `/j-hunt:board` page or click, type, drag or run scripts on it, in any session. Moves there are recorded as yours. Reading the page is allowed. |
 | Personal data and consent | `form_input` into passport, nationality, age, DOB, gender, marital, ID and similar fields is denied; consent boxes stay unticked unless you allow them. |
 | Read-back | `verify_artifact` is denied unless a real `get_draft`/`list_drafts` result in the session contains the draft id. |
 | Stop | A `/j-hunt:sweep` session cannot end until every role it touched has an event and the report was rendered. |
 
-Browser gates apply only in sessions that used a job-hunt command or the tracker; send blocking applies
-everywhere.
+Browser gates apply only in sessions that used a job-hunt command or the tracker; send blocking and the
+board gate apply everywhere.
 
 **Known limits.** Gates see tool calls, not the screen. A click by raw coordinates has no element label,
 so the submit gate cannot classify it; the skills require ref-based clicks for submits and the auditor
-checks every applied role for captured confirmation text. Pressing Enter in a field is not gated.
+checks every applied role for captured confirmation text. Pressing Enter in a field is not gated. The board gate knows the board by its link and port, so desktop
+computer use, which sees only the screen, is not stopped from clicking on it.
 Hooks require a host that runs plugin hooks (Claude Code, Claude Desktop, Hermes); if approval notes
 never appear, the `approve` command tells the model not to submit.
 If Node.js is missing, or the gate cannot start or times out, mail, LinkedIn and browser tools are blocked

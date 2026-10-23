@@ -331,6 +331,7 @@ Every claim of a draft, submission or booking in the report must be backed by a 
 | PreToolUse: any email send / LinkedIn message / connection request | **Block.** Drafts only. |
 | PreToolUse: browser click on an element whose text matches submit/apply/send | Require `find_company` clean + `roles.verified_at` set + an approval token for this role in the current session. |
 | PreToolUse: tracker/board delete actions | Require the target column resolved by header text and the protected columns' counts captured (see §12.3). |
+| PreToolUse: browser tools on the local board (`127.0.0.1`/`localhost` with the board's token or port), any session | Block navigating to it and acting on its page; reading is allowed. Board moves are recorded as the user's. |
 | PreToolUse: form_input into fields labelled passport/nationality/age/marital/gender/ID | Block; surface to the user. |
 | PreToolUse: consent checkboxes/radios (recording, marketing, talent pool) | Default to the privacy-preserving option; never tick "yes" without the user. |
 | Stop | Refuse to finish a `/j-hunt:sweep` without `record` events for every touched role and a rendered report. |

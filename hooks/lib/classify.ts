@@ -46,6 +46,18 @@ export function browserAction(short: string, input: ToolInput): BrowserAction {
   return 'other';
 }
 
+// Tools and computer actions that only look at a page. A list of reads rather than of actions, so an
+// unknown tool counts as acting.
+const READ_ONLY_TOOL = /^(read_page|get_page_text|find|tabs_context(?:_mcp)?|tabs_create(?:_mcp)?|read_console_messages|read_network_requests|resize_window|gif_creator|screenshot|browser_snapshot|browser_take_screenshot|browser_console_messages|browser_network_requests|browser_tabs|browser_wait_for|browser_resize|browser_vision|browser_get_images)$/;
+const READ_ONLY_ACTION = /^(screenshot|zoom|wait|scroll|scroll_to|cursor_position)$/;
+
+export function onlyReads(short: string, input: ToolInput): boolean {
+  const s = short.toLowerCase();
+  if (s === 'computer') return READ_ONLY_ACTION.test(String(input.action || '').toLowerCase());
+  if (s === 'browser_console') return !input.expression;
+  return READ_ONLY_TOOL.test(s);
+}
+
 // The accessible name inside a line like `button "Submit application" [ref_45]`.
 export function accessibleName(label: string | null): string | null {
   if (!label) return null;

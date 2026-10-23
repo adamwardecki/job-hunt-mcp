@@ -6,7 +6,7 @@ import { rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { BoardState } from './board-state.ts';
-import { boardStatePath, readBoardState } from './board-state.ts';
+import { alive, boardStatePath, readBoardState } from './board-state.ts';
 import { ToolError } from './errors.ts';
 import { errorMessage, isRecord } from './util.ts';
 
@@ -41,16 +41,6 @@ export async function healthy({ port, token }: BoardState): Promise<boolean> {
     return isRecord(body) && body.ok === true;
   } catch {
     return false;
-  }
-}
-
-// A reused pid may belong to someone else, so this only says whether the board can still be running. It never signals the pid.
-function alive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (err) {
-    return (err as NodeJS.ErrnoException).code === 'EPERM';
   }
 }
 

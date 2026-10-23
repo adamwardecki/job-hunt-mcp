@@ -125,6 +125,14 @@ test('hermes.ts: a subagent turn cannot grant approval', () => {
   assert.match(hermes('pre_tool_call', { session_id: 'child', tool_name: 'browser_console', args: { expression: "document.querySelector('form').requestSubmit()" } }) ?.message ?? 'not-marked', /not-marked|approval/);
 });
 
+test('hermes.ts: the browser cannot open or work the board', () => {
+  const board = `http://127.0.0.1:54408/#t=${'ab'.repeat(32)}`;
+  assert.match(hermes('pre_tool_call', { session_id: 'h5', tool_name: 'browser_navigate', args: { url: board } }).message, /board is the user's/);
+  hermes('post_tool_call', { session_id: 'h5', tool_call_id: 'b1', tool_name: 'browser_navigate', args: { url: board }, result: JSON.stringify({ success: true, url: board }) });
+  assert.match(hermes('pre_tool_call', { session_id: 'h5', tool_name: 'browser_click', args: { ref: '@e3' } }).message, /board is the user's/);
+  assert.equal(hermes('pre_tool_call', { session_id: 'h5', tool_name: 'browser_snapshot', args: {} }), null);
+});
+
 test('hermes.ts: an unfinished sweep queues a nudge that the next turn receives', () => {
   const sid = 'h4';
   hermes('pre_llm_call', { session_id: sid, user_message: '/j-hunt:sweep' });

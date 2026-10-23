@@ -95,6 +95,16 @@ function tabIdFromText(text: string): string | undefined {
   return match?.[1];
 }
 
+// A tab listing (tabs_context) names several tabs, so the first tab id and URL in it need not belong together.
+function listedTabUrl(text: string, tabId: string): string | undefined {
+  for (const entry of text.match(/\{[^{}]*\}/g) || []) {
+    const id = entry.match(/"(?:tabId|tab_id|pageId|page_id)"\s*:\s*"?([\w.-]+)/)?.[1];
+    const url = entry.match(/"url"\s*:\s*"(https?:\/\/[^"\s]+)"/)?.[1];
+    if (id === tabId && url) return url;
+  }
+  return undefined;
+}
+
 // Most recent page URL seen in a browser tool's input or result. When a browser action names a tab,
 // only evidence associated with that tab is accepted.
 export function currentPage(steps: ToolStep[], preferredTabId?: string): PageContext | null {
@@ -103,6 +113,10 @@ export function currentPage(steps: ToolStep[], preferredTabId?: string): PageCon
     const s = steps[i]!; // i is within steps by the loop bounds.
     if (!/browser|chrome|playwright|puppeteer|computer/i.test(s.name)) continue;
     const use = s.kind === 'use' ? s : uses.get(s.id);
+    if (s.kind === 'result' && preferredTabId !== undefined) {
+      const listed = listedTabUrl(s.text, preferredTabId);
+      if (listed) return { url: listed, tab_id: preferredTabId };
+    }
     const tab = tabIdOf(use?.input) || (s.kind === 'result' ? tabIdFromText(s.text) : undefined);
     if (preferredTabId !== undefined && tab !== preferredTabId) continue;
     if (s.kind === 'use' && typeof s.input?.url === 'string') return { url: s.input.url, ...(tab ? { tab_id: tab } : {}) };
