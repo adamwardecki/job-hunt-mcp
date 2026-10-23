@@ -16,6 +16,8 @@
     "lint": "npm --prefix dev exec --no -- biome check .",
     "lint:fix": "npm --prefix dev exec --no -- biome check --write .",
     "tracker": "node --no-warnings plugin/servers/tracker/src/index.ts",
-    "build:mcpb": "node --no-warnings registry/pack.ts"
+    "build:mcpb": "node --no-warnings registry/pack.ts",
+    "dev": "node --no-warnings dev/session.ts dev",
+    "prod": "node --no-warnings dev/session.ts prod"
   }
 }

@@ -1,6 +1,7 @@
 {
   "name": "job-tracker-dev",
   "private": true,
+  "type": "module",
   "license": "MIT",
   "description": "Development tools for the job-tracker plugin (type-checking, linting, and building and checking the MCPB bundle). Kept out of the plugin root so Claude Code does not install them for users.",
   "devDependencies": {
