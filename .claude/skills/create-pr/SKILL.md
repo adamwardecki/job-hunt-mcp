@@ -26,17 +26,17 @@ Never `npm install` or `npm ci` in the repo root. Why: a root lockfile makes Cla
 
 Look at `git diff --stat origin/main...` (plus uncommitted work) and run whatever applies:
 
-- **Tool name, description or schema** (`servers/tracker/src/tools.ts`): `servers/tracker/test/fixtures/tools-list.json` and `docs/tracker-api.md` are updated in the same PR. Why: clients cache `tools/list`.
-- **Plugin manifest, skills, commands, agents or hooks**: `claude plugin validate --strict .` passes.
-- **Hooks or skill wiring**: the matching change is in `hooks/hermes.ts` / `__init__.py`, with a test on both sides (Hermes parity).
+- **Tool name, description or schema** (`plugin/servers/tracker/src/tools.ts`): `tests/tracker/fixtures/tools-list.json` and `docs/tracker-api.md` are updated in the same PR. Why: clients cache `tools/list`.
+- **Plugin manifest, skills, commands, agents or hooks**: `claude plugin validate --strict ./plugin` and `claude plugin validate --strict .` (the marketplace) pass.
+- **Hooks or skill wiring**: the matching change is in `plugin/hooks/hermes.ts` / `plugin/__init__.py`, with a test on both sides (Hermes parity).
 - **Schema** (`db.ts`): a new function appended to `MIGRATIONS`, no shipped migration edited, and a test in `db.test.ts` that migrates an older database.
-- **Version bump**: `package.json`, `plugin.yaml`, `.claude-plugin/plugin.json`, `SERVER_INFO.version` in `mcp.ts` and `servers/tracker/package.json` all match.
+- **Version bump**: `package.json`, `plugin/package.json`, `plugin/plugin.yaml`, `plugin/.claude-plugin/plugin.json`, `SERVER_INFO.version` in `mcp.ts` and `plugin/servers/tracker/package.json` all match.
 - **Wording in skills, commands or agents**: `tests/runtime-docs.test.ts` asserts exact sentences; `npm test` covers it, but read the failure before rewording the test.
 - **Node APIs**: CI runs Node 22.18, the floor. If your local Node is newer (`node --version`) and the change uses a Node API, check it exists in 22.18.
 
-**Suites that skip locally.** The triage guard tests need Google Chrome and the installer tests need `pwsh`; each skips without it, but CI runs them. If the change touches `skills/triage-tracker/` or `scripts/install-node.*` and the tool is missing here, say so in the PR description and watch those jobs closely.
+**Suites that skip locally.** The triage guard tests need Google Chrome and skip without it, but CI runs them. If the change touches `plugin/skills/triage-tracker/` and Chrome is missing here, say so in the PR description and watch those jobs closely.
 
-**Gates.** If the diff touches send, submit, consent, personal-data or delete gates, or a matcher in `hooks/hooks.json`, stop and confirm with the user before opening the PR (AGENTS.md: ask first).
+**Gates.** If the diff touches send, submit, consent, personal-data or delete gates, or a matcher in `plugin/hooks/hooks.json`, stop and confirm with the user before opening the PR (AGENTS.md: ask first).
 
 **Personal data.** The repo is public. Scan the diff for real CVs, company names from the user's own search, recruiter mail, `.db` files or secrets. Fixtures use made-up companies and people.
 

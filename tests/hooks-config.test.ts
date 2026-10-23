@@ -8,7 +8,7 @@ type Hook = { type: string; command: string; timeout: number; onFailure?: string
 type HookGroup = { matcher?: string; hooks: Hook[] };
 type HookConfig = { hooks: { PreToolUse: HookGroup[]; UserPromptSubmit: HookGroup[]; Stop: HookGroup[] } };
 
-const config = JSON.parse(readFileSync(new URL('../hooks/hooks.json', import.meta.url), 'utf8')) as HookConfig;
+const config = JSON.parse(readFileSync(new URL('../plugin/hooks/hooks.json', import.meta.url), 'utf8')) as HookConfig;
 const { PreToolUse, UserPromptSubmit, Stop } = config.hooks;
 
 const TOOLS = {
@@ -27,7 +27,7 @@ const TOOLS = {
     'mcp__puppeteer__puppeteer_click',
   ],
   open: [
-    'mcp__plugin_j-hunt_tracker__find_company',
+    'mcp__plugin_job-tracker_tracker__find_company',
     'mcp__claude_ai_Google_Drive__search_files',
     'mcp__claude_ai_Slack__slack_read_channel',
     'mcp__claude_ai_Linear__list_issues',
@@ -84,7 +84,7 @@ test('only mail, LinkedIn and browser tools fail closed', () => {
 });
 
 test('the fail-closed set agrees with the Hermes adapter', () => {
-  const src = readFileSync(new URL('../__init__.py', import.meta.url), 'utf8');
+  const src = readFileSync(new URL('../plugin/__init__.py', import.meta.url), 'utf8');
   const m = /FAIL_CLOSED = re\.compile\(r"([^"]+)", re\.I\)/.exec(src);
   assert.ok(m?.[1], 'FAIL_CLOSED not found in __init__.py');
   const hermes = new RegExp(m[1], 'i');
@@ -102,7 +102,7 @@ test('the PreToolUse matchers list the same keywords as Hermes FAIL_CLOSED', () 
   // The matchers only vary the first letter's case (matchers take no regex flags), while Hermes is fully
   // case-insensitive; real MCP server names use those casings.
   const normalised = first.map((k) => k.replace(/\[(.)(.)\]/g, '$2').toLowerCase()).sort();
-  const src = readFileSync(new URL('../__init__.py', import.meta.url), 'utf8');
+  const src = readFileSync(new URL('../plugin/__init__.py', import.meta.url), 'utf8');
   const m = /FAIL_CLOSED = re\.compile\(r"([^"]+)", re\.I\)/.exec(src);
   assert.ok(m?.[1], 'FAIL_CLOSED not found in __init__.py');
   assert.deepEqual(normalised, m[1].split('|').sort());

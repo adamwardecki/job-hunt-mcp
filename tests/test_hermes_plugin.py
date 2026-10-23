@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1] / "plugin"
 
 
 def load_plugin():
@@ -33,8 +33,8 @@ class FakeCtx:
 
 class PluginTest(unittest.TestCase):
     def setUp(self):
-        os.environ["JOB_HUNT_HOME"] = tempfile.mkdtemp(prefix="jh-py-")
-        os.environ.pop("JOB_HUNT_NODE", None)
+        os.environ["JOB_TRACKER_HOME"] = tempfile.mkdtemp(prefix="jh-py-")
+        os.environ.pop("JOB_TRACKER_NODE", None)
         self.ctx = FakeCtx()
         load_plugin().register(self.ctx)
 
@@ -51,11 +51,11 @@ class PluginTest(unittest.TestCase):
         self.assertEqual(set(self.ctx.hooks), {"pre_tool_call", "post_tool_call", "pre_llm_call", "post_llm_call"})
 
     def test_unrelated_tools_never_spawn_node(self):
-        os.environ["JOB_HUNT_NODE"] = "/nonexistent/node"
+        os.environ["JOB_TRACKER_NODE"] = "/nonexistent/node"
         self.assertIsNone(self.ctx.hooks["pre_tool_call"](tool_name="terminal", args={"command": "ls"}, session_id="s"))
 
     def test_fails_closed_for_browser_and_mail_only_when_node_is_missing(self):
-        os.environ["JOB_HUNT_NODE"] = "/nonexistent/node"
+        os.environ["JOB_TRACKER_NODE"] = "/nonexistent/node"
         self.assertEqual(self.ctx.hooks["pre_tool_call"](tool_name="browser_click", args={"ref": "@e1"}, session_id="s")["action"], "block")
         self.assertEqual(self.ctx.hooks["pre_tool_call"](tool_name="connectors__gmail__send_email", args={}, session_id="s")["action"], "block")
         self.assertIsNone(self.ctx.hooks["pre_tool_call"](tool_name="mcp__github__list_issues", args={}, session_id="s"))
@@ -66,7 +66,7 @@ class PluginTest(unittest.TestCase):
         self.assertIn("drafts", r["message"])
 
     def test_unfinished_sweep_injects_a_nudge(self):
-        self.ctx.hooks["pre_llm_call"](session_id="s3", user_message="/j-hunt:sweep", parent_session_id="")
+        self.ctx.hooks["pre_llm_call"](session_id="s3", user_message="/job-tracker:sweep", parent_session_id="")
         self.ctx.hooks["post_llm_call"](session_id="s3")
         self.assertEqual(len(self.ctx.injected), 1)
         self.assertIn("sweep is not finished", self.ctx.injected[0])

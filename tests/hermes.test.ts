@@ -2,20 +2,20 @@
 
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { beforeEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { browserAction, isBrowser, isSendTool, resolveLabel, splitToolName } from '../hooks/lib/classify.ts';
-import { normalizeToolName } from '../hooks/lib/hosts/hermes.ts';
-import type { ToolStep } from '../hooks/lib/types.ts';
+import { browserAction, isBrowser, isSendTool, resolveLabel, splitToolName } from '../plugin/hooks/lib/classify.ts';
+import { normalizeToolName } from '../plugin/hooks/lib/hosts/hermes.ts';
+import type { ToolStep } from '../plugin/hooks/lib/types.ts';
 
 let home: string;
 beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), 'jh-hermes-'));
-  process.env.JOB_HUNT_HOME = home;
-  delete process.env.JOB_HUNT_DB;
+  process.env.JOB_TRACKER_HOME = home;
+  delete process.env.JOB_TRACKER_DB;
 });
 
 test('Hermes tool names map onto the mcp__server__tool shape the gates classify', () => {
@@ -46,8 +46,8 @@ test('Hermes browser actions and @refs are understood', () => {
 
 // --- Steps log ---
 
-import { appendStep, stepsPath, unwrapSkillInvocation, userText } from '../hooks/lib/hosts/hermes.ts';
-import { currentUrl, readTranscript, toolSteps } from '../hooks/lib/transcript.ts';
+import { appendStep, stepsPath, unwrapSkillInvocation, userText } from '../plugin/hooks/lib/hosts/hermes.ts';
+import { currentUrl, readTranscript, toolSteps } from '../plugin/hooks/lib/transcript.ts';
 
 const FIXTURE = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'hermes-skill-invocation.txt'), 'utf8');
 
@@ -68,22 +68,22 @@ test('post_tool_call steps are stored in Claude transcript shape with readable r
 });
 
 test('slash-skill messages unwrap to the typed command; only the user instruction counts', () => {
-  assert.deepEqual(unwrapSkillInvocation('/j-hunt:approve 12'), { text: '/j-hunt:approve 12', skill: null, args: null });
-  assert.deepEqual(unwrapSkillInvocation(FIXTURE), { text: '/j-hunt:approve 12', skill: 'j-hunt:approve', args: '12' });
+  assert.deepEqual(unwrapSkillInvocation('/job-tracker:approve 12'), { text: '/job-tracker:approve 12', skill: null, args: null });
+  assert.deepEqual(unwrapSkillInvocation(FIXTURE), { text: '/job-tracker:approve 12', skill: 'job-tracker:approve', args: '12' });
   assert.equal(userText([{ type: 'text', text: 'hello' }, { type: 'image_url', image_url: {} }]), 'hello');
-  assert.equal(userText(FIXTURE), '/j-hunt:approve 12');
+  assert.equal(userText(FIXTURE), '/job-tracker:approve 12');
 });
 
 // --- hooks/hermes.ts e2e ---
 
-import { openDb } from '../servers/tracker/src/db.ts';
-import { Tracker } from '../servers/tracker/src/tracker.ts';
+import { openDb } from '../plugin/servers/tracker/src/db.ts';
+import { Tracker } from '../plugin/servers/tracker/src/tracker.ts';
 
-const HOOK = join(dirname(fileURLToPath(import.meta.url)), '..', 'hooks', 'hermes.ts');
+const HOOK = join(dirname(fileURLToPath(import.meta.url)), '..', 'plugin', 'hooks', 'hermes.ts');
 const TRACKER = 'mcp__job_hunt_tracker__';
 
 function hermes(event: string, payload: Record<string, unknown>) {
-  const r = spawnSync(process.execPath, ['--no-warnings', HOOK, event], { input: JSON.stringify(payload), env: { ...process.env, JOB_HUNT_HOME: home }, encoding: 'utf8' });
+  const r = spawnSync(process.execPath, ['--no-warnings', HOOK, event], { input: JSON.stringify(payload), env: { ...process.env, JOB_TRACKER_HOME: home }, encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
   return r.stdout.trim() ? JSON.parse(r.stdout) : null;
 }
@@ -103,7 +103,7 @@ test('hermes.ts: connector send tools are blocked, unrelated tools pass silently
   assert.equal(hermes('pre_tool_call', { session_id: 'h1', tool_name: 'mcp__github__list_issues', args: {} }), null);
 });
 
-test('hermes.ts: a submit click needs the user approval typed as /j-hunt:approve', () => {
+test('hermes.ts: a submit click needs the user approval typed as /job-tracker:approve', () => {
   const role = verifiedRole();
   const sid = 'h2';
   hermes('pre_tool_call', { session_id: sid, tool_name: `${TRACKER}open_items`, args: {} }); // marks the session
@@ -120,7 +120,7 @@ test('hermes.ts: a submit click needs the user approval typed as /j-hunt:approve
 
 test('hermes.ts: a subagent turn cannot grant approval', () => {
   const role = verifiedRole();
-  const out = hermes('pre_llm_call', { session_id: 'child', parent_session_id: 'h3', user_message: `/j-hunt:approve ${role.id}` });
+  const out = hermes('pre_llm_call', { session_id: 'child', parent_session_id: 'h3', user_message: `/job-tracker:approve ${role.id}` });
   assert.equal(out, null);
   assert.match(hermes('pre_tool_call', { session_id: 'child', tool_name: 'browser_console', args: { expression: "document.querySelector('form').requestSubmit()" } }) ?.message ?? 'not-marked', /not-marked|approval/);
 });
@@ -135,7 +135,7 @@ test('hermes.ts: the browser cannot open or work the board', () => {
 
 test('hermes.ts: an unfinished sweep queues a nudge that the next turn receives', () => {
   const sid = 'h4';
-  hermes('pre_llm_call', { session_id: sid, user_message: '/j-hunt:sweep' });
+  hermes('pre_llm_call', { session_id: sid, user_message: '/job-tracker:sweep' });
   hermes('post_tool_call', { session_id: sid, tool_call_id: 'u1', tool_name: `${TRACKER}upsert_role`, args: { company: 'A', title: 'B' }, result: JSON.stringify({ role: { id: 1, title: 'B' }, created: true }) });
   const stop = hermes('post_llm_call', { session_id: sid });
   assert.equal(stop.action, 'continue');
@@ -145,23 +145,70 @@ test('hermes.ts: an unfinished sweep queues a nudge that the next turn receives'
   assert.equal(hermes('pre_llm_call', { session_id: sid, user_message: 'ok' }), null, 'the nudge is delivered once');
 });
 
-test('plugin.yaml, plugin.json and package.json carry the same version', () => {
-  const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-  const yaml = readFileSync(join(root, 'plugin.yaml'), 'utf8').match(/^version:\s*"?([^"\n]+)"?/m)?.[1];
-  const claude = JSON.parse(readFileSync(join(root, '.claude-plugin', 'plugin.json'), 'utf8')).version;
-  const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
+const REPO = join(dirname(fileURLToPath(import.meta.url)), '..');
+const PLUGIN = join(REPO, 'plugin');
+
+test('plugin.yaml, plugin.json and both package.json files carry the same version', () => {
+  const yaml = readFileSync(join(PLUGIN, 'plugin.yaml'), 'utf8').match(/^version:\s*"?([^"\n]+)"?/m)?.[1];
+  const claude = JSON.parse(readFileSync(join(PLUGIN, '.claude-plugin', 'plugin.json'), 'utf8')).version;
   assert.equal(yaml, claude);
-  assert.equal(pkg, claude);
+  for (const dir of [REPO, PLUGIN]) assert.equal(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).version, claude, join(dir, 'package.json'));
+});
+
+test('the MCP Registry entry and its MCPB manifest carry the plugin version', () => {
+  // The registry entry points at the release asset by URL, so a version bump that misses it would list a
+  // bundle that does not exist yet (or an old one).
+  const version = JSON.parse(readFileSync(join(PLUGIN, '.claude-plugin', 'plugin.json'), 'utf8')).version;
+  const server = JSON.parse(readFileSync(join(REPO, 'server.json'), 'utf8'));
+  const manifest = JSON.parse(readFileSync(join(REPO, 'registry', 'manifest.json'), 'utf8'));
+  assert.equal(server.version, version);
+  assert.equal(manifest.version, version);
+  assert.equal(server.packages.length, 1);
+  assert.equal(server.packages[0].version, version);
+  assert.equal(server.packages[0].identifier, `https://github.com/adamwardecki/job-tracker-mcp/releases/download/v${version}/job-tracker-${version}.mcpb`);
+  assert.ok(server.description.length <= 100, 'the registry caps descriptions at 100 characters');
+});
+
+test('the MCPB launch config takes no user_config placeholders', () => {
+  // MCPB hosts (Claude Desktop 3.1623, @anthropic-ai/mcpb 2.x) substitute in one pass: a user_config default of
+  // ${HOME}/.job-tracker arrives literally, and an unset key with no default leaves ${user_config.x} itself. Either
+  // way JOB_TRACKER_HOME becomes a relative path and the database lands wherever the host starts the server.
+  const manifest = JSON.parse(readFileSync(join(REPO, 'registry', 'manifest.json'), 'utf8'));
+  assert.doesNotMatch(JSON.stringify(manifest.server.mcp_config), /\$\{user_config\./);
+  assert.equal(manifest.user_config, undefined);
+});
+
+test('the MCPB launch config passes the entry point as the only argument', () => {
+  // Claude Desktop's built-in Node does not run `node <args>`: its nodeHost.js imports the first argument as the
+  // server and hands it the rest. A Node flag first (--no-warnings) became the module to import, and 0.3.1 exited
+  // before answering initialize.
+  const manifest = JSON.parse(readFileSync(join(REPO, 'registry', 'manifest.json'), 'utf8'));
+  assert.equal(manifest.server.mcp_config.command, 'node');
+  assert.deepEqual(manifest.server.mcp_config.args, [`\${__dirname}/${manifest.server.entry_point}`]);
 });
 
 test('the plugin root has no lockfile, so Claude Code installs nothing for users', () => {
-  // Claude Code installs the packages a lockfile next to the root package.json lists, on every install and
+  // Claude Code installs the packages a lockfile next to the plugin's package.json lists, on every install and
   // update. The plugin needs none at runtime; the dev tools and their lockfile live in dev/.
-  const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-  for (const lock of ['package-lock.json', 'npm-shrinkwrap.json', 'bun.lock', 'bun.lockb']) {
-    assert.equal(existsSync(join(root, lock)), false, `${lock} in the plugin root`);
+  for (const dir of [REPO, PLUGIN]) {
+    for (const lock of ['package-lock.json', 'npm-shrinkwrap.json', 'bun.lock', 'bun.lockb']) {
+      assert.equal(existsSync(join(dir, lock)), false, `${lock} in ${dir}`);
+    }
+    const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
+    assert.equal(pkg.dependencies, undefined, 'no runtime dependencies');
+    assert.equal(pkg.devDependencies, undefined, 'dev dependencies belong in dev/package.json');
   }
-  const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-  assert.equal(pkg.dependencies, undefined, 'no runtime dependencies');
-  assert.equal(pkg.devDependencies, undefined, 'dev dependencies belong in dev/package.json');
+});
+
+test('the marketplace ships plugin/ only, with no tests or dev files in it', () => {
+  // The directory scanner reads every shipped file; tests and dev tooling stay outside plugin/ so they are not
+  // part of the plugin users install.
+  const market = JSON.parse(readFileSync(join(REPO, '.claude-plugin', 'marketplace.json'), 'utf8'));
+  assert.deepEqual(
+    market.plugins.map((p: { source: string }) => p.source),
+    ['./plugin'],
+  );
+  const shipped = readdirSync(PLUGIN, { recursive: true, encoding: 'utf8' });
+  const stray = shipped.filter((f) => /(^|\/)(test|tests|fixtures|dev|node_modules)(\/|$)|\.test\.ts$|(^|\/)test_[^/]*\.py$/.test(f));
+  assert.deepEqual(stray, []);
 });

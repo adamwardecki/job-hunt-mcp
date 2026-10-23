@@ -45,8 +45,8 @@ Consequences:
 |---|---|
 | Daily run | **Local** scheduled task on the user's machine (Claude Desktop / Claude Code, or a Hermes cron job), weekdays, morning. Runs while the machine is awake and the app is open. |
 | Browser | Detected at run start. Needed for logged-in sources, some employer pages and every form. When it is not connected, browser work is queued with `blocked_by: browser`. |
-| State (tracker) | **Local** SQLite behind a stdio MCP server in `~/.job-hunt` (owner-only permissions). No remote mode. |
-| Applying, logged-in boards, tracker triage | Interactive sessions (`/j-hunt:apply`, `/j-hunt:triage`) when the user is present and the desktop app is open. |
+| State (tracker) | **Local** SQLite behind a stdio MCP server in `~/.job-tracker` (owner-only permissions). No remote mode. |
+| Applying, logged-in boards, tracker triage | Interactive sessions (`/job-tracker:apply`, `/job-tracker:triage`) when the user is present and the desktop app is open. |
 | User files (profile, rules, stories) | Stored in the tracker DB. |
 
 > **Changed 2026-10-17** from the original cloud-first design: the daily run needs the browser, and the
@@ -63,15 +63,15 @@ job-hunt/
 ├── .claude-plugin/plugin.json
 ├── .mcp.json                     # tracker MCP server (local stdio)
 ├── commands/
-│   ├── setup.md                  # /j-hunt:setup
-│   ├── sweep.md                  # /j-hunt:sweep  (what the scheduled task runs)
-│   ├── apply.md                  # /j-hunt:apply [role-id|url]
-│   ├── triage.md                 # /j-hunt:triage <source>
-│   ├── prep.md                   # /j-hunt:prep <company>
-│   ├── status.md                 # /j-hunt:status
-│   ├── board.md                  # /j-hunt:board  (local kanban board)
-│   ├── cover-letter.md           # /j-hunt:cover-letter <role-id> [--pdf]
-│   └── correct.md                # /j-hunt:correct  (turn a user override into a rule)
+│   ├── setup.md                  # /job-tracker:setup
+│   ├── sweep.md                  # /job-tracker:sweep  (what the scheduled task runs)
+│   ├── apply.md                  # /job-tracker:apply [role-id|url]
+│   ├── triage.md                 # /job-tracker:triage <source>
+│   ├── prep.md                   # /job-tracker:prep <company>
+│   ├── status.md                 # /job-tracker:status
+│   ├── board.md                  # /job-tracker:board  (local kanban board)
+│   ├── cover-letter.md           # /job-tracker:cover-letter <role-id> [--pdf]
+│   └── correct.md                # /job-tracker:correct  (turn a user override into a rule)
 ├── skills/
 │   ├── setup/SKILL.md
 │   ├── source-roles/SKILL.md     # per-source adapters
@@ -222,7 +222,7 @@ User-owned documents (also stored via the tracker or project knowledge): `profil
 
 ---
 
-## 7. Setup flow (`/j-hunt:setup`)
+## 7. Setup flow (`/job-tracker:setup`)
 
 A **skill** drives the conversation. MCP tools persist and validate. Use multiple-choice questions wherever possible. Every step is resumable, and `setup_status()` shows progress.
 
@@ -235,14 +235,14 @@ A **skill** drives the conversation. MCP tools persist and validate. Use multipl
 7. **Browser check.** Detect Claude in Chrome and the built-in browser. If neither is found, show install steps. If found, open a test page and check which job sites are logged in (Wellfound, LinkedIn, YC Work at a Startup, trackers). Record this as a capability; it does not block setup.
 8. **Sources.** Pick from a catalogue (§8.1) and record which need login.
 9. **Autonomy.** Confirm the defaults in `autonomy` (conservative).
-10. **Schedule.** Create the local daily task (`/j-hunt:sweep`) with the host's local scheduling (a Claude Desktop / Claude Code local scheduled task, or a Hermes cron job). Ask when the machine is usually on with Claude open and schedule inside that window. State plainly that it only runs while the machine is awake and the app is open.
-11. **Calibration run.** Run `/j-hunt:sweep` limited to 5 results and show them. Each "no, because…" becomes a rule via `add_rule` with the reason and example.
+10. **Schedule.** Create the local daily task (`/job-tracker:sweep`) with the host's local scheduling (a Claude Desktop / Claude Code local scheduled task, or a Hermes cron job). Ask when the machine is usually on with Claude open and schedule inside that window. State plainly that it only runs while the machine is awake and the app is open.
+11. **Calibration run.** Run `/job-tracker:sweep` limited to 5 results and show them. Each "no, because…" becomes a rule via `add_rule` with the reason and example.
 
 Exit criterion: `setup_status()` all green, or every amber item has a recorded user decision.
 
 ---
 
-## 8. Daily run (`/j-hunt:sweep`)
+## 8. Daily run (`/job-tracker:sweep`)
 
 1. `setup_status()` and **capability detection**. Record what is available.
 2. **Inbox and calendar** (connectors): classify recruiter mail as reply, rejection, invite, booking link, acknowledgement, or holding note.
@@ -312,7 +312,7 @@ Every claim of a draft, submission or booking in the report must be backed by a 
 
 ---
 
-## 10. Writing (`write-note`, `/j-hunt:cover-letter`)
+## 10. Writing (`write-note`, `/job-tracker:cover-letter`)
 
 - Motivation first: why *this* company or role, connected to one or two concrete experiences, then location and availability. 150–200 words. Never echo the job description or restate the CV.
 - **Never volunteer gaps** in anything sent in the user's name. Direct questions get honest answers. Multi-select skill boxes: tick only what the CV supports. Gaps go in the role's internal notes.
@@ -320,7 +320,7 @@ Every claim of a draft, submission or booking in the report must be backed by a 
 - Run the humanizer pass on all outbound prose: no em/en dashes, no "not X but Y", no fake-candid openers, no forced triads, plain verbs.
 - Respect employer AI policies. If the form says "do not use AI", leave those fields for the user and put raw material in the notes.
 - Check `maxLength` on every free-text field **before drafting**. Long-form goes in the cover-letter field when one exists.
-- `/j-hunt:cover-letter --pdf`: one A4 page, standard letter layout (name and contact header, rule, recipient and date, role title line without "Re:", salutation, body, "Kind regards"). Render, then verify visually before handing over.
+- `/job-tracker:cover-letter --pdf`: one A4 page, standard letter layout (name and contact header, rule, recipient and date, role title line without "Re:", salutation, body, "Kind regards"). Render, then verify visually before handing over.
 
 ---
 
@@ -334,7 +334,7 @@ Every claim of a draft, submission or booking in the report must be backed by a 
 | PreToolUse: browser tools on the local board (`127.0.0.1`/`localhost` with the board's token or port), any session | Block navigating to it and acting on its page; reading is allowed. Board moves are recorded as the user's. |
 | PreToolUse: form_input into fields labelled passport/nationality/age/marital/gender/ID | Block; surface to the user. |
 | PreToolUse: consent checkboxes/radios (recording, marketing, talent pool) | Default to the privacy-preserving option; never tick "yes" without the user. |
-| Stop | Refuse to finish a `/j-hunt:sweep` without `record` events for every touched role and a rendered report. |
+| Stop | Refuse to finish a `/job-tracker:sweep` without `record` events for every touched role and a rendered report. |
 
 The **auditor agent** runs after each sweep and checks: no excluded industry touched, no send tools called, every drop has evidence, every "applied" has captured confirmation text, and no outbound prose has dashes or gap statements.
 
@@ -384,7 +384,7 @@ join.com, Workday, Dex, and anything behind sign-in: prepare everything, leave t
 
 ## 14. Acceptance criteria
 
-1. Fresh install → `/j-hunt:setup` completes with only connectors (no browser) and schedules a daily run.
+1. Fresh install → `/job-tracker:setup` completes with only connectors (no browser) and schedules a daily run.
 2. A daily run with no browser connected completes, and the report says which capabilities were missing and what was queued because of it.
 3. A role already applied to under an alias ("Flex Living" vs "The Flex") is deduped.
 4. A role tagged "Remote" on LinkedIn whose ATS says "Hybrid (8 days/month)" is dropped with the ATS quote as evidence.

@@ -1,8 +1,8 @@
-[IMPORTANT: The user has invoked the "j-hunt:approve" skill, indicating they want you to follow its instructions. The full skill content is loaded below.]
+[IMPORTANT: The user has invoked the "job-tracker:approve" skill, indicating they want you to follow its instructions. The full skill content is loaded below.]
 
-The user typed `/j-hunt:approve $ARGUMENTS`.
+The user typed `/job-tracker:approve $ARGUMENTS`.
 
-A prompt hook has already processed this message. Example from the docs: /j-hunt:approve 999
+A prompt hook has already processed this message. Example from the docs: /job-tracker:approve 999
 
 [Skill directory: /x/commands]
 
