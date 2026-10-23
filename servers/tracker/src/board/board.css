@@ -68,6 +68,8 @@ h1 { display: inline-flex; align-items: center; gap: 9px; margin: 0; font-size: 
 .card.draggable { cursor: grab; touch-action: none; user-select: none; }
 .card.draggable:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
 .card.dragging { opacity: 0.35; }
+/* Dropped here, waiting for the evidence the move needs. */
+.card.pending { border-color: var(--accent); border-style: dashed; }
 /* Where the card will land in the column under the pointer. */
 .slot { border: 1px dashed var(--accent); border-radius: var(--radius); background: color-mix(in srgb, var(--accent) 8%, transparent); }
 /* The dragged copy is lifted (opaque, tilted, shadowed) so it never reads as one card stacked on another. */
@@ -79,6 +81,7 @@ h1 { display: inline-flex; align-items: center; gap: 9px; margin: 0; font-size: 
 .meta { margin-top: 2px; color: var(--muted); font-size: 12px; }
 .needs { margin-top: 8px; padding: 5px 8px; border-left: 2px solid var(--warm); background: color-mix(in srgb, var(--warm) 25%, transparent); border-radius: 0 3px 3px 0; font-size: 12px; }
 .actions { display: flex; gap: 10px; align-items: center; margin-top: 9px; font-size: 12px; }
+.card.pending .actions { display: none; }
 
 form.move, form.note { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12px; user-select: text; }
 .form-title { font-weight: 600; color: var(--ink); }

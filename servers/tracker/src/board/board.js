@@ -27,6 +27,17 @@ let dragging = false;
 const isBusy = () => dragging || document.querySelector('#board form') !== null;
 // The card just moved by a drop offers "Add a reason" until the user adds one, dismisses it or moves another.
 let justMoved = null;
+// A card dropped on a column that needs evidence waits there, with its form, until Move or Cancel.
+let pending = null;
+
+// Closes any open form; a pending card goes back where it came from.
+function closeForms() {
+  document.querySelector('#board form')?.remove();
+  if (!pending) return;
+  pending.node.classList.remove('pending');
+  if (pending.parent.isConnected) pending.parent.insertBefore(pending.node, pending.next);
+  pending = null;
+}
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -167,7 +178,10 @@ function card(role) {
 
 // Pointer events cover mouse and touch. The card follows the pointer as a fixed "ghost"; only legal columns light up.
 function startDrag(e, node, role) {
-  if (!e.isPrimary || isBusy() || e.button !== 0 || e.target.closest('a, button, input, textarea, select, form')) return;
+  if (!e.isPrimary || dragging || e.button !== 0 || e.target.closest('a, button, input, textarea, select, form')) return;
+  if (pending?.node === node) return;
+  // A new drag abandons an open form rather than being silently ignored.
+  closeForms();
   const allowed = new Set(targets(role));
   const rect = node.getBoundingClientRect();
   const dx = e.clientX - rect.left;
@@ -298,6 +312,7 @@ function showError(node, message) {
 
 // A drop on a target that needs nothing else moves at once; the server records the default reason.
 async function quickMove(node, role, to) {
+  closeForms();
   justMoved = null;
   try {
     await api('/api/move', { role_id: role.id, to });
@@ -317,7 +332,7 @@ function addReasonButton(node, role) {
 
 // The user's own reason for the move just made, saved as a note next to the default one.
 function openNote(node, role, opener) {
-  document.querySelector('#board form')?.remove();
+  closeForms();
   const form = el('form', 'note');
   const reason = el('input');
   reason.name = 'reason';
@@ -359,7 +374,8 @@ function openNote(node, role, opener) {
 // optional: left empty, the server records the board's default. The card moves only after the server accepts.
 function openForm(node, role, to, opener) {
   justMoved = null;
-  document.querySelector('#board form')?.remove();
+  closeForms();
+  if (to) placePending(node, to);
   const form = el('form', 'move');
   const pick = el('select');
   pick.name = 'to';
@@ -380,7 +396,7 @@ function openForm(node, role, to, opener) {
   pick.addEventListener('change', draw);
   draw();
   cancel.addEventListener('click', () => {
-    form.remove();
+    closeForms();
     if (opener?.isConnected) opener.focus();
   });
   form.addEventListener('submit', async (ev) => {
@@ -389,6 +405,7 @@ function openForm(node, role, to, opener) {
     error.textContent = '';
     try {
       await api('/api/move', { role_id: role.id, to: pick.value, reason: reason.value.trim() || undefined, ...valuesFor(pick.value, extra) });
+      pending = null; // the redraw puts every card where the server says it is
       form.remove();
       await refresh();
     } catch (err) {
@@ -400,7 +417,18 @@ function openForm(node, role, to, opener) {
   form.append(to ? el('div', 'form-title', `Move to ${LABELS[to]}`) : labelled('Move to', pick));
   form.append(extra, labelled('Reason (optional)', reason), error, buttons);
   node.append(form);
-  (form.querySelector('.extra textarea, .extra select') ?? (to ? reason : pick)).focus();
+  node.scrollIntoView({ block: 'nearest' });
+  (form.querySelector('.extra textarea, .extra select') ?? (to ? reason : pick)).focus({ preventScroll: true });
+}
+
+// Shows the dropped card at the top of the column it was dropped on, unfolding that column if needed.
+function placePending(node, to) {
+  const col = boardEl.querySelector(`.col[data-status="${to}"]`);
+  if (!col) return;
+  if (col.classList.contains('folded')) col.querySelector('button.fold')?.click();
+  pending = { node, parent: node.parentElement, next: node.nextSibling };
+  node.classList.add('pending');
+  col.querySelector('.cards').prepend(node);
 }
 
 if (!token) {
