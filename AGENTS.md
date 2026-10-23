@@ -20,6 +20,8 @@ npm run lint           # biome check (lint + import order); CI runs `biome ci`
 npm run lint:fix       # apply safe fixes
 npm run tracker -- --db /tmp/t.db   # run the MCP server on stdio against a scratch DB
 npm run build:mcpb     # build the MCPB bundle into dist/ and record its hash in server.json
+npm run dev            # Claude Code with this worktree's plugin/ on a fresh copy of the real DB (~/.job-tracker-dev)
+npm run prod           # back up the real DB, update the released plugin, start Claude Code on it
 ```
 
 Set up with `npm run setup`, never `npm install` or `npm ci` in the repo root. The root `package.json`
@@ -49,7 +51,7 @@ them on Ubuntu and macOS with Node 22.18 and 24.
 | `tests/` | repo-level tests (hooks, Hermes, installers, docs); `tests/tracker/` for the server |
 | `docs/tracker-api.md` | public reference for the tracker tools |
 | `site/` | static landing page, deployed by `pages.yml`; not linted |
-| `dev/` | dev tools only (`package.json`, lockfile, `node_modules`); never shipped as runtime dependencies |
+| `dev/` | dev tools only (`package.json`, lockfile, `node_modules`, and `session.ts` behind `npm run dev` / `npm run prod`); never shipped as runtime dependencies |
 
 ## TypeScript rules (Node type stripping, no build)
 
