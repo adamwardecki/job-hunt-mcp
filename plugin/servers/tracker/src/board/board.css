@@ -17,7 +17,6 @@
   --mark: #356347;
   --mark-ink: #f6f3eb;
   --lift: 0 12px 30px #4c38201f;
-  --serif: Georgia, "Times New Roman", serif;
   --radius: 5px;
   font: 14px/1.45 "Geist", system-ui, sans-serif;
 }
@@ -44,10 +43,11 @@
 html, body { height: 100%; }
 body { display: flex; flex-direction: column; margin: 0; padding: 20px 24px 16px; background: var(--paper); color: var(--ink); -webkit-font-smoothing: antialiased; }
 header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
-h1 { display: inline-flex; align-items: center; gap: 9px; margin: 0; font-size: 20px; font-weight: 650; letter-spacing: -0.04em; }
-/* The site's "jt" mark, scaled down. */
-.brand-mark { display: inline-flex; width: 27px; height: 29px; padding-left: 5px; overflow: hidden; background: var(--mark); color: var(--mark-ink); font: italic 25px/1 var(--serif); letter-spacing: -5px; }
-.brand-mark span { transform: translateY(4px); }
+h1 { display: inline-flex; align-items: center; gap: 9px; margin: 0; font-size: 21px; font-weight: 650; letter-spacing: -1px; }
+/* The site's "jt" mark at its small-screen size (site/assets/style.css .brand-mark), weight included:
+   the site's mark inherits the header's 650, so it is Georgia bold italic. */
+.brand-mark { flex: none; display: inline-flex; width: 29px; height: 31px; padding-left: 6px; overflow: hidden; background: var(--mark); color: var(--mark-ink); font: italic 650 29px/1 Georgia, "Times New Roman", serif; letter-spacing: -3px; }
+.brand-mark span { transform: translateY(5px); }
 #pipeline, #status { margin: 0; color: var(--muted); font-size: 13px; }
 #status:not(:empty) { color: var(--ink); padding: 2px 8px; border-left: 2px solid var(--warm); }
 #board { flex: 1; min-height: 0; display: flex; gap: 12px; align-items: stretch; overflow-x: auto; }
@@ -76,8 +76,8 @@ h1 { display: inline-flex; align-items: center; gap: 9px; margin: 0; font-size: 
 .ghost { position: fixed; z-index: 10; pointer-events: none; cursor: grabbing; border-color: var(--accent); box-shadow: var(--lift); transform: rotate(-2deg); }
 .head { display: flex; align-items: center; gap: 6px; }
 .company { font-weight: 600; letter-spacing: -0.01em; }
-.posting { flex: none; display: inline-flex; color: var(--muted); }
-.posting:hover { color: var(--accent); }
+.posting { flex: none; display: inline-flex; color: var(--accent); }
+.posting:hover { color: var(--accent-hover); }
 .posting svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .title { margin-top: 1px; }
 .pay { margin-top: 3px; font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
