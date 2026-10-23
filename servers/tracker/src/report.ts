@@ -49,6 +49,8 @@ export function renderReport(t: Tracker, { date, run_id, headline }: ArgsFor<'re
 
   // Only what the plugin submitted; an application the user recorded (e.g. on the board, actor 'user') is theirs.
   const applied = eventsIn(t, scope, "e.status = 'applied' AND e.actor = 'pipeline'");
+  // Only the board can record applied without confirmation text. Listing these lets the user spot one they didn't make.
+  const selfReported = eventsIn(t, scope, "e.status = 'applied' AND e.actor = 'user' AND (e.evidence IS NULL OR trim(e.evidence) = '')");
   const replies = eventsIn(t, scope, "e.actor = 'employer'");
   const dropped = eventsIn(t, scope, "e.status = 'dropped' AND e.actor != 'import'");
   const assessed = new Set(eventsIn(t, scope, "e.status IN ('verified', 'scored', 'dropped') AND e.actor != 'import'").map((e) => e.role_id)).size;
@@ -91,10 +93,11 @@ export function renderReport(t: Tracker, { date, run_id, headline }: ArgsFor<'re
     out.push('');
   }
 
-  // 3. Applied today (only with captured confirmation)
-  if (applied.length) {
+  // 3. Applied today (only with captured confirmation), then what the user marked applied on the board
+  if (applied.length || selfReported.length) {
     out.push('## Applied', '');
     for (const e of applied) out.push(`- **${e.company}**, ${e.title}. Confirmation: "${String(e.evidence).replace(/\s+/g, ' ').slice(0, 140)}"`);
+    for (const e of selfReported) out.push(`- **${e.company}**, ${e.title}. Marked applied by you on the board, without confirmation text.`);
     out.push('');
   }
 
@@ -159,7 +162,8 @@ export function runAudit(t: Tracker, { date, run_id }: ArgsFor<'audit'>) {
   }
   for (const e of eventsIn(t, scope, "e.status = 'dropped' AND (e.evidence IS NULL OR trim(e.evidence) = '')"))
     failures.push({ check: 'drop_without_evidence', role_id: e.role_id, detail: `Drop of ${e.company} has no evidence.` });
-  for (const e of eventsIn(t, scope, "e.status = 'applied' AND (e.evidence IS NULL OR trim(e.evidence) = '')"))
+  // The board's self-reported applications are the user's word, listed in the report instead.
+  for (const e of eventsIn(t, scope, "e.status = 'applied' AND (e.evidence IS NULL OR trim(e.evidence) = '') AND e.actor != 'user'"))
     failures.push({ check: 'applied_without_confirmation', role_id: e.role_id, detail: `${e.company} marked applied without confirmation text.` });
   for (const e of eventsIn(t, scope, "e.status = 'verified'")) {
     const r = t.mustRole(e.role_id);

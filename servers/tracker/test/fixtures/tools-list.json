@@ -627,7 +627,7 @@
   },
   {
     "name": "open_board",
-    "description": "Start the local kanban board (or reuse the running one) and return its link. The user drags cards to move roles; moves follow transition's rules and are recorded as the user's. The board stops after 30 idle minutes.",
+    "description": "Start the local kanban board (or reuse the running one). With open: true it opens in the user's browser and the link is not returned; otherwise the link is returned. The user drags cards to move roles; moves follow transition's rules and are recorded as the user's. The board stops after 30 idle minutes.",
     "inputSchema": {
       "type": "object",
       "properties": {

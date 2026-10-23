@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { boardMove, boardNote, boardView } from '../src/board-api.ts';
 import { ToolError } from '../src/errors.ts';
+import type { RpcResponse } from '../src/mcp.ts';
+import { makeHandler } from '../src/mcp.ts';
+import { renderReport, runAudit } from '../src/report.ts';
 import { STATUSES } from '../src/tracker.ts';
 import { seeded } from './board-seed.ts';
 
@@ -80,4 +83,40 @@ test('a note adds the user\'s own reason without changing the status', () => {
   assert.throws(() => boardNote(s.t, { role_id: s.scored, reason: '   ' }), /reason is required/);
   assert.throws(() => boardNote(s.t, { role_id: s.scored, reason: 'x', status: 'offer' }), /Unknown field: status/);
   assert.throws(() => boardNote(s.t, { role_id: 9999, reason: 'x' }), /No role 9999/);
+});
+
+test('the user can mark a role applied on the board without confirmation text', () => {
+  const s = seeded();
+  boardMove(s.t, { role_id: s.queued, to: 'applied' });
+  const ev = lastEvent(s, s.queued);
+  assert.equal(ev?.status, 'applied');
+  assert.equal(ev?.actor, 'user');
+  assert.equal(ev?.evidence, null);
+});
+
+test('the model still cannot record applied without confirmation, even as the user', async () => {
+  const s = seeded();
+  const handle = makeHandler(s.t);
+  const call = async (name: string, args: Record<string, unknown>) => {
+    const res = (await handle({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name, arguments: args } })) as RpcResponse;
+    return res.result as { isError: boolean; content: [{ text: string }] };
+  };
+  const viaTransition = await call('transition', { role_id: s.queued, to: 'applied', reason: 'Submitted' });
+  assert.equal(viaTransition.isError, true);
+  assert.match(viaTransition.content[0].text, /applied needs evidence/);
+  const viaRecord = await call('record', { role_id: s.queued, status: 'applied', reason: 'User said so', actor: 'user' });
+  assert.equal(viaRecord.isError, true);
+  assert.match(viaRecord.content[0].text, /applied needs evidence/);
+  assert.equal(s.t.roleRow(s.queued)?.status, 'queued');
+  // Only the board's own path may skip it, and only as the user.
+  assert.throws(() => s.t.transition({ role_id: s.queued, to: 'applied', reason: 'r' }, { selfReported: true }), /self-reported/);
+});
+
+test('board-reported applications are listed in the report and do not fail the audit', () => {
+  const s = seeded();
+  boardMove(s.t, { role_id: s.queued, to: 'applied' });
+  const day = new Date().toISOString().slice(0, 10);
+  const report = renderReport(s.t, { date: day }).markdown;
+  assert.match(report, /Fabrikam\*\*, Staff Engineer\. Marked applied by you on the board, without confirmation text\./);
+  assert.ok(!runAudit(s.t, { date: day }).failures.some((f) => f.check === 'applied_without_confirmation'));
 });

@@ -8,7 +8,8 @@ const COLUMNS = ['scored', 'queued', 'applied', 'interviewing', 'offer', 'droppe
 const IN_PIPELINE = ['found', 'verified'];
 const FOLDED = new Set(['dropped', 'closed']);
 // Targets that need nothing but a reason move on drop; the board records a default reason.
-const QUICK = new Set(['queued', 'interviewing', 'offer']);
+// applied is the user's own word on the board, so it needs no confirmation text either.
+const QUICK = new Set(['queued', 'applied', 'interviewing', 'offer']);
 const OUTCOMES = ['rejected', 'withdrawn', 'role_closed'];
 const STOPPED = 'The board has stopped. Run /j-hunt:board in Claude to start it again.';
 const STALE = 'This link is out of date. Run /j-hunt:board in Claude for a fresh one.';
@@ -273,8 +274,7 @@ function fieldsFor(to) {
     const text = el('textarea');
     text.name = 'evidence';
     text.rows = 3;
-    text.required = true;
-    return [labelled('Confirmation text, pasted from the employer’s page or email. This only records the application; nothing is submitted.', text)];
+    return [labelled('Confirmation (optional), pasted from the employer’s page or email. This only records the application; nothing is submitted.', text)];
   }
   if (to === 'dropped') {
     const rule = el('select');

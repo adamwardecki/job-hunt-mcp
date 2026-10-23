@@ -35,13 +35,15 @@ async function board({ idleMs = 60_000, onIdle = () => {}, tracker }: { idleMs?:
       req.end(body);
     });
   const auth = { authorization: `Bearer ${TOKEN}` };
-  const json = { ...auth, 'content-type': 'application/json' };
+  // What the board page's fetch sends on a write.
+  const page = { ...auth, origin: `http://127.0.0.1:${port}`, 'sec-fetch-site': 'same-origin' };
+  const json = { ...page, 'content-type': 'application/json' };
   const close = () =>
     new Promise<void>((done) => {
       server.closeAllConnections();
       server.close(() => done());
     });
-  return { ...s, port, send, auth, json, close };
+  return { ...s, port, send, auth, page, json, close };
 }
 
 test('API calls without the token, or with a wrong one, get 401', async () => {
@@ -109,7 +111,7 @@ test('posts must be JSON, small and well formed', async () => {
   const b = await board();
   try {
     const body = JSON.stringify({ role_id: b.scored, to: 'queued', reason: 'r' });
-    assert.equal((await b.send('POST', '/api/move', { headers: { ...b.auth, 'content-type': 'text/plain' }, body })).status, 415);
+    assert.equal((await b.send('POST', '/api/move', { headers: { ...b.page, 'content-type': 'text/plain' }, body })).status, 415);
     assert.equal((await b.send('POST', '/api/move', { headers: b.json, body: '{oops' })).status, 400);
     assert.equal((await b.send('POST', '/api/move', { headers: b.json, body: JSON.stringify({ reason: 'x'.repeat(70 * 1024) }) })).status, 413);
   } finally {
@@ -148,8 +150,8 @@ test('the content type must be exactly application/json', async () => {
   const b = await board();
   try {
     const body = JSON.stringify({ role_id: b.scored, to: 'queued', reason: 'r' });
-    assert.equal((await b.send('POST', '/api/move', { headers: { ...b.auth, 'content-type': 'application/jsonp' }, body })).status, 415);
-    assert.equal((await b.send('POST', '/api/move', { headers: { ...b.auth, 'content-type': 'application/json; charset=utf-8' }, body })).status, 200);
+    assert.equal((await b.send('POST', '/api/move', { headers: { ...b.page, 'content-type': 'application/jsonp' }, body })).status, 415);
+    assert.equal((await b.send('POST', '/api/move', { headers: { ...b.page, 'content-type': 'application/json; charset=utf-8' }, body })).status, 200);
   } finally {
     await b.close();
   }
@@ -226,6 +228,27 @@ test('a note is posted to /api/note and recorded as the user', async () => {
     assert.equal(ev?.actor, 'user');
     assert.equal((await b.send('POST', '/api/note', { headers: b.json, body: JSON.stringify({ role_id: b.queued }) })).status, 400);
     assert.equal((await b.send('POST', '/api/note', { body: '{}' })).status, 401);
+  } finally {
+    await b.close();
+  }
+});
+
+test('writes are accepted only from the board page itself', async () => {
+  const b = await board();
+  try {
+    const body = JSON.stringify({ role_id: b.scored, to: 'queued' });
+    const post = (headers: Record<string, string>) => b.send('POST', '/api/move', { headers: { ...b.auth, 'content-type': 'application/json', ...headers }, body });
+    // A script with the token but no browser headers (curl, fetch from Node).
+    const script = await post({});
+    assert.equal(script.status, 403);
+    assert.match(JSON.parse(script.body).error, /board page/);
+    assert.equal((await post({ origin: 'http://evil.example' })).status, 403);
+    assert.equal((await post({ origin: `http://127.0.0.1:${b.port}`, 'sec-fetch-site': 'cross-site' })).status, 403);
+    assert.equal(b.t.roleRow(b.scored)?.status, 'scored');
+    // localhost is the same board, so its own origin is fine.
+    assert.equal((await post({ host: `localhost:${b.port}`, origin: `http://localhost:${b.port}`, 'sec-fetch-site': 'same-origin' })).status, 200);
+    // Reads stay open to any token holder.
+    assert.equal((await b.send('GET', '/api/board', { headers: b.auth })).status, 200);
   } finally {
     await b.close();
   }

@@ -139,7 +139,7 @@ commands, scheduled task
 - **Tracker** (`servers/tracker/`): the only writer to the database. Narrow tools, no raw SQL. An
   append-only event log with a state machine (`found → verified → scored → queued → applied →
   interviewing → offer`, plus `dropped` and `closed`). Drops need an employer quote, `verified` needs
-  the ATS URL and location line, `applied` needs the confirmation text. Tool reference:
+  the ATS URL and location line, `applied` needs the confirmation text (unless you mark it yourself on the board). Tool reference:
   [`docs/tracker-api.md`](docs/tracker-api.md).
 - **Hooks** (`hooks/`): see below.
 - **Skills, commands, agents, templates**: the operating rules, including the incidents that shaped them.

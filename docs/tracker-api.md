@@ -38,7 +38,9 @@ closed (from queued | applied | interviewing | offer), with outcome: rejected | 
 - `dropped` needs `evidence`: a verbatim employer quote, a URL plus quote, or `rule:<id>`.
 - `verified` needs `evidence` (the employer ATS URL and the verbatim location line) and
   `location_line` + `location_type`. It is the only way `roles.verified_at` gets set.
-- `applied` needs `evidence` containing the captured confirmation text.
+- `applied` needs `evidence` containing the captured confirmation text. The one exception is a move the
+  user makes on the board (below): it is their own report, recorded without it. `transition` and `record`
+  can never skip it, whatever `actor` says.
 - `closed` needs `outcome`.
 
 ## Tools
@@ -72,7 +74,7 @@ closed (from queued | applied | interviewing | offer), with outcome: rejected | 
 | `render_report` | `date` (YYYY-MM-DD, local day), `run_id?` (preferred: that run only), `headline?` | Markdown daily report (spec §9). Only verified drafts and confirmed submissions are claimed. Missing capabilities and what was queued because of them are listed. Interview times are shown in local time. |
 | `audit` | `run_id?` or `date?` (one is required) | Post-run rule check: excluded industries touched, drops without evidence, applied without confirmation, prose lint failures in artifacts, unverified drafts. `{ok, failures[]}` |
 | `pipeline_summary` | `stale_after_days?` (14) | Counts by status, live processes (interviewing, offer), awaiting reply, rejections, fresh and stale queue |
-| `open_board` | `open?` (bool, default false: also open the default browser) | `{url, reused, opened}`; the text result is `Board: <url>`. Starts the local board for this database, or reuses the running one. See [Board](#board). |
+| `open_board` | `open?` (bool, default false: also open the default browser) | `{reused, opened, url?}`. With `open: true` and the browser opened, no `url`: the token stays out of the model's context. Otherwise `url`, and the text result is `Board: <url>`. Starts the local board for this database, or reuses the running one. See [Board](#board). |
 | `import_legacy` | `applied_log?` (markdown), `preferences?` (markdown), `queue?` (`[{filename, content}]`), `documents?` (`{profile, stories, reusable-answers}`), `path?` (local only: a `pipeline/` folder) | Import counts and unparsed rows |
 
 ## Board
@@ -89,9 +91,15 @@ reuses the board named in `board.json` next to the database while that process i
 - stops after 30 minutes without an authenticated API call and removes `board.json`.
 - moves roles with `transition`, recorded with `actor: user`. Moves to `verified` and `scored` are
   refused: they need the verify-employer and score-role skills.
+- accepts changes (`POST`) only from its own page: the browser's `Origin` must be the board's and
+  `Sec-Fetch-Site`, when sent, `same-origin`. A script holding the token gets 403. With `open: true`,
+  `open_board` gives the link to the browser and not to the model.
+- records `applied` without confirmation text: the user is the authority on their own application.
+  `render_report` lists these as "Marked applied by you on the board" so one the user didn't make stands
+  out, and `audit` does not count them as `applied_without_confirmation`.
 - shows the columns from `scored` on, with `dropped` and `closed` folded; `found` and `verified` roles
-  are counted in the header. A drop on `queued`, `interviewing` or `offer` moves at once; `applied`,
-  `dropped` and `closed` ask for their evidence or outcome first.
+  are counted in the header. A drop on `queued`, `applied`, `interviewing` or `offer` moves at
+  once; `dropped` and `closed` ask for their evidence or outcome first.
 
 | Endpoint | Body | Returns |
 |---|---|---|

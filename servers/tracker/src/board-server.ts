@@ -88,6 +88,7 @@ export function createBoardServer({ tracker, token, idleMs, onIdle, log = () => 
       res.end(file.body);
     } else if (!path.startsWith('/api/')) send(res, 404, { error: 'Not found.' });
     else if (!authorized(req.headers.authorization)) send(res, 401, { error: 'Missing or wrong token. Run /j-hunt:board in Claude for a fresh link.' });
+    else if (req.method !== 'GET' && !fromPage(req, host)) send(res, 403, { error: 'Changes are accepted only from the board page in your browser.' });
     else {
       touch();
       const [status, body] = await api(req, path);
@@ -110,6 +111,13 @@ export function createBoardServer({ tracker, token, idleMs, onIdle, log = () => 
   }
 
   return server;
+}
+
+// A browser marks a write from the board page with the page's own origin. A script holding the token (the
+// agent included) sends neither header unless it forges them on purpose, so moves come from someone at the board.
+function fromPage(req: IncomingMessage, host: string | undefined): boolean {
+  const site = req.headers['sec-fetch-site'];
+  return req.headers.origin === `http://${host}` && (site === undefined || site === 'same-origin');
 }
 
 function send(res: ServerResponse, status: number, body: unknown): void {

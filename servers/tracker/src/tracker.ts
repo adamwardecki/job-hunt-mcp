@@ -408,12 +408,13 @@ export class Tracker {
     if (status) this.run('UPDATE roles SET status = ?, updated_at = ? WHERE id = ?', status, now(), role_id);
   }
 
-  validateEvent(a: EventInput): void {
+  // selfReported: the user marked the role applied on the board themselves, so there is no confirmation to capture.
+  validateEvent(a: EventInput, { selfReported = false }: { selfReported?: boolean } = {}): void {
     req(this.roleRow(a.role_id), `No role ${a.role_id}`);
     req(a.reason && String(a.reason).trim(), 'reason is required on every event');
     if (a.status != null) req(oneOf(STATUSES, a.status), `Unknown status "${a.status}". Known: ${STATUSES.join(', ')}`);
     if (a.status === 'dropped') req(a.evidence && String(a.evidence).trim(), 'A drop needs evidence: a verbatim quote from the employer page (with URL) or rule:<id>.');
-    if (a.status === 'applied') req(a.evidence && String(a.evidence).trim(), 'applied needs evidence: the captured confirmation text.');
+    if (a.status === 'applied' && !selfReported) req(a.evidence && String(a.evidence).trim(), 'applied needs evidence: the captured confirmation text.');
     if (a.status === 'closed') req(oneOf(OUTCOMES, a.outcome), `closed needs outcome: ${OUTCOMES.join(' | ')}`);
     if (a.evidence && /^rule:(\d+)$/.test(a.evidence)) {
       const id = Number(a.evidence.split(':')[1]);
@@ -421,10 +422,12 @@ export class Tracker {
     }
   }
 
-  // The board (board-api.ts) passes actor 'user'. The MCP tool's schema has no actor and checkArgs rejects
-  // unknown arguments, so calls from the model are always the pipeline.
-  transition(a: ArgsFor<'transition'>, { actor = 'pipeline' }: { actor?: 'pipeline' | 'user' } = {}) {
+  // The board (board-api.ts) passes actor 'user' and selfReported. The MCP tool's schema has neither and
+  // checkArgs rejects unknown arguments, so calls from the model are always the pipeline and always need
+  // confirmation text for applied. (record takes an actor, but never selfReported.)
+  transition(a: ArgsFor<'transition'>, { actor = 'pipeline', selfReported = false }: { actor?: 'pipeline' | 'user'; selfReported?: boolean } = {}) {
     req(a.to, 'to is required');
+    req(!selfReported || actor === 'user', 'Only the user can make a self-reported move.');
     return tx(this.db, () => {
       const role = this.roleRow(a.role_id);
       req(role, `No role ${a.role_id}`);
@@ -438,7 +441,7 @@ export class Tracker {
       }
       if (a.to === 'queued' && a.blocked_by) req(oneOf(['browser', 'user', 'login', 'captcha', 'other'], a.blocked_by), 'blocked_by: browser | user | login | captcha | other');
       const ev: EventInput = { ...a, status: a.to, actor };
-      this.validateEvent(ev);
+      this.validateEvent(ev, { selfReported });
       if (a.to === 'verified') {
         this.run('UPDATE roles SET verified_at = ?, location_line = ?, location_type = ? WHERE id = ?', now(), a.location_line ?? null, a.location_type ?? null, a.role_id);
       }

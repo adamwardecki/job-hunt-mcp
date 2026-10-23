@@ -122,16 +122,21 @@ test('a state file for another database that appears while waiting is not accept
   await assert.rejects(openBoard({ dbPath: db }, f.deps), /did not start/);
 });
 
-test('open: true opens the browser, and a browser failure still returns the link', async (t) => {
+test('open: true opens the browser without showing the model the link; a browser failure still returns it', async (t) => {
   const { db, file } = scratch(t);
   writeBoardState(file, { port: 4317, token: TOKEN, pid: process.pid, db });
   const ok = fakes();
   const out = await openBoard({ dbPath: db, open: true }, ok.deps);
   assert.equal(out.opened, true);
-  assert.deepEqual(ok.opened, [out.url]);
+  assert.deepEqual(ok.opened, [`http://127.0.0.1:4317/#t=${TOKEN}`]);
+  // The tool result goes to the model: the token stays with the browser.
+  assert.equal(out.url, undefined);
+  assert.doesNotMatch(JSON.stringify(out), new RegExp(TOKEN));
+  assert.match(out.markdown, /opened in your browser/i);
   const broken = fakes({ openBrowser: async () => Promise.reject(new Error('no display')) });
   const out2 = await openBoard({ dbPath: db, open: true }, broken.deps);
   assert.equal(out2.opened, false);
+  assert.equal(out2.url, `http://127.0.0.1:4317/#t=${TOKEN}`);
   assert.match(out2.markdown, /did not open \(no display\)/);
 });
 

@@ -60,7 +60,8 @@ export function boardMove(t: Tracker, input: unknown) {
   if (current && (current.status || 'found') === to) throw new ToolError(`Role ${role_id} is already ${to}.`);
   const reason = optionalString('reason', body.reason)?.trim() || DEFAULT_REASON;
   const args = { role_id, to, reason, evidence: optionalString('evidence', body.evidence), outcome: optionalString('outcome', body.outcome) };
-  return t.transition(args, { actor: 'user' });
+  // The user is the authority on their own application, so the board records it without confirmation text.
+  return t.transition(args, { actor: 'user', selfReported: true });
 }
 
 // The user's own reason for a move, added after it: events are append-only, so it is a note, not an edit.

@@ -87,17 +87,17 @@ export async function openBoard({ dbPath, open = false }: { dbPath: string | nul
   }
   const { state, reused } = await pending;
   const url = `http://127.0.0.1:${state.port}/#t=${state.token}`;
-  let opened = false;
-  let note = '';
   if (open) {
     try {
       await deps.openBrowser(url);
-      opened = true;
+      // The result goes to the model. Once the browser has the link, the model doesn't need the token, so a
+      // model can't use it to make moves as the user.
+      return { reused, opened: true, markdown: 'The board opened in your browser.' };
     } catch (err) {
-      note = `\nThe browser did not open (${errorMessage(err)}). Open the link yourself.`;
+      return { url, reused, opened: false, markdown: `Board: ${url}\nThe browser did not open (${errorMessage(err)}). Open the link yourself.` };
     }
   }
-  return { url, reused, opened, markdown: `Board: ${url}${note}` };
+  return { url, reused, opened: false, markdown: `Board: ${url}` };
 }
 
 async function findOrStart(db: string, deps: LaunchDeps): Promise<Found> {
