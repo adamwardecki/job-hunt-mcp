@@ -8,6 +8,9 @@ import { isRecord, oneOf } from './util.ts';
 // These steps need research with evidence (the verify-employer and score-role skills), so a drag can't do them.
 const CLAUDE_ONLY: readonly Status[] = ['verified', 'scored'];
 const MOVE_KEYS: readonly string[] = ['role_id', 'to', 'reason', 'evidence', 'outcome'];
+const NOTE_KEYS: readonly string[] = ['role_id', 'reason'];
+// A drag is a decision in itself, so the board doesn't ask why; the user can add their own reason as a note.
+const DEFAULT_REASON = 'Moved on the board';
 
 export interface BoardRole {
   id: number;
@@ -38,18 +41,32 @@ const optionalString = (key: string, v: unknown): string | undefined => {
   return v;
 };
 
-export function boardMove(t: Tracker, body: unknown) {
-  if (!isRecord(body)) throw new ToolError('Send a JSON object: {role_id, to, reason, evidence?, outcome?}.');
-  const extra = Object.keys(body).filter((k) => !MOVE_KEYS.includes(k));
-  if (extra.length) throw new ToolError(`Unknown field: ${extra.join(', ')}. Allowed: ${MOVE_KEYS.join(', ')}.`);
-  const { role_id, to } = body;
+function checkBody(body: unknown, keys: readonly string[]): Record<string, unknown> & { role_id: number } {
+  if (!isRecord(body)) throw new ToolError(`Send a JSON object with: ${keys.join(', ')}.`);
+  const extra = Object.keys(body).filter((k) => !keys.includes(k));
+  if (extra.length) throw new ToolError(`Unknown field: ${extra.join(', ')}. Allowed: ${keys.join(', ')}.`);
+  const { role_id } = body;
   if (typeof role_id !== 'number' || !Number.isInteger(role_id)) throw new ToolError('role_id must be an integer.');
+  return { ...body, role_id };
+}
+
+export function boardMove(t: Tracker, input: unknown) {
+  const body = checkBody(input, MOVE_KEYS);
+  const { role_id, to } = body;
   if (!oneOf(STATUSES, to)) throw new ToolError(`to must be one of: ${STATUSES.join(', ')}`);
   if (CLAUDE_ONLY.includes(to)) throw new ToolError(`Moving to ${to} needs Claude: run a sweep, or ask Claude to verify and score role ${role_id}.`);
   // A same-status transition is legal (re-running a step with new evidence) but would only add a no-op event here.
   const current = t.roleRow(role_id);
   if (current && (current.status || 'found') === to) throw new ToolError(`Role ${role_id} is already ${to}.`);
-  // transition rejects an empty reason with its own message, so a missing one is passed through as ''.
-  const args = { role_id, to, reason: optionalString('reason', body.reason) ?? '', evidence: optionalString('evidence', body.evidence), outcome: optionalString('outcome', body.outcome) };
+  const reason = optionalString('reason', body.reason)?.trim() || DEFAULT_REASON;
+  const args = { role_id, to, reason, evidence: optionalString('evidence', body.evidence), outcome: optionalString('outcome', body.outcome) };
   return t.transition(args, { actor: 'user' });
+}
+
+// The user's own reason for a move, added after it: events are append-only, so it is a note, not an edit.
+export function boardNote(t: Tracker, input: unknown) {
+  const body = checkBody(input, NOTE_KEYS);
+  // record rejects an empty reason with its own message.
+  const reason = optionalString('reason', body.reason)?.trim() ?? '';
+  return t.record({ role_id: body.role_id, reason, actor: 'user' });
 }

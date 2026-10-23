@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { boardMove, boardView } from '../src/board-api.ts';
+import { boardMove, boardNote, boardView } from '../src/board-api.ts';
 import { ToolError } from '../src/errors.ts';
 import { STATUSES } from '../src/tracker.ts';
 import { seeded } from './board-seed.ts';
@@ -56,4 +56,28 @@ test('moves that need Claude, no-op moves and malformed bodies are refused', () 
   assert.throws(() => boardMove(s.t, { role_id: s.found, to: 'nowhere', reason: 'r' }), /to must be one of/);
   assert.throws(() => boardMove(s.t, { role_id: s.found, to: 'dropped', reason: 'r', actor: 'pipeline' }), /Unknown field: actor/);
   assert.throws(() => boardMove(s.t, { role_id: s.found, to: 'dropped', reason: 7 }), /reason must be a string/);
+});
+
+test('a move without a reason records the board default; a given reason wins', () => {
+  const s = seeded();
+  boardMove(s.t, { role_id: s.scored, to: 'queued' });
+  assert.equal(lastEvent(s, s.scored)?.reason, 'Moved on the board');
+  boardMove(s.t, { role_id: s.queued, to: 'closed', outcome: 'withdrawn', reason: '  ' });
+  assert.equal(lastEvent(s, s.queued)?.reason, 'Moved on the board');
+  boardMove(s.t, { role_id: s.found, to: 'dropped', evidence: `rule:${s.rule}`, reason: 'Agency, not the employer' });
+  assert.equal(lastEvent(s, s.found)?.reason, 'Agency, not the employer');
+});
+
+test('a note adds the user\'s own reason without changing the status', () => {
+  const s = seeded();
+  boardMove(s.t, { role_id: s.scored, to: 'queued' });
+  boardNote(s.t, { role_id: s.scored, reason: 'Great team, apply this week' });
+  const ev = lastEvent(s, s.scored);
+  assert.equal(ev?.status, null);
+  assert.equal(ev?.actor, 'user');
+  assert.equal(ev?.reason, 'Great team, apply this week');
+  assert.equal(s.t.roleRow(s.scored)?.status, 'queued');
+  assert.throws(() => boardNote(s.t, { role_id: s.scored, reason: '   ' }), /reason is required/);
+  assert.throws(() => boardNote(s.t, { role_id: s.scored, reason: 'x', status: 'offer' }), /Unknown field: status/);
+  assert.throws(() => boardNote(s.t, { role_id: 9999, reason: 'x' }), /No role 9999/);
 });

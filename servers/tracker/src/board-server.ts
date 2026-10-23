@@ -5,7 +5,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import { createServer } from 'node:http';
-import { boardMove, boardView } from './board-api.ts';
+import { boardMove, boardNote, boardView } from './board-api.ts';
 import { ToolError } from './errors.ts';
 import type { Tracker } from './tracker.ts';
 import { errorText } from './util.ts';
@@ -100,6 +100,7 @@ export function createBoardServer({ tracker, token, idleMs, onIdle, log = () => 
       if (req.method === 'GET' && path === '/api/health') return [200, { ok: true }];
       if (req.method === 'GET' && path === '/api/board') return [200, boardView(tracker)];
       if (req.method === 'POST' && path === '/api/move') return [200, boardMove(tracker, await readJson(req))];
+      if (req.method === 'POST' && path === '/api/note') return [200, boardNote(tracker, await readJson(req))];
       return [404, { error: 'Not found.' }];
     } catch (err) {
       if (err instanceof HttpError) return [err.status, { error: err.message }];

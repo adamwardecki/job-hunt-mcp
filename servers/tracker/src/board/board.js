@@ -2,7 +2,13 @@
 // Every move is POST /api/move, which runs the tracker's transition rules. All text goes in with textContent.
 
 const LABELS = { found: 'Found', verified: 'Verified', scored: 'Scored', queued: 'Queued', applied: 'Applied', interviewing: 'Interviewing', offer: 'Offer', dropped: 'Dropped', closed: 'Closed' };
+// found and verified are the sweep's own steps, so they are counted in the header, not shown as columns.
+// scored stays: it is the shortlist the user promotes to queued by hand.
+const COLUMNS = ['scored', 'queued', 'applied', 'interviewing', 'offer', 'dropped', 'closed'];
+const IN_PIPELINE = ['found', 'verified'];
 const FOLDED = new Set(['dropped', 'closed']);
+// Targets that need nothing but a reason move on drop; the board records a default reason.
+const QUICK = new Set(['queued', 'interviewing', 'offer']);
 const OUTCOMES = ['rejected', 'withdrawn', 'role_closed'];
 const STOPPED = 'The board has stopped. Run /j-hunt:board in Claude to start it again.';
 const STALE = 'This link is out of date. Run /j-hunt:board in Claude for a fresh one.';
@@ -10,6 +16,7 @@ const STALE = 'This link is out of date. Run /j-hunt:board in Claude for a fresh
 const token = new URLSearchParams(location.hash.slice(1)).get('t') || '';
 const boardEl = document.getElementById('board');
 const statusEl = document.getElementById('status');
+const pipelineEl = document.getElementById('pipeline');
 const expanded = new Set();
 let view = null;
 let lastKey = '';
@@ -17,7 +24,9 @@ let requests = 0;
 // While a card is dragged or a move form is open, polling must not redraw the board under the user.
 // Derived from the page rather than kept as a flag, so it cannot get stuck.
 let dragging = false;
-const isBusy = () => dragging || document.querySelector('form.move') !== null;
+const isBusy = () => dragging || document.querySelector('#board form') !== null;
+// The card just moved by a drop offers "Add a reason" until the user adds one, dismisses it or moves another.
+let justMoved = null;
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -88,7 +97,9 @@ function age(ts) {
 }
 
 function render() {
-  boardEl.replaceChildren(...view.statuses.map(column));
+  boardEl.replaceChildren(...COLUMNS.map(column));
+  const counts = IN_PIPELINE.map((s) => [s, view.roles.filter((r) => r.status === s).length]).filter(([, n]) => n > 0);
+  pipelineEl.textContent = counts.length ? `In the sweep: ${counts.map(([s, n]) => `${n} ${s}`).join(' · ')}` : '';
 }
 
 function column(status) {
@@ -99,7 +110,7 @@ function column(status) {
   const head = el('h2');
   if (FOLDED.has(status)) {
     col.classList.toggle('folded', !expanded.has(status));
-    const toggle = el('button', 'fold', `${LABELS[status]} (${roles.length})`);
+    const toggle = el('button', 'fold', `${LABELS[status]} · ${roles.length}`);
     toggle.type = 'button';
     toggle.setAttribute('aria-expanded', String(expanded.has(status)));
     // Flip in place rather than render(): a redraw would throw away an open move form.
@@ -124,18 +135,23 @@ function column(status) {
 
 function card(role) {
   const node = el('article', 'card');
-  node.append(el('div', 'company', role.company), el('div', 'title', role.title));
+  node.dataset.id = role.id;
+  const head = el('div', 'head');
+  head.append(el('span', 'company', role.company));
+  if (role.url && /^https?:\/\//i.test(role.url)) {
+    const link = el('a', 'posting', 'Posting ↗');
+    link.href = role.url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.setAttribute('aria-label', `${role.company} posting (opens in a new tab)`);
+    head.append(link);
+  }
+  node.append(head, el('div', 'title', role.title));
   const meta = [role.score != null ? `Score ${role.score}` : '', role.location_type || '', age(role.last_event)].filter(Boolean).join(' · ');
   if (meta) node.append(el('div', 'meta', meta));
   if (role.question) node.append(el('div', 'needs', `Needs you: ${role.question}`));
   const actions = el('div', 'actions');
-  if (role.url && /^https?:\/\//i.test(role.url)) {
-    const link = el('a', '', 'Posting');
-    link.href = role.url;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    actions.append(link);
-  }
+  if (justMoved === role.id) actions.append(addReasonButton(node, role));
   if (targets(role).length) {
     const move = el('button', '', 'Move to…');
     move.type = 'button';
@@ -210,7 +226,9 @@ function startDrag(e, node, role) {
     const to = drop ? over?.dataset.status : null;
     slot.remove();
     for (const col of columns()) col.classList.remove('target', 'dim', 'over');
-    if (to && allowed.has(to)) openForm(node, role, to, node.querySelector('.actions button'));
+    if (!to || !allowed.has(to)) return;
+    if (QUICK.has(to)) quickMove(node, role, to);
+    else openForm(node, role, to, node.querySelector('.actions button'));
   };
   const onUp = () => end(true);
   const onCancel = () => end(false);
@@ -271,9 +289,77 @@ function valuesFor(to, extra) {
   return {};
 }
 
-// The card moves only after the server accepts; a refused move leaves it in place with the server's message.
+function showError(node, message) {
+  node.querySelector(':scope > .error')?.remove();
+  const error = el('p', 'error', message);
+  error.setAttribute('role', 'alert');
+  node.append(error);
+}
+
+// A drop on a target that needs nothing else moves at once; the server records the default reason.
+async function quickMove(node, role, to) {
+  justMoved = null;
+  try {
+    await api('/api/move', { role_id: role.id, to });
+    justMoved = role.id;
+    await refresh();
+  } catch (err) {
+    showError(node, err.message);
+  }
+}
+
+function addReasonButton(node, role) {
+  const add = el('button', 'link', 'Add a reason');
+  add.type = 'button';
+  add.addEventListener('click', () => openNote(node, role, add));
+  return add;
+}
+
+// The user's own reason for the move just made, saved as a note next to the default one.
+function openNote(node, role, opener) {
+  document.querySelector('#board form')?.remove();
+  const form = el('form', 'note');
+  const reason = el('input');
+  reason.name = 'reason';
+  reason.required = true;
+  reason.placeholder = 'Why did you move it?';
+  const error = el('p', 'error');
+  error.setAttribute('role', 'alert');
+  const save = el('button', 'primary', 'Save');
+  save.type = 'submit';
+  const cancel = el('button', '', 'Cancel');
+  cancel.type = 'button';
+  const buttons = el('div', 'buttons');
+  buttons.append(save, cancel);
+  cancel.addEventListener('click', () => {
+    form.remove();
+    if (opener?.isConnected) opener.focus();
+  });
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    save.disabled = true;
+    error.textContent = '';
+    try {
+      await api('/api/note', { role_id: role.id, reason: reason.value.trim() });
+      justMoved = null;
+      form.remove();
+      lastKey = ''; // redraw so the "Add a reason" button goes away
+      await refresh();
+    } catch (err) {
+      error.textContent = err.message;
+      save.disabled = false;
+    }
+  });
+  form.append(labelled('Reason', reason), error, buttons);
+  node.append(form);
+  reason.focus();
+}
+
+// Targets that need evidence or an outcome (and every keyboard move) go through this form. The reason is
+// optional: left empty, the server records the board's default. The card moves only after the server accepts.
 function openForm(node, role, to, opener) {
-  document.querySelector('form.move')?.remove();
+  justMoved = null;
+  document.querySelector('#board form')?.remove();
   const form = el('form', 'move');
   const pick = el('select');
   pick.name = 'to';
@@ -281,9 +367,7 @@ function openForm(node, role, to, opener) {
   if (to) pick.value = to;
   const reason = el('input');
   reason.name = 'reason';
-  reason.required = true;
-  reason.value = 'Moved on the board';
-  const extra = el('div');
+  const extra = el('div', 'extra');
   const error = el('p', 'error');
   error.setAttribute('role', 'alert');
   const save = el('button', 'primary', 'Move');
@@ -304,7 +388,7 @@ function openForm(node, role, to, opener) {
     save.disabled = true;
     error.textContent = '';
     try {
-      await api('/api/move', { role_id: role.id, to: pick.value, reason: reason.value.trim(), ...valuesFor(pick.value, extra) });
+      await api('/api/move', { role_id: role.id, to: pick.value, reason: reason.value.trim() || undefined, ...valuesFor(pick.value, extra) });
       form.remove();
       await refresh();
     } catch (err) {
@@ -312,9 +396,11 @@ function openForm(node, role, to, opener) {
       save.disabled = false;
     }
   });
-  form.append(labelled('Move to', pick), labelled('Reason', reason), extra, error, buttons);
+  // From a drop the target is already chosen, so only the "Move to" picker for keyboard moves.
+  form.append(to ? el('div', 'form-title', `Move to ${LABELS[to]}`) : labelled('Move to', pick));
+  form.append(extra, labelled('Reason (optional)', reason), error, buttons);
   node.append(form);
-  (to ? reason : pick).focus();
+  (form.querySelector('.extra textarea, .extra select') ?? (to ? reason : pick)).focus();
 }
 
 if (!token) {

@@ -89,12 +89,16 @@ reuses the board named in `board.json` next to the database while that process i
 - stops after 30 minutes without an authenticated API call and removes `board.json`.
 - moves roles with `transition`, recorded with `actor: user`. Moves to `verified` and `scored` are
   refused: they need the verify-employer and score-role skills.
+- shows the columns from `scored` on, with `dropped` and `closed` folded; `found` and `verified` roles
+  are counted in the header. A drop on `queued`, `interviewing` or `offer` moves at once; `applied`,
+  `dropped` and `closed` ask for their evidence or outcome first.
 
 | Endpoint | Body | Returns |
 |---|---|---|
 | `GET /api/health` | none | `{ok: true}` |
 | `GET /api/board` | none | `{statuses, roles, moves, rules}`: roles with company, score, location type, URL, last event time and blocking question; allowed drag targets per status; active rules for drops |
-| `POST /api/move` | `{role_id, to, reason, evidence?, outcome?}` | `{role, from, to}`, or 400 with the status machine's message |
+| `POST /api/move` | `{role_id, to, reason?, evidence?, outcome?}` | `{role, from, to}`, or 400 with the status machine's message. Without a reason the event says "Moved on the board" |
+| `POST /api/note` | `{role_id, reason}` | `{role}`: the user's own reason for a move, recorded as a note (no status change) |
 
 ## Session approvals (hooks, not tools)
 

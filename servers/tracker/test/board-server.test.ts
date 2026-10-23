@@ -215,3 +215,18 @@ test('unauthenticated probes do not defer onIdle', async () => {
     await b.close();
   }
 });
+
+test('a note is posted to /api/note and recorded as the user', async () => {
+  const b = await board();
+  try {
+    const res = await b.send('POST', '/api/note', { headers: b.json, body: JSON.stringify({ role_id: b.queued, reason: 'Recruiter says remote is fine' }) });
+    assert.equal(res.status, 200);
+    const ev = b.t.roleDetail({ role_id: b.queued }).events.at(-1);
+    assert.equal(ev?.reason, 'Recruiter says remote is fine');
+    assert.equal(ev?.actor, 'user');
+    assert.equal((await b.send('POST', '/api/note', { headers: b.json, body: JSON.stringify({ role_id: b.queued }) })).status, 400);
+    assert.equal((await b.send('POST', '/api/note', { body: '{}' })).status, 401);
+  } finally {
+    await b.close();
+  }
+});
