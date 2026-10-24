@@ -2435,13 +2435,21 @@ mark {
 }
 
 /* Docs */
+.header-center {
+  display: flex;
+  gap: 32px;
+  font-size: 12px;
+}
+.header-center a:hover {
+  color: var(--accent);
+}
 .docs-page {
   display: grid;
   grid-template-columns: 1fr 220px;
   gap: 60px;
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 64px 32px 80px;
+  width: min(1240px, calc(100% - 112px));
+  margin-inline: auto;
+  padding: 64px 0 80px;
 }
 .docs-toc {
   position: sticky;
@@ -2606,6 +2614,7 @@ mark {
     padding: 40px 20px 60px;
   }
   .docs-toc {
+    order: -1;
     position: static;
     margin-bottom: 32px;
     padding-bottom: 16px;
