@@ -42,7 +42,7 @@ test('setup step 0 never loops on restarts and never reinstalls over a shadowed 
 
 test('every tracker command explains a missing runtime in one sentence', () => {
   const missing = /\*\*If the tracker tools are missing\*\* \(search for them first if tools are deferred\), or a hook error says `node` could not start:/;
-  for (const name of ['apply', 'status', 'prep', 'cover-letter', 'triage', 'correct', 'import']) {
+  for (const name of ['apply', 'status', 'prep', 'cover-letter', 'triage', 'correct', 'import', 'board']) {
     assert.match(read(`commands/${name}.md`), new RegExp(`${missing.source}.*offer to run \`\\/job-tracker:setup\``), name);
   }
   assert.match(read('commands/sweep.md'), new RegExp(`${missing.source}.*Record nothing\\.`));
@@ -62,4 +62,11 @@ test('setup field lists and settings.example.yaml match the config schema', asyn
     const block = yaml.slice(yaml.indexOf(`\n${section}:`) + 1).split(/\n(?=[a-z])/)[0] ?? '';
     for (const k of keys) assert.match(block, new RegExp(`\\n  ${k}:`), `settings.example.yaml ${section}.${k}`);
   }
+});
+
+test('the board command opens the browser and the sweep report points to it', () => {
+  const board = read('commands/board.md');
+  assert.match(board, /Call `open_board` with `open: true`\./);
+  assert.match(board, /Why: /);
+  assert.match(read('commands/sweep.md'), /End the report with the line `Board: run \/job-tracker:board`\./);
 });

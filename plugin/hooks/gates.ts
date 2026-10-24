@@ -3,6 +3,7 @@
 
 import { lintProse } from '../servers/tracker/src/lint.ts';
 import { errorText } from '../servers/tracker/src/util.ts';
+import { isBoardUrl, runningBoardPort } from './lib/board.ts';
 import * as C from './lib/classify.ts';
 import { activeApprovals, loadSession, saveSession } from './lib/session.ts';
 import { normalizeTarget, sameTarget, targetMatchesRole } from './lib/target.ts';
@@ -53,6 +54,9 @@ export async function preTool(payload: HookPayload): Promise<void> {
     return;
   }
 
+  // The board is the user's, in any session: see boardGate.
+  if (C.isBrowser(server) && (await boardGate(payload, session, short, input))) return;
+
   if (C.isTracker(server)) {
     if (!session.marked) {
       session.marked = true;
@@ -77,6 +81,22 @@ export async function preTool(payload: HookPayload): Promise<void> {
   }
 
   if (C.isBrowser(server)) return browserGate(payload, session, short, input);
+}
+
+// Moves on the board are recorded as the user's own and skip the confirmation text the tracker tools
+// demand, so the model must not reach them through a browser: no opening the board, and no acting on its
+// page. Looking is allowed. Returns true when it denied.
+async function boardGate(payload: HookPayload, session: SessionState, short: string, input: ToolInput): Promise<boolean> {
+  const port = await runningBoardPort();
+  let onBoard: boolean;
+  if (typeof input.url === 'string') onBoard = isBoardUrl(input.url, port);
+  else if (C.onlyReads(short, input)) onBoard = false;
+  else {
+    const page = currentPage(toolSteps(readTranscript(payload.transcript_path)), tabIdOf(input));
+    onBoard = page !== null && isBoardUrl(page.url, port);
+  }
+  if (onBoard) deny(payload, session, "The Job Tracker board is the user's: a move made there is recorded as the user's own, without the evidence and status rules the tracker tools require. Do not open or operate it in the browser. Change status with transition or record, or ask the user to move the card.");
+  return onBoard;
 }
 
 async function browserGate(payload: HookPayload, session: SessionState, short: string, input: ToolInput): Promise<void> {

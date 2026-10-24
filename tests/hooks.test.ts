@@ -288,7 +288,61 @@ test('browser gates stay out of sessions that never touched the job hunt', async
   assert.equal(denied(), undefined);
 });
 
-test('session files are owner-only', { skip: process.platform === 'win32' }, () => {
+const TOKEN = 'ab'.repeat(32);
+const writeBoard = (port: number, pid = process.pid) => writeFileSync(join(home, 'board.json'), JSON.stringify({ port, token: TOKEN, pid, db: join(home, 'tracker.db') }));
+
+test('the board is off limits to browser tools in every session: moves there count as the user\'s', async () => {
+  const go = async (url: string) => {
+    outputs = [];
+    await preTool({ session_id: session(), transcript_path: transcript([]), tool_name: `${CHROME}navigate`, tool_input: { url, tabId: 1 } });
+    return reason();
+  };
+  // The link open_board hands the browser, on either host the board answers, with or without a scheme.
+  assert.match(await go(`http://127.0.0.1:54408/#t=${TOKEN}`), /board is the user's/);
+  assert.match(await go(`http://localhost:54408/#t=${TOKEN}`), /board is the user's/);
+  assert.match(await go(`127.0.0.1:54408/#t=${TOKEN}`), /board is the user's/);
+  assert.equal(await go('http://127.0.0.1:3000/'), '', 'other local servers are fine');
+  assert.equal(await go(`https://example.com/#t=${TOKEN}`), '', 'a token-shaped fragment elsewhere is fine');
+  // Without the token in the link, the running board is known by its port.
+  assert.equal(await go('http://127.0.0.1:61000/'), '');
+  writeBoard(61000);
+  assert.match(await go('http://127.0.0.1:61000/'), /board is the user's/);
+  writeBoard(61000, 2 ** 22 + 12345); // a board that is no longer running
+  assert.equal(await go('http://127.0.0.1:61000/'), '');
+});
+
+test('on an open board page, browser tools may look but not act', async () => {
+  const board = `http://127.0.0.1:54408/#t=${TOKEN}`;
+  // The user's own tab, seen in a tab listing rather than opened by the model.
+  const tabs = JSON.stringify({ availableTabs: [{ tabId: 7, title: 'Docs', url: 'https://example.com/' }, { tabId: 9, title: 'Job Tracker board', url: board }] });
+  const tp = transcript([[`${CHROME}tabs_context_mcp`, {}, tabs], [`${CHROME}read_page`, { tabId: 9 }, 'button "Skip" [ref_4]']]);
+  const call = async (short: string, input: Record<string, unknown>, path = tp) => {
+    outputs = [];
+    await preTool({ session_id: session(), transcript_path: path, tool_name: `${CHROME}${short}`, tool_input: input });
+    return reason();
+  };
+  for (const [short, input] of [
+    ['computer', { action: 'left_click', ref: 'ref_4', tabId: 9 }],
+    ['computer', { action: 'left_click', coordinate: [400, 300], tabId: 9 }],
+    ['computer', { action: 'left_click_drag', start_coordinate: [400, 300], coordinate: [700, 300], tabId: 9 }],
+    ['computer', { action: 'key', text: 'Return', tabId: 9 }],
+    ['computer', { action: 'type', text: 'Applied by email', tabId: 9 }],
+    ['form_input', { ref: 'ref_4', value: 'x', tabId: 9 }],
+    ['javascript_tool', { action: 'javascript_exec', text: 'fetch("/api/move")', tabId: 9 }],
+  ] as const) assert.match(await call(short, input), /board is the user's/, `${short} ${JSON.stringify(input)}`);
+  for (const [short, input] of [
+    ['read_page', { tabId: 9 }],
+    ['get_page_text', { tabId: 9 }],
+    ['computer', { action: 'screenshot', tabId: 9 }],
+    ['computer', { action: 'left_click', ref: 'ref_1', tabId: 7 }],
+    ['navigate', { url: 'https://example.com/jobs', tabId: 9 }],
+  ] as const) assert.equal(await call(short, input), '', `${short} ${JSON.stringify(input)}`);
+  // Once the model navigates the tab away, it may use it again.
+  const away = transcript([[`${CHROME}tabs_context_mcp`, {}, tabs], [`${CHROME}navigate`, { url: 'https://example.com/jobs', tabId: 9 }, 'Navigated to https://example.com/jobs']]);
+  assert.equal(await call('computer', { action: 'left_click', coordinate: [1, 1], tabId: 9 }, away), '');
+});
+
+test('session files are owner-only',{ skip: process.platform === 'win32' }, () => {
   const state = { marked: true, kind: null, approvals: [], consents: [], denials: [], stop_blocks: 0 };
   saveSession('perm-test', state);
   assert.equal(statSync(join(home, 'sessions')).mode & 0o777, 0o700);

@@ -481,3 +481,13 @@ test('an unfinished run covers untagged rows up to now', () => {
   assert.match(md, /Past \(pay\)/);
   assert.doesNotMatch(md, /Future/);
 });
+
+test('transition records the pipeline by default and the user when the board passes actor', () => {
+  const t = fresh();
+  const { role } = t.upsertRole({ company: 'Northwind', title: 'Backend Engineer', url: 'https://jobs.ashbyhq.com/northwind/1', source: 'ashby' });
+  verify(t, role.id);
+  t.transition({ role_id: role.id, to: 'scored', reason: 'fits', score: 7 });
+  t.transition({ role_id: role.id, to: 'queued', reason: 'Moved on the board' }, { actor: 'user' });
+  const actors = t.roleDetail({ role_id: role.id }).events.map((e) => [e.status, e.actor]);
+  assert.deepEqual(actors.slice(-3), [['verified', 'pipeline'], ['scored', 'pipeline'], ['queued', 'user']]);
+});

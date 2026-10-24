@@ -69,6 +69,7 @@ job-hunt/
 │   ├── triage.md                 # /job-tracker:triage <source>
 │   ├── prep.md                   # /job-tracker:prep <company>
 │   ├── status.md                 # /job-tracker:status
+│   ├── board.md                  # /job-tracker:board  (local kanban board)
 │   ├── cover-letter.md           # /job-tracker:cover-letter <role-id> [--pdf]
 │   └── correct.md                # /job-tracker:correct  (turn a user override into a rule)
 ├── skills/
@@ -108,7 +109,7 @@ The manual log (`applied-log.md`) grew past 200 KB and a `grep` over it timed ou
 - Runtime: Python stdlib `sqlite3` or Node built-in `node:sqlite` (22.5+). **No native modules** (e.g. `better-sqlite3`).
 - DB file lives outside the plugin directory, so plugin updates never touch user data.
 - Deployment: local only. `.mcp.json` starts the server over stdio.
-- Access: no network listener and no token. The DB holds personal data, so it is created owner-only (0700 directory, 0600 files) and setup says where it lives.
+- Access: the MCP server has no network listener and no token. The optional board (`open_board`, `servers/tracker/src/board.ts`) listens on 127.0.0.1 with a per-start token and stops after 30 idle minutes. The DB holds personal data, so it is created owner-only (0700 directory, 0600 files) and setup says where it lives.
 
 ### 5.3 Schema
 
@@ -330,6 +331,7 @@ Every claim of a draft, submission or booking in the report must be backed by a 
 | PreToolUse: any email send / LinkedIn message / connection request | **Block.** Drafts only. |
 | PreToolUse: browser click on an element whose text matches submit/apply/send | Require `find_company` clean + `roles.verified_at` set + an approval token for this role in the current session. |
 | PreToolUse: tracker/board delete actions | Require the target column resolved by header text and the protected columns' counts captured (see §12.3). |
+| PreToolUse: browser tools on the local board (`127.0.0.1`/`localhost` with the board's token or port), any session | Block navigating to it and acting on its page; reading is allowed. Board moves are recorded as the user's. |
 | PreToolUse: form_input into fields labelled passport/nationality/age/marital/gender/ID | Block; surface to the user. |
 | PreToolUse: consent checkboxes/radios (recording, marketing, talent pool) | Default to the privacy-preserving option; never tick "yes" without the user. |
 | Stop | Refuse to finish a `/job-tracker:sweep` without `record` events for every touched role and a rendered report. |

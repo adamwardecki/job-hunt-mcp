@@ -47,7 +47,10 @@ export function renderReport(t: Tracker, { date, run_id, headline }: ArgsFor<'re
   const audit = runAudit(t, { date, run_id });
   const out = [`# Daily report · ${date}`, ''];
 
+  // Only what the plugin submitted; an application the user recorded (e.g. on the board, actor 'user') is theirs.
   const applied = eventsIn(t, scope, "e.status = 'applied' AND e.actor = 'pipeline'");
+  // Only the board can record applied without confirmation text. Listing these lets the user spot one they didn't make.
+  const selfReported = eventsIn(t, scope, "e.status = 'applied' AND e.actor = 'user' AND (e.evidence IS NULL OR trim(e.evidence) = '')");
   const replies = eventsIn(t, scope, "e.actor = 'employer'");
   const dropped = eventsIn(t, scope, "e.status = 'dropped' AND e.actor != 'import'");
   const assessed = new Set(eventsIn(t, scope, "e.status IN ('verified', 'scored', 'dropped') AND e.actor != 'import'").map((e) => e.role_id)).size;
@@ -90,10 +93,11 @@ export function renderReport(t: Tracker, { date, run_id, headline }: ArgsFor<'re
     out.push('');
   }
 
-  // 3. Applied today (only with captured confirmation)
-  if (applied.length) {
+  // 3. Applied today (only with captured confirmation), then what the user marked applied on the board
+  if (applied.length || selfReported.length) {
     out.push('## Applied', '');
     for (const e of applied) out.push(`- **${e.company}**, ${e.title}. Confirmation: "${String(e.evidence).replace(/\s+/g, ' ').slice(0, 140)}"`);
+    for (const e of selfReported) out.push(`- **${e.company}**, ${e.title}. Marked applied by you on the board, without confirmation text.`);
     out.push('');
   }
 
@@ -113,7 +117,8 @@ export function renderReport(t: Tracker, { date, run_id, headline }: ArgsFor<'re
     out.push('## Dropped', '');
     const groups = new Map<string, string[]>();
     for (const e of dropped) {
-      const key = e.category || 'other';
+      // Only the board can drop without evidence (validateEvent), and only as the user.
+      const key = e.actor === 'user' && !e.evidence?.trim() ? 'by you on the board' : e.category || 'other';
       let group = groups.get(key);
       if (!group) {
         group = [];
@@ -156,9 +161,10 @@ export function runAudit(t: Tracker, { date, run_id }: ArgsFor<'audit'>) {
     const touched = eventsIn(t, scope, "e.status IN ('scored', 'queued', 'applied')").filter((e) => e.industry && excluded.some((x) => e.industry?.toLowerCase().includes(x)));
     for (const e of touched) failures.push({ check: 'excluded_industry', role_id: e.role_id, detail: `${e.company} (${e.industry}) reached ${e.status} despite the excluded-industries filter.` });
   }
-  for (const e of eventsIn(t, scope, "e.status = 'dropped' AND (e.evidence IS NULL OR trim(e.evidence) = '')"))
+  for (const e of eventsIn(t, scope, "e.status = 'dropped' AND (e.evidence IS NULL OR trim(e.evidence) = '') AND e.actor != 'user'"))
     failures.push({ check: 'drop_without_evidence', role_id: e.role_id, detail: `Drop of ${e.company} has no evidence.` });
-  for (const e of eventsIn(t, scope, "e.status = 'applied' AND (e.evidence IS NULL OR trim(e.evidence) = '')"))
+  // The board's self-reported applications are the user's word, listed in the report instead.
+  for (const e of eventsIn(t, scope, "e.status = 'applied' AND (e.evidence IS NULL OR trim(e.evidence) = '') AND e.actor != 'user'"))
     failures.push({ check: 'applied_without_confirmation', role_id: e.role_id, detail: `${e.company} marked applied without confirmation text.` });
   for (const e of eventsIn(t, scope, "e.status = 'verified'")) {
     const r = t.mustRole(e.role_id);

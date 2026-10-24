@@ -8,7 +8,8 @@ Claude Code and as `mcp__job_hunt_tracker__<tool>` in Hermes. Skills refer to th
 
 Runtime: Node 22.18+ (`node:sqlite`, TypeScript run directly), zero runtime npm dependencies. Local only:
 `.mcp.json` starts `node servers/tracker/src/index.ts` over stdio. There is no network listener and no
-token. Access is the OS user's permissions on `$JOB_TRACKER_HOME` (default `~/.job-tracker/`, created `0700`;
+token; the optional board (see [Board](#board)) listens on `127.0.0.1` with a per-start token and
+stops after 30 idle minutes. Access is the OS user's permissions on `$JOB_TRACKER_HOME` (default `~/.job-tracker/`, created `0700`;
 the database and session files are `0600`). Tightening is best effort: on a filesystem that cannot
 chmod, a warning is logged and the tracker still starts. Data never lives in the plugin directory.
 
@@ -33,10 +34,13 @@ closed (from queued | applied | interviewing | offer), with outcome: rejected | 
 ```
 
 - Every event needs a `reason`.
-- `dropped` needs `evidence`: a verbatim employer quote, a URL plus quote, or `rule:<id>`.
+- `dropped` needs `evidence`: a verbatim employer quote, a URL plus quote, or `rule:<id>`. The one
+  exception is a move the user makes on the board (below).
 - `verified` needs `evidence` (the employer ATS URL and the verbatim location line) and
   `location_line` + `location_type`. It is the only way `roles.verified_at` gets set.
-- `applied` needs `evidence` containing the captured confirmation text.
+- `applied` needs `evidence` containing the captured confirmation text. The one exception is a move the
+  user makes on the board (below): it is their own report, recorded without it. `transition` and `record`
+  can never skip it, whatever `actor` says.
 - `closed` needs `outcome`.
 
 ## Tools
@@ -70,7 +74,43 @@ closed (from queued | applied | interviewing | offer), with outcome: rejected | 
 | `render_report` | `date` (YYYY-MM-DD, local day), `run_id?` (preferred: that run only), `headline?` | Markdown daily report (spec §9). Only verified drafts and confirmed submissions are claimed. Missing capabilities and what was queued because of them are listed. Interview times are shown in local time. |
 | `audit` | `run_id?` or `date?` (one is required) | Post-run rule check: excluded industries touched, drops without evidence, applied without confirmation, prose lint failures in artifacts, unverified drafts. `{ok, failures[]}` |
 | `pipeline_summary` | `stale_after_days?` (14) | Counts by status, live processes (interviewing, offer), awaiting reply, rejections, fresh and stale queue |
+| `open_board` | `open?` (bool, default false: also open the default browser) | `{reused, opened, url?}`. With `open: true` and the browser opened, no `url`: the token stays out of the model's context. Otherwise `url`, and the text result is `Board: <url>`. Starts the local board for this database, or reuses the running one. See [Board](#board). |
 | `import_legacy` | `applied_log?` (markdown), `preferences?` (markdown), `queue?` (`[{filename, content}]`), `documents?` (`{profile, stories, reusable-answers}`), `path?` (local only: a `pipeline/` folder) | Import counts and unparsed rows |
+
+## Board
+
+`open_board` starts `node servers/tracker/src/board.ts --db <same database>` as a detached process. It
+reuses the board named in `board.json` next to the database while that process is alive and answers
+`GET /api/health` with the board's token. It refuses an in-memory tracker. The board:
+
+- listens on `127.0.0.1` only, on a port the OS picks, with a new 256-bit token per start. The token is
+  in the link's fragment (`#t=`), so it is never sent in a request line, and every API call sends it as
+  `Authorization: Bearer <token>`.
+- rejects any `Host` other than `127.0.0.1:<port>` or `localhost:<port>` (DNS rebinding), sends no CORS
+  headers, and accepts only `application/json` posts up to 64 KB.
+- stops after 30 minutes without an authenticated API call and removes `board.json`.
+- moves roles with `transition`, recorded with `actor: user`. Between its lanes (`scored` to `closed`)
+  the user moves freely, backwards and out of `dropped` or `closed` too; the model's `transition` stays
+  forward-only. Roles still `found` or `verified` can't be moved, nothing can be moved to them, and only a
+  role that was verified and scored can be moved to `scored` or `queued`.
+- accepts changes (`POST`) only from its own page: the browser's `Origin` must be the board's and
+  `Sec-Fetch-Site`, when sent, `same-origin`. A script holding the token gets 403. With `open: true`,
+  `open_board` gives the link to the browser and not to the model, and the `PreToolUse` hook stops
+  browser tools from opening the board or acting on its page in any session.
+- records `applied` without confirmation text and `dropped` without evidence: the user is the authority
+  on their own search. `render_report` lists these as "Marked applied by you on the board" and "Dropped:
+  by you on the board" so one the user didn't make stands out, and `audit` does not count them as
+  `applied_without_confirmation` or `drop_without_evidence`.
+- shows the columns from `scored` on, with `dropped` and `closed` folded; `found` and `verified` roles
+  are counted in the header. A drop moves at once and the card opens with an optional reason, saved
+  as a note; `closed` asks for its outcome first. Cards show the pay band when the posting had one.
+
+| Endpoint | Body | Returns |
+|---|---|---|
+| `GET /api/health` | none | `{ok: true}` |
+| `GET /api/board` | none | `{statuses, roles, rules}`: roles with company, score, location type, URL, pay band, last event time, blocking question and `moves` (the lanes the role may be dragged to); active rules |
+| `POST /api/move` | `{role_id, to, reason?, evidence?, outcome?}` | `{role, from, to}`, or 400 with the status machine's message. Without a reason the event says "Moved on the board" |
+| `POST /api/note` | `{role_id, reason}` | `{role}`: the user's own reason for a move, recorded as a note (no status change) |
 
 ## Session approvals (hooks, not tools)
 

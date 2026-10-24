@@ -626,6 +626,21 @@
     }
   },
   {
+    "name": "open_board",
+    "description": "Start the local kanban board (or reuse the running one). With open: true it opens in the user's browser and the link is not returned; otherwise the link is returned. The user drags cards to move roles; moves follow transition's rules and are recorded as the user's. The board stops after 30 idle minutes.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "open": {
+          "type": "boolean",
+          "description": "true also opens it in the default browser. Only when the user asked to see the board now; never in a scheduled run."
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
     "name": "add_rule",
     "description": "Add a user preference or correction as a rule, with reason and example.",
     "inputSchema": {

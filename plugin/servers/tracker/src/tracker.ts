@@ -68,7 +68,7 @@ export interface Scope {
 type RoleSummary = Pick<RoleRow, 'id' | 'title' | 'url' | 'status' | 'updated_at'>;
 
 // Allowed moves (spec §5.4). Self-transitions are allowed so a step can be re-run with new evidence.
-const MACHINE: Record<Status, readonly Status[]> = {
+export const MACHINE: Record<Status, readonly Status[]> = {
   found: ['verified', 'dropped'],
   verified: ['scored', 'dropped'],
   scored: ['queued', 'dropped'],
@@ -79,6 +79,20 @@ const MACHINE: Record<Status, readonly Status[]> = {
   dropped: [],
   closed: [],
 };
+
+// The statuses the board shows as lanes. Between them the user moves freely, back and out of dropped or closed:
+// the user is the authority on their own search. found and verified are the sweep's own steps.
+export const BOARD_LANES = ['scored', 'queued', 'applied', 'interviewing', 'offer', 'dropped', 'closed'] as const;
+// Lanes that rest on Claude's research: a role gets there from the board only if it was verified and scored.
+const RESEARCHED: readonly Status[] = ['scored', 'queued'];
+
+// Where the user may move a role on the board, and why not when nowhere.
+export function userMoves(role: Pick<RoleRow, 'status' | 'verified_at' | 'score'>): { moves: Status[]; why?: string } {
+  const from = role.status || 'found';
+  if (!oneOf(BOARD_LANES, from)) return { moves: [], why: `is still in the sweep (${from}): Claude verifies and scores it first` };
+  const researched = role.verified_at != null && role.score != null;
+  return { moves: BOARD_LANES.filter((s) => s !== from && (researched || !RESEARCHED.includes(s))) };
+}
 
 function req(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new ToolError(msg);
@@ -408,12 +422,14 @@ export class Tracker {
     if (status) this.run('UPDATE roles SET status = ?, updated_at = ? WHERE id = ?', status, now(), role_id);
   }
 
-  validateEvent(a: EventInput): void {
+  // selfReported: the user moved the role on the board themselves. Their own word is the evidence for an
+  // application or a drop, so there is no confirmation or employer quote to capture.
+  validateEvent(a: EventInput, { selfReported = false }: { selfReported?: boolean } = {}): void {
     req(this.roleRow(a.role_id), `No role ${a.role_id}`);
     req(a.reason && String(a.reason).trim(), 'reason is required on every event');
     if (a.status != null) req(oneOf(STATUSES, a.status), `Unknown status "${a.status}". Known: ${STATUSES.join(', ')}`);
-    if (a.status === 'dropped') req(a.evidence && String(a.evidence).trim(), 'A drop needs evidence: a verbatim quote from the employer page (with URL) or rule:<id>.');
-    if (a.status === 'applied') req(a.evidence && String(a.evidence).trim(), 'applied needs evidence: the captured confirmation text.');
+    if (a.status === 'dropped' && !selfReported) req(a.evidence && String(a.evidence).trim(), 'A drop needs evidence: a verbatim quote from the employer page (with URL) or rule:<id>.');
+    if (a.status === 'applied' && !selfReported) req(a.evidence && String(a.evidence).trim(), 'applied needs evidence: the captured confirmation text.');
     if (a.status === 'closed') req(oneOf(OUTCOMES, a.outcome), `closed needs outcome: ${OUTCOMES.join(' | ')}`);
     if (a.evidence && /^rule:(\d+)$/.test(a.evidence)) {
       const id = Number(a.evidence.split(':')[1]);
@@ -421,23 +437,33 @@ export class Tracker {
     }
   }
 
-  transition(a: ArgsFor<'transition'>) {
+  // The board (board-api.ts) passes actor 'user' and selfReported: the move follows userMoves instead of
+  // MACHINE. The MCP tool's schema has neither and checkArgs rejects unknown arguments, so calls from the
+  // model are always the pipeline, forward-only, and always need evidence for applied and dropped. (record
+  // takes an actor, but never selfReported.)
+  transition(a: ArgsFor<'transition'>, { actor = 'pipeline', selfReported = false }: { actor?: 'pipeline' | 'user'; selfReported?: boolean } = {}) {
     req(a.to, 'to is required');
+    req(!selfReported || actor === 'user', 'Only the user can make a self-reported move.');
     return tx(this.db, () => {
       const role = this.roleRow(a.role_id);
       req(role, `No role ${a.role_id}`);
       const from = role.status || 'found';
-      const allowed = oneOf(STATUSES, from) ? MACHINE[from] : [];
-      req(from === a.to || oneOf(allowed, a.to), `Illegal transition ${from} → ${a.to}. Allowed from ${from}: ${allowed.join(', ') || 'none (terminal)'}.`);
+      if (selfReported) {
+        const { moves, why } = userMoves(role);
+        req(!why, `Role ${a.role_id} ${why}.`);
+        req(oneOf(moves, a.to), `Role ${a.role_id} needs Claude to verify and score it before it can be ${a.to}.`);
+      } else {
+        const allowed = oneOf(STATUSES, from) ? MACHINE[from] : [];
+        req(from === a.to || oneOf(allowed, a.to), `Illegal transition ${from} → ${a.to}. Allowed from ${from}: ${allowed.join(', ') || 'none (terminal)'}.`);
+      }
       if (a.to === 'verified') {
         req(a.evidence && /https?:\/\//.test(a.evidence), 'verified needs evidence with the employer posting URL and the verbatim location line.');
         req(a.location_line && a.location_type, 'verified needs location_line (verbatim from the employer ATS) and location_type.');
         req(oneOf(['remote', 'hybrid', 'onsite', 'unknown'], a.location_type), 'location_type: remote | hybrid | onsite | unknown');
       }
       if (a.to === 'queued' && a.blocked_by) req(oneOf(['browser', 'user', 'login', 'captcha', 'other'], a.blocked_by), 'blocked_by: browser | user | login | captcha | other');
-      // transition's schema has no actor, and checkArgs rejects unknown arguments, so it is always the pipeline.
-      const ev: EventInput = { ...a, status: a.to, actor: 'pipeline' };
-      this.validateEvent(ev);
+      const ev: EventInput = { ...a, status: a.to, actor };
+      this.validateEvent(ev, { selfReported });
       if (a.to === 'verified') {
         this.run('UPDATE roles SET verified_at = ?, location_line = ?, location_type = ? WHERE id = ?', now(), a.location_line ?? null, a.location_type ?? null, a.role_id);
       }

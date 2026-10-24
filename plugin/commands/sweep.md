@@ -51,7 +51,7 @@ This is the command the weekday scheduled task runs. It runs as a local schedule
 
 **Asking the user** anywhere in this plugin means: `transition` (or `record`, if already queued) to `queued` with `question` = the single blocking question and the quotes in `evidence`. `render_report` lists these under **Needs you**.
 
-7. **Report.** Call `render_report` with today's date (YYYY-MM-DD), the `run_id`, and a `headline` (one or two sentences: the outcome, e.g. "3 roles queued, 1 interview to book, 2 rejections"). Check that it states which capabilities were missing and what was queued or skipped because of it. If it does not, add one line under Needs you.
+7. **Report.** Call `render_report` with today's date (YYYY-MM-DD), the `run_id`, and a `headline` (one or two sentences: the outcome, e.g. "3 roles queued, 1 interview to book, 2 rejections"). Check that it states which capabilities were missing and what was queued or skipped because of it. If it does not, add one line under Needs you. End the report with the line `Board: run /job-tracker:board`. Why: a scheduled run can't open the board, and its link changes each time the board starts.
 
 8. **Audit.** Launch the `auditor` agent with: today's date, the `run_id`, the rendered report, the list of artifact ids and Gmail draft ids created in this run, and the list of tool names you called (including any a hook denied). Put every FAIL line it returns at the top of the report's **Needs you** section.
 

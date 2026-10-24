@@ -132,6 +132,7 @@ You answer the "Needs you" items, run `/job-tracker:apply` for the roles you wan
 | `/job-tracker:triage <source>` | Reconcile and clean a tracker board (JobCopilot-style) with the delete guard. |
 | `/job-tracker:prep <company>` | Interview prep from your stories. |
 | `/job-tracker:status` | Pipeline summary and open items. |
+| `/job-tracker:board` | Kanban board in your browser. Drag a card to any lane to move a role, back or forward; your word is the evidence. |
 | `/job-tracker:cover-letter <role-id> [--pdf]` | Cover letter, optionally as a one-page PDF. |
 | `/job-tracker:correct` | Turn your override into a rule with a reason and example. |
 | `/job-tracker:import [path]` | One-off import of an existing markdown log. |
@@ -150,7 +151,7 @@ commands, scheduled task
 - **Tracker** (`plugin/servers/tracker/`): the only writer to the database. Narrow tools, no raw SQL. An
   append-only event log with a state machine (`found → verified → scored → queued → applied →
   interviewing → offer`, plus `dropped` and `closed`). Drops need an employer quote, `verified` needs
-  the ATS URL and location line, `applied` needs the confirmation text. Tool reference:
+  the ATS URL and location line, `applied` needs the confirmation text (unless you mark it yourself on the board, where drops need no quote either). Tool reference:
   [`docs/tracker-api.md`](docs/tracker-api.md).
 - **Hooks** (`plugin/hooks/`): see below.
 - **Skills, commands, agents, templates**: the operating rules, including the incidents that shaped them.
@@ -159,7 +160,9 @@ commands, scheduled task
 ## Your data
 
 The tracker runs locally, always. `.mcp.json` starts a stdio server on `~/.job-tracker/tracker.db`. There is
-no network listener and no token. The directory is created owner-only (`0700`) and the database and
+no network listener and no token. The board (`/job-tracker:board`) is the one exception,
+and only when you start it: it listens on `127.0.0.1` only, with a new token in each link, and stops
+after 30 idle minutes. The directory is created owner-only (`0700`) and the database and
 session files are `0600`, because they hold your CV summary, pay floor and application history.
 Tightening is best effort: on a filesystem that cannot chmod, the tracker logs a warning and still starts.
 
@@ -203,16 +206,18 @@ the machine is awake and the app is open.
 | Drafts | Gmail `create_draft`/`update_draft` bodies are linted; em/en dashes, "not X but Y", fake-candid openers and volunteered gaps are denied. |
 | Submit | A click on a submit/apply element (resolved from the page's accessibility tree) or a scripted submit needs your `/job-tracker:approve` on that role's current form and a passing `gate_check` (verified, not `no_cold_apply`, no live application at the company). Approval is consumed by one submit attempt. No identifiable page or reachable tracker means no submit. |
 | Board delete | Needs a fresh `JOBHUNT_TRIAGE_GUARD` with `ok: true` and nothing but the delete control and its confirm button clicked since. |
+| Your board | Browser tools may not open the `/job-tracker:board` page or click, type, drag or run scripts on it, in any session. Moves there are recorded as yours. Reading the page is allowed. |
 | Personal data and consent | `form_input` into passport, nationality, age, DOB, gender, marital, ID and similar fields is denied; consent boxes stay unticked unless you allow them. |
 | Read-back | `verify_artifact` is denied unless a real `get_draft`/`list_drafts` result in the session contains the draft id. |
 | Stop | A `/job-tracker:sweep` session cannot end until every role it touched has an event and the report was rendered. |
 
-Browser gates apply only in sessions that used a job-hunt command or the tracker; send blocking applies
-everywhere.
+Browser gates apply only in sessions that used a job-hunt command or the tracker; send blocking and the
+board gate apply everywhere.
 
 **Known limits.** Gates see tool calls, not the screen. A click by raw coordinates has no element label,
 so the submit gate cannot classify it; the skills require ref-based clicks for submits and the auditor
-checks every applied role for captured confirmation text. Pressing Enter in a field is not gated.
+checks every applied role for captured confirmation text. Pressing Enter in a field is not gated. The board gate knows the board by its link and port, so desktop
+computer use, which sees only the screen, is not stopped from clicking on it.
 Hooks require a host that runs plugin hooks (Claude Code, Claude Desktop, Hermes); if approval notes
 never appear, the `approve` command tells the model not to submit.
 If Node.js is missing, or the gate cannot start or times out, mail, LinkedIn and browser tools are blocked
